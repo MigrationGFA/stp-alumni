@@ -1,0 +1,11 @@
+{
+  "Navbar": {
+    "title": "STP Alumni",
+    "home": "Home",
+    "about": "About"
+  },
+  "Hero": {
+    "welcome": "Welcome to the STP Platform",
+    "subtitle": "The official network for alumni."
+  }
+}
