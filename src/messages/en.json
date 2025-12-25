@@ -1,11 +1,24 @@
 {
+
   "Navbar": {
-    "title": "STP Alumni",
-    "home": "Home",
-    "about": "About"
-  },
+    "features": "Features",
+    "about": "About Us",
+    "community": "Community",
+    "contact": "Contact",
+    "login": "Log In",
+    "join": "Join as Alumni"
+  }
+,
   "Hero": {
-    "welcome": "Welcome to the STP Platform",
-    "subtitle": "The official network for alumni."
+    "imageAlt": "Alumni networking and connecting at professional event",
+    "badgeText": "Connecting 10,000+ Alumni Worldwide",
+    "headlineMain": "Stay Connected.",
+    "headlineSub": "Grow Together.",
+    "description": "Connect with graduates, entrepreneurs, and professionals across sectors. Build your network, find mentors, and unlock opportunities.",
+    "getStarted": "Get Started Free",
+    "watchDemo": "Watch Demo",
+    "featureFree": "Free to Join",
+    "featureIndustries": "50+ Industries",
+    "featureNetwork": "Global Network"
   }
 }
