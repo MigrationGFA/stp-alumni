@@ -10,7 +10,6 @@
   }
 ,
   "Hero": {
-<<<<<<< HEAD
     "welcome": "Welcome to the STP Platform",
     "subtitle": "The official network for alumni."
   },
@@ -65,8 +64,7 @@
     "uploadFile": "Upload file",
     "goals": "What are your Goals?",
     "goalsPlaceholder": "Kindly share your goals here",
-    "continueButton": "Continue"
-=======
+    "continueButton": "Continue",
     "imageAlt": "Alumni networking and connecting at professional event",
     "badgeText": "Connecting 10,000+ Alumni Worldwide",
     "headlineMain": "Stay Connected.",
@@ -77,6 +75,5 @@
     "featureFree": "Free to Join",
     "featureIndustries": "50+ Industries",
     "featureNetwork": "Global Network"
->>>>>>> origin/main
   }
 }
