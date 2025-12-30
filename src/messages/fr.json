@@ -7,5 +7,58 @@
   "Hero": {
     "welcome": "Bienvenue sur la plateforme STP",
     "subtitle": "Le réseau officiel des anciens élèves."
+  },
+  "Login": {
+    "title": "Connexion",
+    "subtitle": "Entrez vos identifiants pour accéder à votre compte",
+    "loginWithGoogle": "Se connecter avec Google",
+    "or": "OU",
+    "email": "Email",
+    "emailPlaceholder": "Entrez votre email",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "loginButton": "Se connecter",
+    "notMember": "Pas encore membre?",
+    "createAccount": "Créer un compte"
+  },
+  "Signup": {
+    "title": "Bienvenue sur STP Alumni!",
+    "subtitle": "Veuillez fournir votre nom et votre email.",
+    "signupWithGoogle": "S'inscrire avec Google",
+    "or": "OU",
+    "firstName": "Prénom",
+    "firstNamePlaceholder": "Entrez votre prénom",
+    "lastName": "Nom de famille",
+    "lastNamePlaceholder": "Entrez votre nom de famille",
+    "email": "Email",
+    "emailPlaceholder": "Entrez votre email",
+    "continueButton": "Continuer",
+    "alreadyMember": "Déjà membre?",
+    "login": "Se connecter"
+  },
+  "SignupPassword": {
+    "title": "Choisissez un mot de passe",
+    "subtitle": "Doit contenir au moins 8 caractères",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "confirmPasswordPlaceholder": "Confirmer le mot de passe",
+    "continueButton": "Continuer"
+  },
+  "ProfileSetup": {
+    "title": "Configuration du profil",
+    "subtitle": "Fournissez vos informations pour optimiser votre expérience",
+    "sector": "Secteur",
+    "sectorPlaceholder": "Dans quel secteur êtes-vous?",
+    "location": "Localisation",
+    "locationPlaceholder": "Entrez votre localisation",
+    "skills": "Compétences",
+    "skillsPlaceholder": "Quelle compétence avez-vous?",
+    "uploadProfileImage": "Télécharger votre photo de profil",
+    "cvResume": "CV/curriculum vitae:",
+    "uploadFile": "Télécharger le fichier",
+    "goals": "Quels sont vos objectifs?",
+    "goalsPlaceholder": "Veuillez partager vos objectifs ici",
+    "continueButton": "Continuer"
   }
 }
