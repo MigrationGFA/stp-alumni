@@ -7,8 +7,10 @@ export const routing = defineRouting({
 //   locales: ['fr', 'en'],
 
   // Used when no locale matches
-  defaultLocale: 'en'
+  defaultLocale: 'en',
 //   defaultLocale: 'fr'
+
+localeDetection:true 
 });
 
 // These are helpers for navigation (Links, redirects, etc.)

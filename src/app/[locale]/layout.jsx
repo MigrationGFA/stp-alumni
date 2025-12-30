@@ -1,9 +1,10 @@
 import { Inter } from "next/font/google";
 import ".././globals.css";
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,25 +14,27 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children, params }) {
-// 1. Await the params before accessing properties
+  // 1. Await the params before accessing properties
   const { locale } = await params;
 
   // 2. Now 'locale' will be defined (e.g., "en" or "fr")
   console.log(locale, "locale detected");
-if (!routing.locales.includes(locale)) {
+  if (!routing.locales.includes(locale)) {
     notFound();
   }
 
-  
   const messages = await getMessages();
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <body className={inter.className}>
-
-        <NextIntlClientProvider messages={messages}>
-
-          {children}
-        </NextIntlClientProvider>
+        <ThemeProvider attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange>
+          <NextIntlClientProvider messages={messages}>
+            {children}
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
