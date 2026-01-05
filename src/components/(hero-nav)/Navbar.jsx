@@ -49,15 +49,21 @@ const Navbar = () => {
             variant="ghost"
             size="sm"
             className={"border border-white dark:border-[#2B7FFF] text-white dark:text-[#2B7FFF] rounded-sm p-3.75"}
+            asChild
           >
-            {t("login")}
+            <Link href="/login">
+              {t("login")}
+            </Link>
           </Button>
           <Button
             variant="default"
             size="sm"
             className="gradient-btn-primary-rtl hover:opacity-90 transition-opacity rounded-sm p-3.75"
+            asChild
           >
-            {t("join")}
+            <Link href="/signup">
+              {t("join")}
+            </Link>
           </Button>
 
           <ModeToggle/>
@@ -95,15 +101,25 @@ const Navbar = () => {
               ))}
 
               <div className="flex flex-col gap-2 pt-4">
-                <Button variant="default" size="sm" className="bg-red-500">
-                  {t("login")}
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="bg-red-500"
+                  asChild
+                >
+                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    {t("login")}
+                  </Link>
                 </Button>
                 <Button
                   variant="default"
                   size="sm"
                   className="w-full justify-start"
+                  asChild
                 >
-                  {t("join")}
+                  <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                    {t("join")}
+                  </Link>
                 </Button>
               </div>
             </div>

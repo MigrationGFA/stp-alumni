@@ -5,10 +5,24 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link } from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/routing';
 
 export default function LoginPage() {
   const t = useTranslations('Login');
+  const router = useRouter();
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    // TODO: Add actual authentication logic here
+    // For now, just navigate to dashboard
+    router.push('/dashboard');
+  };
+
+  const handleGoogleLogin = () => {
+    // TODO: Add Google OAuth logic here
+    // For now, just navigate to dashboard
+    router.push('/dashboard');
+  };
 
   return (
     <div className="min-h-screen flex px-4 sm:px-6 lg:px-12 xl:px-16 gap-6 lg:gap-8">
@@ -37,6 +51,7 @@ export default function LoginPage() {
           <Button
             variant="outline"
             className="w-full mb-6 h-11 border-gray-300 bg-white hover:bg-gray-50"
+            onClick={handleGoogleLogin}
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path
@@ -96,7 +111,10 @@ export default function LoginPage() {
           </div>
 
           {/* Login Button */}
-          <Button className="w-full h-11 bg-[#155DFC] hover:bg-[#155DFC]/90 text-white mb-6">
+          <Button 
+            className="w-full h-11 bg-[#155DFC] hover:bg-[#155DFC]/90 text-white mb-6"
+            onClick={handleLogin}
+          >
             {t('loginButton')}
           </Button>
 
