@@ -12,7 +12,14 @@ export default function SignupPage() {
   const router = useRouter();
 
   const handleContinue = () => {
+    // TODO: Add form validation and data submission
     router.push('/signup-password');
+  };
+
+  const handleGoogleSignup = () => {
+    // TODO: Add Google OAuth logic here
+    // For now, just navigate to dashboard
+    router.push('/dashboard');
   };
 
   return (
@@ -42,6 +49,7 @@ export default function SignupPage() {
           <Button
             variant="outline"
             className="w-full mb-6 h-11 border-gray-300 bg-white hover:bg-gray-50"
+            onClick={handleGoogleSignup}
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path

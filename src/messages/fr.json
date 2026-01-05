@@ -9,7 +9,9 @@
   },
   "Hero": {
     "welcome": "Bienvenue sur la plateforme STP",
-    "subtitle": "Le réseau officiel des anciens élèves."
+    "subtitle": "Le réseau officiel des anciens élèves.",
+    "getStarted": "Commencer",
+    "watchDemo": "Voir la démo"
   },
   "Login": {
     "title": "Connexion",
@@ -73,5 +75,52 @@
     "featureFree": "Inscription Gratuite",
     "featureIndustries": "Plus de 50 Secteurs",
     "featureNetwork": "Réseau Mondial"
+  },
+  "Sidebar": {
+    "dashboard": "Tableau de bord",
+    "network": "Réseau",
+    "messaging": "Messagerie",
+    "resources": "Ressources",
+    "newsfeed": "Fil d'actualité",
+    "marketplace": "Marché",
+    "events": "Événements",
+    "dealRoom": "Salle des affaires",
+    "settings": "Paramètres",
+    "signOut": "Se déconnecter"
+  },
+  "Dashboard": {
+    "title": "Tableau de bord",
+    "courseTitle": "Perfectionnez vos compétences avec des cours en ligne professionnels",
+    "joinNow": "Rejoindre maintenant",
+    "networking": "Réseautage",
+    "events": "Événements",
+    "marketplace": "Marché",
+    "startPost": "Commencer une publication",
+    "submit": "Soumettre le texte",
+    "submitPost": "Publier",
+    "follow": "Suivre",
+    "comments": "{{count}} Commentaires",
+    "commentsCount": "12 Commentaires",
+    "like": "J'aime",
+    "comment": "Commenter",
+    "view": "Voir",
+    "yourNetwork": "Votre réseau",
+    "invitations": "Invitations",
+    "messages": "Messages",
+    "seeMore": "Voir plus",
+    "save": "Enregistrer",
+    "copyLink": "Copier le lien de la publication",
+    "postAuthorName": "Adebisi Adeyemi",
+    "postAuthorTitle": "Développeur Web | Développeur Backend | Stratège de Marque",
+    "postContent": "L'investisseur milliardaire Leon Cooperman a averti lundi que les rendements du marché pourraient être médiocres car le retour incroyable de cette année volera probablement les rendements futurs. \"Le marché global, nous avons anticipé beaucoup de demande. Je m'attendrais à ce que les rendements futurs soient",
+    "more": "...plus",
+    "likedBy": "Tunde Onakoya et 57 autres",
+    "eventDate": "Lun, 8 déc 2025, 11h00",
+    "eventTitle": "Tournoi de Golf 2025 Drive for the Driven",
+    "invitedYou": "vous a invité à vous connecter",
+    "message1": "voulez-vous obtenir plus d'informations",
+    "message2": "je l'enverrai bientôt seunsa!",
+    "message3": "James, bonjour bon matin",
+    "message4": "yo yo, j'aimerais que tu saches"
   }
 }

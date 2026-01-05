@@ -11,7 +11,9 @@
 ,
   "Hero": {
     "welcome": "Welcome to the STP Platform",
-    "subtitle": "The official network for alumni."
+    "subtitle": "The official network for alumni.",
+    "getStarted": "Get Started",
+    "watchDemo": "Watch Demo"
   },
   "Login": {
     "title": "Login",
@@ -75,5 +77,52 @@
     "featureFree": "Free to Join",
     "featureIndustries": "50+ Industries",
     "featureNetwork": "Global Network"
+  },
+  "Sidebar": {
+    "dashboard": "Dashboard",
+    "network": "Network",
+    "messaging": "Messaging",
+    "resources": "Resources",
+    "newsfeed": "Newsfeed",
+    "marketplace": "Marketplace",
+    "events": "Events",
+    "dealRoom": "Deal Room",
+    "settings": "Settings",
+    "signOut": "Sign out"
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "courseTitle": "Sharpen Your Skills with Professional Online Courses",
+    "joinNow": "Join Now",
+    "networking": "Networking",
+    "events": "Events",
+    "marketplace": "Marketplace",
+    "startPost": "Start a post",
+    "submit": "Submit text",
+    "submitPost": "Submit Post",
+    "follow": "Follow",
+    "comments": "{{count}} Comments",
+    "commentsCount": "12 Comments",
+    "like": "Like",
+    "comment": "Comment",
+    "view": "View",
+    "yourNetwork": "Your Network",
+    "invitations": "Invitations",
+    "messages": "Messages",
+    "seeMore": "See More",
+    "save": "Save",
+    "copyLink": "Copy link to post",
+    "postAuthorName": "Adebisi Adeyemi",
+    "postAuthorTitle": "Web Developer | Backend Developer | Brand Strategist",
+    "postContent": "Billionaire investor Leon Cooperman warned on Monday market returns could be lackluster because this year's incredible comeback will likely rob returns from the future. \"The overall market, we've been pulling a lot of demand forward. I would expect that future returns will be",
+    "more": "...more",
+    "likedBy": "Tunde Onakoya and 57 others",
+    "eventDate": "Mon, Dec 8, 2025, 11:00 AM",
+    "eventTitle": "2025 Drive for the Driven Golf Tournament",
+    "invitedYou": "invited you to connect with them",
+    "message1": "do you want to get more information",
+    "message2": "i'll be sending it soon seunsa!",
+    "message3": "James, hello good morning",
+    "message4": "yo yo, i'd like you to know"
   }
 }

@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CloudUpload, Paperclip } from 'lucide-react';
 import { useState, useRef } from 'react';
+import { useRouter } from '@/i18n/routing';
 
 export default function ProfileSetupPage() {
   const t = useTranslations('ProfileSetup');
+  const router = useRouter();
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState('');
   const profileImageInputRef = useRef(null);
@@ -49,6 +51,12 @@ export default function ProfileSetupPage() {
       // Handle file upload logic here if needed
       console.log('CV file selected:', file);
     }
+  };
+
+  const handleContinue = () => {
+    // TODO: Add form validation and data submission
+    // Navigate to dashboard after profile setup
+    router.push('/dashboard');
   };
 
   return (
@@ -187,7 +195,10 @@ export default function ProfileSetupPage() {
           </div>
 
           {/* Continue Button */}
-          <Button className="w-full h-11 bg-[#155DFC] hover:bg-[#155DFC]/90 text-white">
+          <Button 
+            onClick={handleContinue}
+            className="w-full h-11 bg-[#155DFC] hover:bg-[#155DFC]/90 text-white"
+          >
             {t('continueButton')}
           </Button>
         </div>
