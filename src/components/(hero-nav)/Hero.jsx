@@ -1,4 +1,4 @@
-import { ArrowRight, Play, CheckCircle, CircleSmall, Dot } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 // import heroImage from "@/assets/hero-alumni.jpg";
 import heroImage from "../../../public/hero-alumni.jpg";
@@ -12,7 +12,7 @@ const Hero = () => {
   const features = [t('featureFree'), t('featureIndustries'), t('featureNetwork')];
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden dark:bg-gradient-to-r dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden dark:bg-linear-to-r dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]">
       {/* Background Image */}
       <div className="absolute inset-0 z-0 dark:hidden">
         <Image
