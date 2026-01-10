@@ -1,6 +1,7 @@
 import { Network, BookOpen, ShoppingCart, UsersRound } from "lucide-react";
 import React from "react";
 import { useTranslations } from 'next-intl';
+import Container from "../container";
 
 function Everything() {
   const t = useTranslations('Everything');
@@ -33,9 +34,9 @@ function Everything() {
   ];
 
   return (
-    <section className="dark:bg-linear-to-r dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]">
+    <section className="dark:bg-[#233389]">
 
-    <div className="container mx-auto py-20 ">
+    <Container className=" mx-auto py-20 ">
       <h1 className="text-stp-blue-light font-semibold text-5xl text-center dark:text-white">
         {t('headingMain')}
         <p className="gradient-btn-primary-grew">{t('headingGradient')}</p>
@@ -56,7 +57,7 @@ function Everything() {
           </div>
         ))}
       </div>
-    </div>
+    </Container>
     </section>
   );
 }

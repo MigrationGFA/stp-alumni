@@ -38,10 +38,10 @@ const Sidebar = () => {
     { label: t("settings"), href: "/settings", icon: Settings },
   ];
 
-  const isActive = (href) => pathname === href;
+  const isActive = (href) => pathname.includes(href);
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[#1B2F5B] text-white flex flex-col">
+    <aside className="fixed left-0 top-0 h-screen w-70 bg-[#1B2F5B] text-white -translate-x-full lg:translate-x-0 flex flex-col">
       {/* Logo */}
       <div className="flex items-center justify-center gap-3 px-6 py-6 border-b border-white/10">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2B7FFF] text-white font-bold text-lg">

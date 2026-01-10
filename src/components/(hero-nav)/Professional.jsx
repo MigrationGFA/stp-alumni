@@ -5,6 +5,7 @@ import hero3 from "../../../public/assets/hero3.png";
 import Image from "next/image";
 import { CircleCheck } from "lucide-react";
 import { useTranslations } from 'next-intl';
+import Container from "../container";
 
 function Professional() {
   const t = useTranslations('Professional');
@@ -46,8 +47,8 @@ function Professional() {
   ];
 
   return (
-    <section className="dark:bg-linear-to-r dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]">
-      <div className="py-12 relative px-4 container mx-auto space-y-10 dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]">
+    <section className="  dark:bg-[#233389]">
+      <Container className=" relative pt-10 pb-20 space-y-10 ">
         {arr.map((ele, i) => {
           const reverse = i % 2 === 0;
 
@@ -86,8 +87,8 @@ function Professional() {
             </div>
           );
         })}
-      </div>
-    </section>
+      </Container>
+   </section>
   );
 }
 

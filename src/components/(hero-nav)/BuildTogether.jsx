@@ -13,7 +13,7 @@ function BuildTogether() {
   ];
 
   return (
-    <div className="bg-[#16234b]">
+    <div className="bg-[linear-gradient(135deg,#233389_0%,#162456_75%,#233389_100%)] pb-10">
       <div className="text-center flex flex-col gap-5 items-center pt-12">
         <h1 className="text-5xl text-white">
           {t('titleMain')} <br />
@@ -23,7 +23,7 @@ function BuildTogether() {
           {t('description')}
         </p>
 
-        <div className="flex flex-col md:flex-row gap-4 max-w-4xl">
+        <div className="flex flex-col md:flex-row flex-wrap gap-4 max-w-4xl">
           {stats.map((ele, i) => (
             <div className="text-center space-y-1 bg-stp-blue-dark py-5 px-18" key={ele.text}>
               <p className="text-[#00D3F2] text-2xl flex items-center">

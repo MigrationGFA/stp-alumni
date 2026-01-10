@@ -44,12 +44,12 @@ function TestimonialCarousel() {
   };
 
   return (
-    <div className="bg-[#16234b] py-20 px-4 ">
+    <div className=" py-20 px-4 ">
       <div className="max-w-7xl mx-auto">
         <Slider {...settings} className="testimonial-slider">
           {testimonials.map((item) => (
             <div key={item.id} className="px-3 outline-none">
-              <div className="bg-[#1e2f63] text-white p-10 rounded-3xl min-h-75 flex flex-col justify-between border border-white/5 hover:border-white/20 transition-colors shadow-2xl">
+              <div className="bg-[#1B2F5B] text-white p-10 rounded-3xl min-h-75 flex flex-col justify-between border border-white/5 hover:border-white/20 transition-colors shadow-2xl">
                 
                 {/* Quote Section */}
                 <p className="text-lg leading-relaxed font-normal opacity-90 italic">

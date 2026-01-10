@@ -22,6 +22,48 @@
     "featureIndustries": "50+ Industries",
     "featureNetwork": "Global Network"
   },
+  "Footer": {
+    "brandName": "STP Alumni",
+    "tagline": "Empowering graduates, entrepreneurs, and professionals through networking, mentorship, and opportunities.",
+    "copyright": "© {year} STP Alumni. All rights reserved.",
+    "email": "support@stpalumni.com",
+    "product": {
+      "title": "Product",
+      "features": "Features",
+      "marketplace": "Marketplace",
+      "mentorship": "Mentorship",
+      "learning": "Learning",
+      "pricing": "Pricing"
+    },
+    "company": {
+      "title": "Company",
+      "aboutUs": "About Us",
+      "careers": "Careers",
+      "blog": "Blog",
+      "pressKit": "Press Kit",
+      "contact": "Contact"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "cookiePolicy": "Cookie Policy",
+      "gdpr": "GDPR",
+      "accessibility": "Accessibility"
+    }
+  },
+  "JoinToday": {
+    "imageAlt": "Alumni networking and connecting at professional event",
+    "badgeText": "Join Today - It's Free",
+    "headlineMain": "Ready to unlock your ",
+    "headlineSub": "full potential?",
+    "description": "Join 10,000+ alumni who are networking, learning, and growing together in the STP community.",
+    "getStarted": "Get Started Free",
+    "watchDemo": "Watch Demo",
+    "featureFree": "Trusted by professionals",
+    "featureIndustries": "Secure & Private",
+    "featureNetwork": "No credit card required"
+  },
   "Professional": {
     "network": {
       "title": "Build Your Professional Network",

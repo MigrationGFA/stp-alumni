@@ -1,18 +1,11 @@
-"use client";
-import { useTranslations } from "next-intl";
+// src/app/[locale]/(portal)/network/page.js
+import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 
-/**
- * Network page - Alumni network and connections
- * @returns {JSX.Element}
- */
-export default function NetworkPage() {
-  const t = useTranslations("Sidebar");
+export default async function NetworkEntryPage() {
+  const locale = await getLocale();
   
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900">{t("network")}</h1>
-      <p className="mt-4 text-gray-600">Network page coming soon...</p>
-    </div>
-  );
+  // Hard-coding the redirect path with the locale 
+  // prevents the "undefined" error caused by the library's internal resolver
+  redirect(`/${locale}/network/connections`);
 }
-

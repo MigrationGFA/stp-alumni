@@ -19,6 +19,48 @@
     "featureIndustries": "Plus de 50 Secteurs",
     "featureNetwork": "Réseau Mondial"
   },
+  "Footer": {
+    "brandName": "STP Alumni",
+    "tagline": "Soutenir les diplômés, les entrepreneurs et les professionnels grâce au réseautage, au mentorat et aux opportunités.",
+    "copyright": "© {year} STP Alumni. Tous droits réservés.",
+    "email": "support@stpalumni.com",
+    "product": {
+      "title": "Produit",
+      "features": "Fonctionnalités",
+      "marketplace": "Place de marché",
+      "mentorship": "Mentorat",
+      "learning": "Apprentissage",
+      "pricing": "Tarification"
+    },
+    "company": {
+      "title": "Entreprise",
+      "aboutUs": "À Propos",
+      "careers": "Carrières",
+      "blog": "Blog",
+      "pressKit": "Dossier de Presse",
+      "contact": "Contact"
+    },
+    "legal": {
+      "title": "Légal",
+      "privacyPolicy": "Politique de Confidentialité",
+      "termsOfService": "Conditions d'Utilisation",
+      "cookiePolicy": "Politique de Cookies",
+      "gdpr": "RGPD",
+      "accessibility": "Accessibilité"
+    }
+  },
+  "JoinToday": {
+    "imageAlt": "Anciens élèves réseautant et se connectant lors d'un événement professionnel",
+    "badgeText": "Inscrivez-vous aujourd'hui - C'est gratuit",
+    "headlineMain": "Prêt à libérer votre ",
+    "headlineSub": "plein potentiel ?",
+    "description": "Rejoignez plus de 10 000 diplômés qui réseautent, apprennent et progressent ensemble au sein de la communauté STP.",
+    "getStarted": "Commencer gratuitement",
+    "watchDemo": "Voir la démo",
+    "featureFree": "Approuvé par des professionnels",
+    "featureIndustries": "Sécurisé et privé",
+    "featureNetwork": "Aucune carte de crédit requise"
+},
   "Login": {
     "title": "Connexion",
     "subtitle": "Entrez vos identifiants pour accéder à votre compte",

@@ -1,9 +1,11 @@
 import { Sparkles } from "lucide-react";
 
-const HeroBadge = ({ text }) => {
+const HeroBadge = ({ text,className,iconClass }) => {
   return (
-    <div className="inline-flex items-center gap-2 rounded-full gradient-primary-rtl px-4 py-2 text-sm font-light text-white backdrop-blur-sm dark:border dark:border-[#314158] animate-fade-in">
-      <Sparkles className="h-4 w-4 dark:text-[#00D3F2]" />
+    <div
+      className={`inline-flex items-center gap-2 rounded-full  px-4 py-2 text-sm font-light text-white backdrop-blur-sm animate-fade-in ${className}`}
+    >
+      <Sparkles className={`h-4 w-4 ${iconClass}`} />
       <span>{text}</span>
     </div>
   );
