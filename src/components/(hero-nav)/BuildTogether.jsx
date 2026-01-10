@@ -13,7 +13,7 @@ function BuildTogether() {
   ];
 
   return (
-    <div className="bg-[#16234b]">
+    <div className="bg-[linear-gradient(135deg,#233389_0%,#162456_75%,#233389_100%)] pb-10">
       <div className="text-center flex flex-col gap-5 items-center pt-12">
         <h1 className="text-5xl text-white">
           {t('titleMain')} <br />
