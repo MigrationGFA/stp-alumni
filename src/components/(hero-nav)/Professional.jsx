@@ -1,0 +1,94 @@
+import React from "react";
+import hero1 from "../../../public/assets/hero1.png";
+import hero2 from "../../../public/assets/hero2.png";
+import hero3 from "../../../public/assets/hero3.png";
+import Image from "next/image";
+import { CircleCheck } from "lucide-react";
+import { useTranslations } from 'next-intl';
+
+function Professional() {
+  const t = useTranslations('Professional');
+
+  const arr = [
+    {
+      img: hero1,
+      title: t('network.title'),
+      desc: t('network.desc'),
+      list: [
+        t('network.item1'),
+        t('network.item2'),
+        t('network.item3'),
+        t('network.item4'),
+      ],
+    },
+    {
+      img: hero2,
+      title: t('growth.title'),
+      desc: t('growth.desc'),
+      list: [
+        t('growth.item1'),
+        t('growth.item2'),
+        t('growth.item3'),
+        t('growth.item4'),
+      ],
+    },
+    {
+      img: hero3,
+      title: t('opportunities.title'),
+      desc: t('opportunities.desc'),
+      list: [
+        t('opportunities.item1'),
+        t('opportunities.item2'),
+        t('opportunities.item3'),
+        t('opportunities.item4'),
+      ],
+    },
+  ];
+
+  return (
+    <section className="dark:bg-linear-to-r dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]">
+      <div className="py-12 relative px-4 container mx-auto space-y-10 dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]">
+        {arr.map((ele, i) => {
+          const reverse = i % 2 === 0;
+
+          return (
+            <div
+              className={`flex justify-between gap-5 ${
+                !reverse ? "flex-row-reverse" : ""
+              }`}
+              key={ele.title}
+            >
+              <div className="relative flex-1">
+                <Image
+                  src={ele.img}
+                  alt={ele.title}
+                  className="mx-aut"
+                  width={550}
+                  height={330}
+                />
+              </div>
+
+              <div className="flex-1 space-y-3 flex justify-center flex-col">
+                <h1 className="text-3xl text-stp-blue-light dark:text-white">{ele.title}</h1>
+                <p className="font-[20px] text-[#6D76A8]  dark:text-[#90A1B9]">{ele.desc}</p>
+                <ul>
+                  {ele.list.map((item) => (
+                    <li
+                      className="flex items-start gap-2 my-1 font-[18px] text-[#959CC3]  dark:text-[#CAD5E2]"
+                      key={item}
+                    >
+                      <CircleCheck className="mt-1 h-4 w-4 text-orange-400" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+export default Professional;
