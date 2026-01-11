@@ -1,7 +1,5 @@
 "use client";
-import { useEffect } from "react";
 import { NetworkStats } from "./(components)/NetworkStats";
-import { useRouter, usePathname } from "@/i18n/routing"; // Use these!
 
 const NetworkLayout = ({ children }) => {
 
