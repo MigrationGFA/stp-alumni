@@ -7,11 +7,13 @@ import {
   Bell,
   PanelTopOpen,
   ChevronDown,
+  PanelLeftOpen,
+  PanelLeftClose,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileDrawer } from "@/components/ProfileDrawer";
 
-function UserHeader() {
+function UserHeader({toggleSidebar, isCollapsed}) {
   const [isScrolled, setIsScrolled] = useState(false);
 
   const data = {
@@ -31,7 +33,7 @@ function UserHeader() {
   }, []);
   return (
     <header
-      className={`sticky top-0 z-30 w-full px-8 py-4 transition-all duration-300 flex lg:block  justify-between ${
+      className={`sticky top-0 z-30 w-full px-8 py-4 transition-all duration-300 flex  items-center  justify-between ${
         isScrolled
           ? "bg-[#E8ECF4]/60 backdrop-blur-md border-b border-white/20 shadow-sm"
           : "bg-[#E8ECF4] border-b border-transparent"
@@ -46,6 +48,17 @@ function UserHeader() {
           STP Alumni
         </span>
       </div>
+
+      <button
+        onClick={toggleSidebar}
+        className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-500 "
+      >
+        {isCollapsed ? (
+          <PanelLeftOpen size={20} />
+        ) : (
+          <PanelLeftClose size={20} />
+        )}
+      </button>
 
       <div className="flex items-center justify-end">
         <div className="flex items-center gap-4">
@@ -89,7 +102,6 @@ function UserHeader() {
               <AvatarFallback className="bg-primary text-primary-foreground">
                 EM
               </AvatarFallback>
-              
             </Avatar>
             {/* 
             <div className="relative h-10 w-10 rounded-full bg-white/50 overflow-hidden  shadow-sm">
@@ -110,7 +122,7 @@ function UserHeader() {
                 {data?.email || "No email"}
               </p>
             </div>
-          </div> 
+          </div>
         </div>
       </div>
     </header>
