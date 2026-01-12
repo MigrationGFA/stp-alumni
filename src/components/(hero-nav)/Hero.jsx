@@ -1,30 +1,38 @@
-import { ArrowRight, Play, CheckCircle, CircleSmall, Dot } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 // import heroImage from "@/assets/hero-alumni.jpg";
 import heroImage from "../../../public/hero-alumni.jpg";
 import HeroBadge from "./HeroBadge";
 import Image from "next/image";
 import React from "react";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
 const Hero = () => {
-  const t = useTranslations('Hero');
-  const features = [t('featureFree'), t('featureIndustries'), t('featureNetwork')];
+  const t = useTranslations("Hero");
+  const features = [
+    t("featureFree"),
+    t("featureIndustries"),
+    t("featureNetwork"),
+  ];
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden dark:bg-gradient-to-r dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[linear-gradient(135deg,#233389_0%,#162456_50%,#233389_100%)]">
+    {/* <section className="relative min-h-screen flex items-center justify-center overflow-hidden dark:bg-linear-to-r dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]"> */}
       {/* Background Image */}
       <div className="absolute inset-0 z-0 dark:hidden">
         <Image
           src={heroImage}
-          alt={t('imageAlt')}
-          className="h-full w-full object-cover "
+          alt={t("imageAlt")}
+          className="h-full w-full object-cover opacity-75 "
           fill
         />
         {/* <div className="absolute inset-0 bg-hero-overlay" /> */}
         <div className="absolute inset-0 bg-[rgba(29,41,61,0.45)]" />
       </div>
 
+      <div className="hidden dark:block absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2 w-[384px] h-96 rounded-full bg-[#00B8DB]/30 blur-[128px]" />
+
+      <div className="hidden dark:block absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-[384px] h-96 rounded-full bg-[#00B8DB]/30 blur-[128px]" />
       {/* Purple accent border at bottom */}
       {/* <div className="absolute bottom-0 left-0 right-0 h-1 bg-accent" /> */}
 
@@ -32,26 +40,30 @@ const Hero = () => {
       <div className="container relative z-10 mx-auto px-6 py-20 text-center ">
         {/* Badge */}
         <div className="mb-8 ">
-          <HeroBadge text={t('badgeText')} />
+          <HeroBadge text={t("badgeText")} className={"gradient-primary-rtl dark:border dark:border-[#314158]"} iconClass="dark:text-[#00D3F2]"/>
         </div>
 
         {/* Headlines */}
         <h1 className="mb-4 font-display text-5xl font-medium tracking-tight text-white md:text-6xl lg:text-7xl  animate-fade-up">
-          {t('headlineMain')}
+          {t("headlineMain")}
         </h1>
         <h2 className="mb-6 font-display text-5xl font-medium tracking-normal md:text-6xl lg:text-7xl animate-fade-up text-grow-together">
-          <span className="">{t('headlineSub')}</span>
+          <span className="">{t("headlineSub")}</span>
         </h2>
 
         {/* Subheadline */}
         <p className="mx-auto mb-10 max-w-2xl text-lg text-[#DDEBFF] md:text-xl animate-fade-up ">
-          {t('description')}
+          {t("description")}
         </p>
 
         {/* CTAs */}
         <div className="flex flex-col items-center justify-center text-white gap-4 sm:flex-row animate-fade-up">
-          <Button variant="hero" size="lg" className={"gradient-btn-primary-rtl"}>
-            {t('getStarted')}
+          <Button
+            variant="hero"
+            size="lg"
+            className={"gradient-btn-primary-rtl"}
+          >
+            {t("getStarted")}
             <ArrowRight className="ml-1 h-5 w-5" />
           </Button>
           <Button
@@ -60,7 +72,7 @@ const Hero = () => {
             className={"border border-white dark:border-[#2B7FFF]"}
           >
             <Play className="mr-1 h-4 w-4" />
-            {t('watchDemo')}
+            {t("watchDemo")}
           </Button>
         </div>
 

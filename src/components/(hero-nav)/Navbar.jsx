@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing"; // This is the specialized Link
 import { useTranslations } from "next-intl";
 import { ModeToggle } from "../ModeToggle";
 import LanguageSwitcher from "../LanguageSwitcher";
+import Container from "../container";
 
 const Navbar = () => {
   const t = useTranslations("Navbar");
@@ -19,12 +20,29 @@ const Navbar = () => {
     { label: t("contact"), href: "/contact" },
   ];
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 ">
-      <div className="container mx-auto flex items-center justify-between px-6 py-4">
+    // <nav className="fixed top-0 left-0 right-0 z-50 ">
+    <nav 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? "bg-white/10 dark:bg-[#0A192F]/40 backdrop-blur-lg border-b border-white/10 py-2" 
+          : "bg-transparent py-4"
+      }`}
+    >
+     <Container className="flex items-center justify-between py-4">
         {/* Logo - Link ensures locale prefix like /en or /fr */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2B7FFF] text-white font-bold text-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-l from-[#00D3F2] to-[#155DFC] text-[#28282b] font-bold text-sm">
             S
           </div>
           <span className="text-lg font-semibold text-white">STP Alumni</span>
@@ -82,7 +100,7 @@ const Navbar = () => {
             <Menu className="h-6 w-6" />
           )}
         </button>
-      </div>
+      </Container>
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (

@@ -78,9 +78,10 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#E8ECF4]">
+    <div className="">
+    {/* <div className="min-h-screen bg-[#E8ECF4]"> */}
       {/* Header */}
-      <header className="px-52 py-4">
+      {/* <header className="px-52 py-4">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-4">
             <button className="p-3 rounded-full transition-colors bg-[rgba(2,6,24,0.08)] hover:bg-[rgba(2,6,24,0.12)]">
@@ -100,7 +101,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </header>
+      </header> */}
 
       {/* Main Content */}
       <div className="px-52 py-6">
@@ -182,7 +183,7 @@ export default function DashboardPage() {
             <div className="bg-white rounded-lg p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex gap-3">
-                  <div className="h-12 w-12 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-gray-300 overflow-hidden shrink-0">
                     <Image
                       src="/assets/Profile Image.jpg"
                       alt={t("postAuthorName")}

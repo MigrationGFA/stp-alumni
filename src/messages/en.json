@@ -9,12 +9,88 @@
     "join": "Join as Alumni"
   }
 ,
+
   "Hero": {
-    "welcome": "Welcome to the STP Platform",
-    "subtitle": "The official network for alumni.",
-    "getStarted": "Get Started",
-    "watchDemo": "Watch Demo"
+    "imageAlt": "Alumni networking and connecting at professional event",
+    "badgeText": "Connecting 10,000+ Alumni Worldwide",
+    "headlineMain": "Stay Connected.",
+    "headlineSub": "Grow Together.",
+    "description": "Connect with graduates, entrepreneurs, and professionals across sectors. Build your network, find mentors, and unlock opportunities.",
+    "getStarted": "Get Started Free",
+    "watchDemo": "Watch Demo",
+    "featureFree": "Free to Join",
+    "featureIndustries": "50+ Industries",
+    "featureNetwork": "Global Network"
   },
+  "Footer": {
+    "brandName": "STP Alumni",
+    "tagline": "Empowering graduates, entrepreneurs, and professionals through networking, mentorship, and opportunities.",
+    "copyright": "© {year} STP Alumni. All rights reserved.",
+    "email": "support@stpalumni.com",
+    "product": {
+      "title": "Product",
+      "features": "Features",
+      "marketplace": "Marketplace",
+      "mentorship": "Mentorship",
+      "learning": "Learning",
+      "pricing": "Pricing"
+    },
+    "company": {
+      "title": "Company",
+      "aboutUs": "About Us",
+      "careers": "Careers",
+      "blog": "Blog",
+      "pressKit": "Press Kit",
+      "contact": "Contact"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "cookiePolicy": "Cookie Policy",
+      "gdpr": "GDPR",
+      "accessibility": "Accessibility"
+    }
+  },
+  "JoinToday": {
+    "imageAlt": "Alumni networking and connecting at professional event",
+    "badgeText": "Join Today - It's Free",
+    "headlineMain": "Ready to unlock your ",
+    "headlineSub": "full potential?",
+    "description": "Join 10,000+ alumni who are networking, learning, and growing together in the STP community.",
+    "getStarted": "Get Started Free",
+    "watchDemo": "Watch Demo",
+    "featureFree": "Trusted by professionals",
+    "featureIndustries": "Secure & Private",
+    "featureNetwork": "No credit card required"
+  },
+  "Professional": {
+    "network": {
+      "title": "Build Your Professional Network",
+      "desc": "Connect with alumni across 50+ industries worldwide. Filter by sector, location, and skills to find the perfect connections for your career goals.",
+      "item1": "Advanced search filters",
+      "item2": "Direct messaging",
+      "item3": "Group discussions",
+      "item4": "Resource sharing"
+    },
+    "growth": {
+      "title": "Learn & Grow Together",
+      "desc": "Access exclusive masterclasses, structured courses, and mentorship programs. Upskill with content created by industry experts and fellow alumni..",
+      "item1": "Video masterclasses",
+      "item2": "1-on-1 mentorship",
+      "item3": "Interactive workshops",
+      "item4": "Certification programs"
+    },
+    "opportunities": {
+      "title": "Discover Opportunities",
+      "desc": "Explore the alumni marketplace to buy, sell, and partner. Showcase your products and services to a trusted community of professionals.",
+      "item1": "Product listing",
+      "item2": "Service marketplace",
+      "item3": "Partnership opportunities",
+      "item4": "Secure transactions"
+    }
+  }
+,
   "Login": {
     "title": "Login",
     "subtitle": "Enter your credentials to access your account",
@@ -78,6 +154,15 @@
     "featureIndustries": "50+ Industries",
     "featureNetwork": "Global Network"
   },
+  "BuildTogether": {
+    "titleMain": "Building together,",
+    "titleStronger": "growing stronger",
+    "description": "Join thousands of alumni who are creating opportunities and making impact",
+    "activeMember": "Active member",
+    "industries": "Industries",
+    "opportunityShared": "Opportunity Shared",
+    "sanctionRate": "Sanction Rate"
+  },
   "Sidebar": {
     "dashboard": "Dashboard",
     "network": "Network",
@@ -124,5 +209,18 @@
     "message2": "i'll be sending it soon seunsa!",
     "message3": "James, hello good morning",
     "message4": "yo yo, i'd like you to know"
+  },
+  "Everything": {
+    "headingMain": "Everything you need to",
+    "headingGradient": "succeed together",
+    "description": "Powerful tools and features designed to amplify your professional journey",
+    "networkTitle": "Network",
+    "networkDesc": "Connect with fellow alumni across industries",
+    "marketplaceTitle": "MarketPlace",
+    "marketplaceDesc": "Showcase and discover products and services",
+    "mentorshipTitle": "Mentorship",
+    "mentorshipDesc": "Access experienced mentors and share expertise",
+    "learningTitle": "Learning",
+    "learningDesc": "Join masterclasses and structures lessons"
   }
 }
