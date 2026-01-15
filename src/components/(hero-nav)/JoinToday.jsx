@@ -1,3 +1,5 @@
+"use client";
+
 import { ArrowRight, Check, LockKeyhole, Play, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeroBadge from "./HeroBadge";

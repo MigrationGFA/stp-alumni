@@ -1,3 +1,5 @@
+"use client";
+
 import { Network, BookOpen, ShoppingCart, UsersRound } from "lucide-react";
 import React from "react";
 import { useTranslations } from 'next-intl';
