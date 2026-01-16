@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import TestimonialCarousel from "../TestimonialCarousel";
 import { useTranslations } from 'next-intl';

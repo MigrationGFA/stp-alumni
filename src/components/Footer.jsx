@@ -1,3 +1,5 @@
+"use client";
+
 import { Link } from "@/i18n/routing";
 import Container from "./container";
 import { useTranslations } from 'next-intl';

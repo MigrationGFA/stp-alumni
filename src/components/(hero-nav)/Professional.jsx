@@ -1,7 +1,6 @@
+"use client";
+
 import React from "react";
-import hero1 from "../../../public/assets/hero1.png";
-import hero2 from "../../../public/assets/hero2.png";
-import hero3 from "../../../public/assets/hero3.png";
 import Image from "next/image";
 import { CircleCheck } from "lucide-react";
 import { useTranslations } from 'next-intl';
@@ -12,7 +11,7 @@ function Professional() {
 
   const arr = [
     {
-      img: hero1,
+      img: "/assets/hero1.png",
       title: t('network.title'),
       desc: t('network.desc'),
       list: [
@@ -23,7 +22,7 @@ function Professional() {
       ],
     },
     {
-      img: hero2,
+      img: "/assets/hero2.png",
       title: t('growth.title'),
       desc: t('growth.desc'),
       list: [
@@ -34,7 +33,7 @@ function Professional() {
       ],
     },
     {
-      img: hero3,
+      img: "/assets/hero3.png",
       title: t('opportunities.title'),
       desc: t('opportunities.desc'),
       list: [

@@ -1,7 +1,7 @@
+"use client";
+
 import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-// import heroImage from "@/assets/hero-alumni.jpg";
-import heroImage from "../../../public/hero-alumni.jpg";
 import HeroBadge from "./HeroBadge";
 import Image from "next/image";
 import React from "react";
@@ -21,7 +21,7 @@ const Hero = () => {
       {/* Background Image */}
       <div className="absolute inset-0 z-0 dark:hidden">
         <Image
-          src={heroImage}
+          src="/hero-alumni.jpg"
           alt={t("imageAlt")}
           className="h-full w-full object-cover opacity-75 "
           fill
