@@ -21,7 +21,7 @@ export default function PortalLayout({ children }) {
         {/* Pass toggle function to Header */}
         <UserHeader toggleSidebar={() => setIsCollapsed(!isCollapsed)} isCollapsed={isCollapsed} />
       
-        <div className="flex-1 p-4 lg:p-6 overflow-auto pb-20 lg:pb-6">
+        <div className="flex-1 sm:p-4 lg:p-6 overflow-auto pb-20 lg:pb-6">
           {children}
         </div>
       </main>
