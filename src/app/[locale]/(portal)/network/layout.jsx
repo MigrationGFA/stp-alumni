@@ -6,7 +6,7 @@ const NetworkLayout = ({ children }) => {
 
   return (
     <section>
-      <div className="space-y-6">
+      <div className="space-y-6 p-3 sm:p-0">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-stp-blue-light">
             Networking

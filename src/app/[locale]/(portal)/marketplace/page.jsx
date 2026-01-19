@@ -93,7 +93,7 @@ export default function MarketplacePage() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen px-3 sm:p-0">
       {/* Page Title */}
       <h1 className="text-3xl font-bold text-[#233389] mb-6">{t("title")}</h1>
 
