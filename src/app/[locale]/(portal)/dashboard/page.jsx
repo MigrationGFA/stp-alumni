@@ -78,7 +78,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="">
+    <div className="p-3 sm:p-0">
     {/* <div className="min-h-screen bg-[#E8ECF4]"> */}
       {/* Header */}
       {/* <header className="px-52 py-4">

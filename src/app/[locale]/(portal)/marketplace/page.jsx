@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { Search } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,15 +21,17 @@ export default function MarketplacePage() {
   const t = useTranslations("Marketplace");
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
-  const [sectorFilter, setSectorFilter] = useState("healthcare");
-  const [locationFilter, setLocationFilter] = useState("nearme");
+  const [sectorFilter, setSectorFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
 
   // Sample alumni data
   const alumniProfiles = [
     {
       id: 1,
       name: "Ajiboye Opeyemi",
-      roleKey: "roleIT",
+      role: "developer",
+      sector: "it",
+      roleKey: "roleDeveloper",
       educationKey: "educationPhD",
       experienceKey: "experience10",
       image: "/assets/Marketplace 1.jpg",
@@ -37,6 +39,8 @@ export default function MarketplacePage() {
     {
       id: 2,
       name: "Daniel Adeniran",
+      role: "designer",
+      sector: "healthcare",
       roleKey: "roleDesigner",
       educationKey: "educationMSc",
       experienceKey: "experience5",
@@ -45,15 +49,19 @@ export default function MarketplacePage() {
     {
       id: 3,
       name: "Wale Adedayo",
-      roleKey: "roleIT",
+      role: "developer",
+      sector: "finance",
+      roleKey: "roleDeveloper",
       educationKey: "educationMSc",
       experienceKey: "experience5",
       image: "/assets/Marketplace 3.jpg",
     },
     {
       id: 4,
-      name: "Wale Adedayo",
-      roleKey: "roleIT",
+      name: "Chioma Okonkwo",
+      role: "manager",
+      sector: "education",
+      roleKey: "roleManager",
       educationKey: "educationMSc",
       experienceKey: "experience5",
       image: "/assets/Marketplace 4.jpg",
@@ -61,7 +69,9 @@ export default function MarketplacePage() {
     {
       id: 5,
       name: "Ajiboye Opeyemi",
-      roleKey: "roleIT",
+      role: "developer",
+      sector: "it",
+      roleKey: "roleDeveloper",
       educationKey: "educationPhD",
       experienceKey: "experience10",
       image: "/assets/Marketplace 1.jpg",
@@ -69,6 +79,8 @@ export default function MarketplacePage() {
     {
       id: 6,
       name: "Daniel Adeniran",
+      role: "designer",
+      sector: "healthcare",
       roleKey: "roleDesigner",
       educationKey: "educationMSc",
       experienceKey: "experience5",
@@ -77,23 +89,66 @@ export default function MarketplacePage() {
     {
       id: 7,
       name: "Wale Adedayo",
-      roleKey: "roleIT",
+      role: "developer",
+      sector: "finance",
+      roleKey: "roleDeveloper",
       educationKey: "educationMSc",
       experienceKey: "experience5",
       image: "/assets/Marketplace 3.jpg",
     },
     {
       id: 8,
-      name: "Wale Adedayo",
-      roleKey: "roleIT",
+      name: "Chioma Okonkwo",
+      role: "manager",
+      sector: "education",
+      roleKey: "roleManager",
       educationKey: "educationMSc",
       experienceKey: "experience5",
       image: "/assets/Marketplace 4.jpg",
     },
   ];
 
+  // Helper function to get sector display name
+  const getSectorDisplay = (sector) => {
+    const sectorMap = {
+      it: "IT sector",
+      healthcare: "Healthcare",
+      finance: "Finance",
+      education: "Education",
+    };
+    return sectorMap[sector] || sector;
+  };
+
+  // Filter alumni based on search and filters
+  const filteredAlumni = useMemo(() => {
+    let filtered = alumniProfiles;
+
+    // Filter by search query (name, role, or sector)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (alumni) =>
+          alumni.name.toLowerCase().includes(query) ||
+          t(alumni.roleKey).toLowerCase().includes(query) ||
+          getSectorDisplay(alumni.sector).toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by role
+    if (roleFilter !== "all") {
+      filtered = filtered.filter((alumni) => alumni.role === roleFilter);
+    }
+
+    // Filter by sector
+    if (sectorFilter !== "all") {
+      filtered = filtered.filter((alumni) => alumni.sector === sectorFilter);
+    }
+
+    return filtered;
+  }, [alumniProfiles, searchQuery, roleFilter, sectorFilter, t]);
+
   return (
-    <div className="min-h-screen px-3 sm:p-0">
+    <div className="min-h-screen p-3 sm:p-0">
       {/* Page Title */}
       <h1 className="text-3xl font-bold text-[#233389] mb-6">{t("title")}</h1>
 
@@ -174,43 +229,68 @@ export default function MarketplacePage() {
 
       {/* Alumni Grid */}
       <div className="bg-white rounded-lg p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {alumniProfiles.map((alumni) => (
-          <div
-            key={alumni.id}
-            className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-          >
-            {/* Profile Image */}
-            <div className="relative w-full aspect-square">
-              <Image
-                src={alumni.image}
-                alt={alumni.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-              />
-            </div>
+        {filteredAlumni.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredAlumni.map((alumni) => (
+            <div
+              key={alumni.id}
+              className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            >
+              {/* Profile Image */}
+              <div className="relative w-full aspect-square">
+                <Image
+                  src={alumni.image}
+                  alt={alumni.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                />
+              </div>
 
-            {/* Profile Info */}
-            <div className="p-4 text-center">
-              <h3 className="text-lg font-bold text-gray-900 mb-1">
-                {alumni.name}
-              </h3>
-              <p className="text-sm text-gray-600 mb-1">{t(alumni.roleKey)}</p>
-              <p className="text-xs text-gray-500 mb-1">{t(alumni.educationKey)}</p>
-              <p className="text-xs text-gray-500 mb-4">{t(alumni.experienceKey)}</p>
+              {/* Profile Info */}
+              <div className="p-4 text-center">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                  {alumni.name}
+                </h3>
+                <p className="text-sm text-gray-600 mb-1">
+                  {t(alumni.roleKey)} | {getSectorDisplay(alumni.sector)}
+                </p>
+                <p className="text-xs text-gray-500 mb-1">{t(alumni.educationKey)}</p>
+                <p className="text-xs text-gray-500 mb-4">{t(alumni.experienceKey)}</p>
 
-              {/* Contact Button */}
-              <Button
-                variant="outline"
-                className="w-full border-[#233389] text-[#233389] hover:bg-[#233389] hover:text-white rounded-full"
-              >
-                {t("contact")}
-              </Button>
+                {/* Contact Button */}
+                <Button
+                  variant="outline"
+                  className="w-full border-[#233389] text-[#233389] hover:bg-[#233389] hover:text-white rounded-full"
+                >
+                  {t("contact")}
+                </Button>
+              </div>
             </div>
+            ))}
           </div>
-          ))}
-        </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Users className="h-16 w-16 text-gray-300 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No alumni found</h3>
+            <p className="text-sm text-gray-500 max-w-md mb-4">
+              {searchQuery
+                ? "Try adjusting your search query or filters to find alumni."
+                : "No alumni match the selected filters."}
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                setRoleFilter("all");
+                setSectorFilter("all");
+              }}
+              className="border-[#233389] text-[#233389] hover:bg-[#233389] hover:text-white"
+            >
+              Clear all filters
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
