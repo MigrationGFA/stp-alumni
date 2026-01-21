@@ -7,11 +7,11 @@ const navItems = [
   { icon: Home, label: "Home", href: "/dashboard" },
   { icon: Users, label: "Network", href: "/network" },
   { icon: MessageSquare, label: "Messages", href: "/messaging" },
-  { icon: BookOpen, label: "Resources", href: "/resources" },
+  // { icon: BookOpen, label: "Resources", href: "/resources" },
   { icon: Newspaper, label: "Feed", href: "/newsfeed" },
-  { icon: ShoppingBag, label: "Market", href: "/marketplace" },
+  // { icon: ShoppingBag, label: "Market", href: "/marketplace" },
   { icon: Calendar, label: "Events", href: "/events" },
-  { icon: Briefcase, label: "Deal Room", href: "/deal-room" },
+  // { icon: Briefcase, label: "Deal Room", href: "/deal-room" },
 ];
 
 export function MobileBottomNav() {
@@ -19,7 +19,7 @@ export function MobileBottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border lg:hidden">
-      <div className="flex items-center h-16 overflow-x-auto scrollbar-hide">
+      <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {
           const isActive = location.includes(item.href) 
           

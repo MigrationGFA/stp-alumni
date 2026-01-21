@@ -169,7 +169,7 @@ export default function Events() {
   return (
     <>
     <div className="space-y-6 px-4 sm:px-0">
-        <h1 className="text-2xl lg:text-3xl font-bold text-primary">Events</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-stp-blue-light">Events</h1>
 
         {/* Banner: Stack on mobile, row on sm+ */}
         <div className="bg-[#1B2F5B] rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">

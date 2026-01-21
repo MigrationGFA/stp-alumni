@@ -118,7 +118,7 @@ const Navbar = () => {
                 </Link>
               ))}
 
-              <div className="flex flex-col gap-2 pt-4">
+              <div className="flex flex-col gap-2 pt-4">   
                 <Button 
                   variant="default" 
                   size="sm" 

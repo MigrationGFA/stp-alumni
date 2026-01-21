@@ -16,8 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatRelativeTime } from "@/lib/helper";
 
-
-
 function ConversationSkeleton() {
   return (
     <div className="flex items-start gap-3 p-4">
@@ -40,7 +38,7 @@ export function ConversationList({
   onSortChange,
   onSelect,
 }) {
-  const sortLabels= {
+  const sortLabels = {
     recent: "Most Recent",
     unread: "Unread First",
     name: "Name (A-Z)",
@@ -51,7 +49,9 @@ export function ConversationList({
       {/* Header */}
       <div className="p-4 border-b border-border space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-lg text-stp-blue-light">Messages</h2>
+          <h2 className="font-semibold text-lg text-stp-blue-light">
+            Messages
+          </h2>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -116,68 +116,75 @@ export function ConversationList({
         ) : (
           <div className="divide-y divide-border">
             {conversations.map((conversation) => (
-             <button
-  key={conversation.id}
-  onClick={() => onSelect(conversation)}
-  className={cn(
-    // Base styles
-    "w-full flex items-start gap-2 p-3 sm:p-4 text-left hover:bg-muted/50 transition-colors",
-    // Selected state
-    selectedId === conversation.id && "bg-muted",
-    // Responsive padding
-    "px-3 py-3 md:px-4 md:py-4"
-  )}
->
-  {/* Avatar section */}
-  <div className="relative shrink-0">
-    <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-      <AvatarImage src={conversation.avatar} alt={conversation.name} />
-      <AvatarFallback>
-        {conversation.name
-          .split(" ")
-          .map((n) => n[0])
-          .join("")}
-      </AvatarFallback>
-    </Avatar>
-    {conversation.online && (
-      <span className="absolute bottom-0 right-0 h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-green-500 border border-card sm:border-2" />
-    )}
-  </div>
+              <button
+                key={conversation.id}
+                onClick={() => onSelect(conversation)}
+                className={cn(
+                  // Base styles
+                  "w-full flex items-start gap-2 p-3 sm:p-4 text-left hover:bg-muted/50 transition-colors",
+                  // Selected state
+                  selectedId === conversation.id && "bg-muted",
+                  // Responsive padding
+                  "px-3 py-3 md:px-4 md:py-4",
+                )}
+              >
+                {/* Avatar section */}
+                <div className="relative shrink-0">
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                    <AvatarImage
+                      src={conversation.avatar}
+                      alt={conversation.name}
+                    />
+                    <AvatarFallback>
+                      {conversation.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  {conversation.online && (
+                    <span className="absolute bottom-0 right-0 h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-green-500 border border-card sm:border-2" />
+                  )}
+                </div>
 
-  {/* Content section */}
-  <div className="flex-1 min-w-0 overflow-hidden">
-    <div className="flex items-center justify-between gap-2">
-      <span
-        className={cn(
-          "font-medium text-xs sm:text-sm truncate",
-          conversation.unread ? "text-foreground" : "text-muted-foreground"
-        )}
-      >
-        {conversation.name}
-      </span>
-      <span className="text-xs text-muted-foreground shrink-0 ml-2">
-        {formatRelativeTime(conversation.lastMessageAt)}
-      </span>
-    </div>
-    <p
-      className={cn(
-        "text-xs sm:text-sm truncate mt-0.5",
-        conversation.unread
-          ? "text-foreground font-medium"
-          : "text-muted-foreground"
-      )}
-    >
-      {conversation.lastMessage}
-    </p>
-  </div>
+                {/* Content section */}
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={cn(
+                        "font-medium text-xs sm:text-sm truncate",
+                        conversation.unread
+                          ? "text-foreground"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {conversation.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                      {formatRelativeTime(conversation.lastMessageAt)}
+                    </span>
+                  </div>
+                  <p
+                    className={cn(
+                      "text-xs sm:text-sm truncate mt-0.5",
+                      conversation.unread
+                        ? "text-stp-blue-light font-medium"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {conversation.lastMessage}
+                  </p>
+                </div>
 
-  {/* Unread badge */}
-  {conversation.unread && conversation.unreadCount > 0 && (
-    <span className="px-1.5 min-w-[1.75rem] h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center shrink-0">
-      {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
-    </span>
-  )}
-</button>
+                {/* Unread badge */}
+                {conversation.unread && conversation.unreadCount > 0 && (
+                  <span className="px-1.5 min-w-[1.75rem] h-6 rounded-full bg-stp-blue-light text-primary-foreground text-xs font-medium flex items-center justify-center shrink-0">
+                    {conversation.unreadCount > 9
+                      ? "9+"
+                      : conversation.unreadCount}
+                  </span>
+                )}
+              </button>
             ))}
           </div>
         )}

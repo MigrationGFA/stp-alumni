@@ -33,14 +33,14 @@ function UserHeader({toggleSidebar, isCollapsed}) {
   }, []);
   return (
     <header
-      className={`sticky top-0 z-30 w-full px-8 py-4 transition-all duration-300 flex  items-center  justify-between ${
+      className={`sticky top-0 z-30 w-full px-6 md:px-8 py-4 transition-all duration-300 flex  items-center  justify-between ${
         isScrolled
           ? "bg-[#E8ECF4]/60 backdrop-blur-md border-b border-white/20 shadow-sm"
           : "bg-[#E8ECF4] border-b border-transparent"
       }`}
     >
       {/* Logo */}
-      <div className="flex lg:hidden items-center justify-center gap-3 px-6 md:py-6 border-b border-white/10">
+      <div className="flex lg:hidden items-center justify-center gap-3 6 md:py-6 border-b border-white/10">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2B7FFF] text-white font-bold text-lg">
           S
         </div>
@@ -63,13 +63,13 @@ function UserHeader({toggleSidebar, isCollapsed}) {
       <div className="flex items-center justify-end">
         <div className="flex items-center gap-4">
           {/* Message Button */}
-          <button className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm ">
+          <button className="hidden md:block p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm ">
             <MessageSquareMore className="h-6 w-6 text-[#020618]" />
           </button>
 
           {/* Notification Button */}
           <button className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm ">
-            <Bell className="h-6 w-6 text-[#020618]" />
+            <Bell className="h-4 w-4 md:h-6 md:w-6 text-[#020618]" />
           </button>
 
           {/* Mobile: ProfileDrawer trigger */}
