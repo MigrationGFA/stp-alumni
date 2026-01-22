@@ -303,5 +303,9 @@
     "educationMSc": "Master en Administration des Affaires",
     "experience10": "10 années d'expérience",
     "experience5": "5 années d'expérience"
+  },
+  "ComingSoon": {
+    "message": "Bientôt Disponible",
+    "description": "Nous travaillons dur pour vous apporter cette page. Revenez bientôt!"
   }
 }

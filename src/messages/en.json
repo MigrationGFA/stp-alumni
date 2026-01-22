@@ -307,5 +307,9 @@
     "educationMSc": "MSc Business Admin",
     "experience10": "10 years Experience",
     "experience5": "5 years Experience"
+  },
+  "ComingSoon": {
+    "message": "Coming Soon",
+    "description": "We're working hard to bring you this page. Check back soon!"
   }
 }
