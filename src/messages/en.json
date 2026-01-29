@@ -1,10 +1,10 @@
 {
 
   "Navbar": {
-    "features": "Features",
-    "about": "About Us",
-    "community": "Community",
-    "contact": "Contact",
+    "market": "Marketplace",
+    "events": "Events",
+    "about": "About",
+    "contact": "Contact Us",
     "login": "Log In",
     "join": "Join as Alumni"
   }
@@ -74,7 +74,7 @@
       "item4": "Resource sharing"
     },
     "growth": {
-      "title": "Learn & Grow Together",
+      "title": "Connect & Grow Together",
       "desc": "Access exclusive masterclasses, structured courses, and mentorship programs. Upskill with content created by industry experts and fellow alumni..",
       "item1": "Video masterclasses",
       "item2": "1-on-1 mentorship",
@@ -216,12 +216,12 @@
     "description": "Powerful tools and features designed to amplify your professional journey",
     "networkTitle": "Network",
     "networkDesc": "Connect with fellow alumni across industries",
-    "marketplaceTitle": "MarketPlace",
-    "marketplaceDesc": "Showcase and discover products and services",
-    "mentorshipTitle": "Mentorship",
-    "mentorshipDesc": "Access experienced mentors and share expertise",
-    "learningTitle": "Learning",
-    "learningDesc": "Join masterclasses and structures lessons"
+    "marketplaceTitle": "Public",
+    "marketplaceDesc": "Buy, sell, and partner within the alumni community",
+    "mentorshipTitle": "Events",
+    "mentorshipDesc": "Participate in exclusive alumni events and workshops",
+    "learningTitle": "Resources",
+    "learningDesc": "Access guides, templates, and training materials"
   },
   "Messaging": {
     "title": "Messaging",
