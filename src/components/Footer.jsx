@@ -21,11 +21,11 @@ export function Footer() {
     {
       title: t('company.title'),
       links: [
-        { label: t('company.aboutUs'), href: "#" },
-        { label: t('company.careers'), href: "#" },
-        { label: t('company.blog'), href: "#" },
-        { label: t('company.pressKit'), href: "#" },
-        { label: t('company.contact'), href: "#" },
+        { label: t('company.aboutUs'), href: "/about" },
+        { label: t('company.careers'), href: "/careers" },
+        { label: t('company.blog'), href: "/blog" },
+        { label: t('company.pressKit'), href: "/press-kit" },
+        { label: t('company.contact'), href: "/contact" },
       ],
     },
     {
