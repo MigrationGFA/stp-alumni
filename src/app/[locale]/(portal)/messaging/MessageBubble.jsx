@@ -107,7 +107,7 @@ export function MessageBubble({
             className={cn(
               "px-4 py-2.5 rounded-2xl text-sm",
               message.isOwn
-                ? "bg-primary text-primary-foreground rounded-br-md"
+                ? "bg-stp-blue-light text-white rounded-br-md"
                 : "bg-muted text-foreground rounded-bl-md",
               isFailed && "opacity-60"
             )}
