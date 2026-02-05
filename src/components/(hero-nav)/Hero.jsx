@@ -47,9 +47,9 @@ const Hero = () => {
         <h1 className="mb-0 font-display text-5xl font-medium tracking-tight text-white md:text-6xl lg:text-7xl  animate-fade-up">
           {t("headlineMain")}
         </h1>
-        <h2 className="mb-6 font-display text-5xl font-medium  tracking-tight leading-14 md:text-6xl lg:text-7xl animate-fade-up text-grow-together">
-          <span className="">{t("headlineSub")}</span>
-        </h2>
+       <h2 className="mb-6 font-display text-5xl font-medium tracking-tight leading-[1.2] md:text-6xl lg:text-7xl animate-fade-up text-grow-together pb-2">
+  <span className="inline-block pb-1">{t("headlineSub")}</span>
+</h2>
 
         {/* Subheadline */}
         <p className="mx-auto mb-10 max-w-2xl text-lg text-[#DDEBFF] md:text-xl animate-fade-up ">

@@ -25,7 +25,7 @@ function BuildTogether() {
           {t('description')}
         </p>
 
-        <div className="flex flex-col md:flex-row flex-wrap gap-4 max-w-4xl">
+        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-4 max-w-4xl">
           {stats.map((ele, i) => (
             <div className="text-center space-y-1 bg-stp-blue-dark py-5 px-18" key={ele.text}>
               <p className="text-[#00D3F2] text-2xl flex items-center">
