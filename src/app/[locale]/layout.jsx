@@ -5,6 +5,9 @@ import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { Footer } from "@/components/Footer";
+import Navbar from "@/components/(hero-nav)/Navbar";
+import { NavbarProvider } from "@/contexts/NavbarContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,13 +31,19 @@ export default async function RootLayout({ children, params }) {
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class"
+        <ThemeProvider
+          attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange>
+          disableTransitionOnChange
+        >
           <NextIntlClientProvider locale={locale} messages={messages}>
             <Toaster position="center" />
-            {children}
+            {/* <NavbarProvider>
+              <Navbar /> */}
+              <div className="min-h-screen bg-background">{children}</div>
+              {/* <Footer />
+            </NavbarProvider> */}
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>
