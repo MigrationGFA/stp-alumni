@@ -48,7 +48,7 @@ function Everything() {
         {t('description')}
       </p>
 
-      <div className="flex gap-4 justify-center">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 justify-center">
         {arr.map((ele) => (
           <div className="p-4 bg-stp-blue-dark dark:bg-[#0F172B80] rounded-md text-white space-y-2" key={ele.title}>
             <div className={`bg-linear-to-r ${ele.iconColor} p-2 w-fit rounded-lg`}>
