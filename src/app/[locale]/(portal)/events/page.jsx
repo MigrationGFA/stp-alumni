@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { YourEventCard } from "./YourEventCard";
 import { EventCard } from "./EventCard";
 import { CreateEventModal } from "./CreateEventModal";
+import { useAuthView } from "@/contexts/AuthViewContext";
 
 const yourEvents = [
   {
@@ -154,6 +155,7 @@ const allRecommendedEvents = [
 const ITEMS_PER_PAGE = 6;
 
 export default function Events() {
+  const { isPublicView } = useAuthView();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [showAllYourEvents, setShowAllYourEvents] = useState(false);
   const [recommendedPage, setRecommendedPage] = useState(1);
@@ -169,21 +171,25 @@ export default function Events() {
   return (
     <>
     <div className="space-y-6 px-4 sm:px-0">
-        <h1 className="text-2xl lg:text-3xl font-bold text-stp-blue-light">Events</h1>
+        {!isPublicView && (
+          <h1 className="text-2xl lg:text-3xl font-bold text-stp-blue-light">Events</h1>
+        )}
 
-        {/* Banner: Stack on mobile, row on sm+ */}
-        <div className="bg-[#1B2F5B] rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <p className="text-primary-foreground font-medium text-sm sm:text-base">
-            Set up your next event in minutes.
-          </p>
-          <Button
-            variant="secondary"
-            className="bg-transparent text-white border rounded-2xl hover:bg-background/90 hover:text-stp-blue-light text-xs sm:text-sm w-full sm:w-auto"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            Create an event
-          </Button>
-        </div>
+        {/* Banner: only for registered users */}
+        {!isPublicView && (
+          <div className="bg-[#1B2F5B] rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <p className="text-primary-foreground font-medium text-sm sm:text-base">
+              Set up your next event in minutes.
+            </p>
+            <Button
+              variant="secondary"
+              className="bg-transparent text-white border rounded-2xl hover:bg-background/90 hover:text-stp-blue-light text-xs sm:text-sm w-full sm:w-auto"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              Create an event
+            </Button>
+          </div>
+        )}
 
         {/* Your Events: Grid for mobile/desktop, scroll only if preferred */}
         <div className="bg-card rounded-xl p-5 border border-border">

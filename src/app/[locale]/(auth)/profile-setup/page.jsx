@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { CloudUpload } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useRouter } from '@/i18n/routing';
+import { setRegisteredCookie } from '@/lib/auth-cookie';
 
 export default function ProfileSetupPage() {
   const t = useTranslations('ProfileSetup');
@@ -56,7 +57,7 @@ export default function ProfileSetupPage() {
 
   const handleContinue = () => {
     // TODO: Add form validation and data submission
-    // Navigate to dashboard after profile setup
+    setRegisteredCookie();
     router.push('/dashboard');
   };
 
