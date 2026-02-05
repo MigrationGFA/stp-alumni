@@ -1,7 +1,6 @@
 import { Inter } from "next/font/google";
 import ".././globals.css";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -24,7 +23,8 @@ export default async function RootLayout({ children, params }) {
     notFound();
   }
 
-  const messages = await getMessages();
+  // Load messages for this locale so /fr shows French regardless of getRequestConfig
+  const messages = (await import(`../../messages/${locale}.json`)).default;
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={inter.className}>
@@ -32,7 +32,7 @@ export default async function RootLayout({ children, params }) {
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange>
-          <NextIntlClientProvider messages={messages}>
+          <NextIntlClientProvider locale={locale} messages={messages}>
             <Toaster position="center" />
             {children}
           </NextIntlClientProvider>

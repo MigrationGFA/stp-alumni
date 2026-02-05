@@ -47,7 +47,7 @@ const Hero = () => {
         <h1 className="mb-4 font-display text-5xl font-medium tracking-tight text-white md:text-6xl lg:text-7xl  animate-fade-up">
           {t("headlineMain")}
         </h1>
-        <h2 className="mb-6 font-display text-5xl font-medium tracking-normal md:text-6xl lg:text-7xl animate-fade-up text-grow-together">
+        <h2 className="mb-6 pb-2 font-display text-5xl font-medium tracking-normal leading-snug md:text-6xl lg:text-7xl animate-fade-up text-grow-together">
           <span className="">{t("headlineSub")}</span>
         </h2>
 

@@ -1,6 +1,7 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 
-const withNextIntl = createNextIntlPlugin();
+// Explicit path so the plugin loads the correct request config (and locale/messages)
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.js');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Link, useRouter } from '@/i18n/routing';
+import { setRegisteredCookie } from '@/lib/auth-cookie';
 
 export default function SignupPage() {
   const t = useTranslations('Signup');
@@ -18,7 +19,7 @@ export default function SignupPage() {
 
   const handleGoogleSignup = () => {
     // TODO: Add Google OAuth logic here
-    // For now, just navigate to dashboard
+    setRegisteredCookie();
     router.push('/dashboard');
   };
 

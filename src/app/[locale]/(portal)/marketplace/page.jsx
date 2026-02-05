@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Search, Users } from "lucide-react";
+import { useAuthView } from "@/contexts/AuthViewContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import {
  */
 export default function MarketplacePage() {
   const t = useTranslations("Marketplace");
+  const { isPublicView } = useAuthView();
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [sectorFilter, setSectorFilter] = useState("all");
@@ -149,8 +151,10 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen p-3 sm:p-0">
-      {/* Page Title */}
-      <h1 className="text-3xl font-bold text-[#233389] mb-6">{t("title")}</h1>
+      {/* Page Title: only when inside portal (registered) layout */}
+      {!isPublicView && (
+        <h1 className="text-3xl font-bold text-[#233389] mb-6">{t("title")}</h1>
+      )}
 
       {/* Search and Filters Section */}
       <div className="mb-6">
