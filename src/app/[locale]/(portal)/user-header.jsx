@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { Link } from "@/i18n/routing";
 import {
   MessageSquareMore,
   Bell,
@@ -39,15 +40,17 @@ function UserHeader({toggleSidebar, isCollapsed}) {
           : "bg-[#E8ECF4] border-b border-transparent"
       }`}
     >
-      {/* Logo */}
-      <div className="flex lg:hidden items-center justify-center gap-3 6 md:py-6 border-b border-white/10">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2B7FFF] text-white font-bold text-lg">
-          S
-        </div>
-        <span className="text-xl font-semibold hidden sm:block">
-          STP Alumni
-        </span>
-      </div>
+      {/* Logo - click goes to landing page */}
+      <Link href="/" className="flex lg:hidden items-center justify-center gap-3 6 md:py-6 border-b border-white/10">
+        <Image
+          src="/assets/Blazing-Torrent-Color-logo.png"
+          alt="STP Alumni"
+          width={140}
+          height={40}
+          className="object-contain h-10 w-auto"
+          priority
+        />
+      </Link>
 
       <button
         onClick={toggleSidebar}

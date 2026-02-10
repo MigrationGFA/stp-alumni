@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import {
@@ -53,19 +54,17 @@ const Sidebar = ({ isCollapsed }) => {
         isExpanded ? "w-60" : "w-20"
       } -translate-x-full lg:translate-x-0`}
     >
-      {/* Logo */}
-      <div className="flex items-center justify-center gap-3 px-6 pt-6 pb-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2B7FFF] text-white font-bold text-lg">
-          S
-        </div>
-        <span
-          className={`ml-3 text-lg font-semibold transition-opacity duration-300 ${
-            isExpanded ? "block" : "hidden opacity-0"
-          }`}
-        >
-          STP Alumni
-        </span>
-      </div>
+      {/* Logo - click goes to landing page */}
+      <Link href="/" className="flex items-center justify-center gap-3 px-6 pt-6 pb-3">
+        <Image
+          src="/assets/Blazing-Torrent-Black-Color-logo.png"
+          alt="STP Alumni"
+          width={200}
+          height={50}
+          className={`object-contain object-left brightness-0 invert opacity-100 ${isExpanded ? "max-w-[200px]" : "max-w-12"}`}
+          priority
+        />
+      </Link>
 
       {/* Nav Items */}
       <nav className="flex-1 px-4 py-6 space-y-2  overflow-hidden">
