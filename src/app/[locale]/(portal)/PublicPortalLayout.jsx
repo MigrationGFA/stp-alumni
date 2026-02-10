@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
@@ -16,10 +17,14 @@ export default function PublicPortalLayout({ children, pageTitle }) {
       {/* Minimal top bar: logo + Login / Join */}
       <header className="sticky top-0 z-40 w-full bg-[#1B2F5B] border-b border-white/10 px-4 sm:px-6 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2B7FFF] text-white font-bold text-sm">
-            S
-          </div>
-          <span className="text-lg font-semibold text-white">STP Alumni</span>
+          <Image
+            src="/assets/Blazing-Torrent-Color-logo.png"
+            alt="STP Alumni"
+            width={140}
+            height={36}
+            className="object-contain h-9 w-auto"
+            priority
+          />
         </Link>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" asChild>

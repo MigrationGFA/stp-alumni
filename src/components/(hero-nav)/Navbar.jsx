@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing"; // This is the specialized Link
@@ -44,10 +45,14 @@ const Navbar = () => {
      <Container className="flex items-center justify-between py-4">
         {/* Logo - Link ensures locale prefix like /en or /fr */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-l from-[#00D3F2] to-[#155DFC] text-[#28282b] font-bold text-sm">
-            S
-          </div>
-          <span className="text-lg font-semibold text-white">STP Alumni</span>
+          <Image
+            src="/assets/Blazing-Torrent-Color-logo.png"
+            alt="STP Alumni"
+            width={240}
+            height={62}
+            className="object-contain h-[62px] w-auto"
+            priority
+          />
         </Link>
 
         {/* Desktop Navigation */}
