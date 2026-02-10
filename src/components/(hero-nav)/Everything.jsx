@@ -15,18 +15,18 @@ function Everything() {
       icon: Network,
       iconColor: "from-[#00B8DB] to-[#155DFC]",
     },
-    {
-      title: t('marketplaceTitle'),
-      desc: t('marketplaceDesc'),
-      icon: ShoppingCart,
-      iconColor: "from-[#AD46FF] to-[#E60076]",
-    },
-    {
-      title: t('mentorshipTitle'),
-      desc: t('mentorshipDesc'),
-      icon: UsersRound,
-      iconColor: "from-[#FF6900] to-[#E7000B]",
-    },
+    // {
+    //   title: t('marketplaceTitle'),
+    //   desc: t('marketplaceDesc'),
+    //   icon: ShoppingCart,
+    //   iconColor: "from-[#AD46FF] to-[#E60076]",
+    // },
+    // {
+    //   title: t('mentorshipTitle'),
+    //   desc: t('mentorshipDesc'),
+    //   icon: UsersRound,
+    //   iconColor: "from-[#FF6900] to-[#E7000B]",
+    // },
     {
       title: t('learningTitle'),
       desc: t('learningDesc'),
@@ -48,7 +48,7 @@ function Everything() {
         {t('description')}
       </p>
 
-      <div className="flex gap-4 justify-center">
+      <div className="grid md:grid-cols-2 gap-4 justify-center">
         {arr.map((ele) => (
           <div className="p-4 bg-stp-blue-dark dark:bg-[#0F172B80] rounded-md text-white space-y-2" key={ele.title}>
             <div className={`bg-linear-to-r ${ele.iconColor} p-2 w-fit rounded-lg`}>

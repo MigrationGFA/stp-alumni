@@ -53,12 +53,12 @@ function Professional() {
 
           return (
             <div
-              className={`flex justify-between gap-5 ${
-                !reverse ? "flex-row-reverse" : ""
+              className={`flex flex-col md:flex-row justify-between gap-5 ${
+                !reverse ? "flex-col md:flex-row-reverse" : ""
               }`}
               key={ele.title}
             >
-              <div className="relative flex-1">
+              <div className="relative flex-1 flex justify-center items-center md:block">
                 <Image
                   src={ele.img}
                   alt={ele.title}
