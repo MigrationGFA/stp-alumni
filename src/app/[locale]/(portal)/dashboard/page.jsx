@@ -22,6 +22,7 @@ import {
   Link as LinkIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
 
 /**
  * Dashboard page - main landing page after login
@@ -112,16 +113,18 @@ export default function DashboardPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* E-Learning Course Banner */}
             <div className="rounded-xl overflow-hidden p-4 lg:p-8 text-white" style={{ background: 'linear-gradient(132.7deg, #ED202D -39.31%, #233389 71.64%, #FBAD17 159.79%)' }}>
-              <p className="text-sm font-medium mb-3">E-LEARNING COURSE</p>
-              <h2 className="text-xl lg:text-3xl font-bold mb-4">
+              <p className="text-sm font-light tracking-[0.3em] mb-3">CONNECT SHARE PARTICIPATE</p>
+              <h2 className="text-xl lg:text-3xl font-bold mb-4 max-w-md">
                 {t("courseTitle")}
               </h2>
-              <Button className="bg-[#ED202D] hover:bg-[#d01824] text-white rounded-full px-4 flex items-center gap-2">
+              <Link href={"/events"}>
+              <Button className="bg-[#ED202D] hover:bg-[#d01824] text-white rounded-full px-4 flex items-center gap-2 cursor-pointer">
                 {t("joinNow")}
                 <span className="bg-white rounded-full p-1">
                   <ChevronRight className="h-4 w-4 text-black" />
                 </span>
               </Button>
+              </Link>
             </div>
 
             {/* Quick Actions */}
