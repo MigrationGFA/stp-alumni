@@ -1,11 +1,9 @@
-name: Mirror to Account A
+name: Mirror to Account A (Debug)
 
 on:
   push:
     branches:
-      - main
-      - branch-evans
-      - branch-aisha
+      - "**"  # trigger on all branches
 
 jobs:
   mirror:
@@ -17,11 +15,29 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push to Account A
+      - name: Push to Account A (Debug Mode)
+        env:
+          TOKEN: ${{ secrets.MIRROR_TOKEN }}
         run: |
-          # git config --global user.name "GitHub Actions"
-          # git config --global user.email "actions@github.com"
-          git remote add mirror https://DEV-TNK:${{ secrets.MIRROR_TOKEN }}@github.com/DEV-TNK/stp-alumni.git
-          # git remote add mirror https://x-access-token:${{ secrets.MIRROR_TOKEN }}@github.com/DEV-TNK/stp-alumni.git
+          # --- Debugging Steps ---
+          if [ -z "$TOKEN" ]; then
+            echo "ERROR: MIRROR_TOKEN is not set!"
+            exit 1
+          fi
+          echo "Token starts with: ${TOKEN:0:4}..."
+
+          # Test repository access via GitHub API
+          echo "Testing access to DEV-TNK/stp-alumni..."
+          curl -s -H "Authorization: token ${TOKEN}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/repos/DEV-TNK/stp-alumni | jq '.full_name, .private' || echo "API test failed"
+
+          # --- Git Push to Mirror Repo ---
+          echo "Adding mirror remote..."
+          git remote add mirror https://x-access-token:${TOKEN}@github.com/DEV-TNK/stp-alumni.git
+
+          echo "Pushing all branches..."
           git push mirror --force --all
+
+          echo "Pushing all tags..."
           git push mirror --tags
