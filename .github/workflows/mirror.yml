@@ -1,0 +1,21 @@
+name: Mirror to Account A
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Account A
+        run: |
+          git remote add mirror https://DEV-TNK:${{ secrets.MIRROR_TOKEN }}@github.com/DEV-TNK/stp-alumni.git
+          git push mirror --mirror
