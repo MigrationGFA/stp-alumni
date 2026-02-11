@@ -26,12 +26,12 @@ jobs:
           fi
           echo "Token starts with: ${TOKEN:0:4}..."
 
-          # Test repository access via GitHub API
-          echo "Testing access to DEV-TNK/stp-alumni..."
+          # Check token info from GitHub API
+          echo "Token permissions:"
           curl -s -H "Authorization: token ${TOKEN}" \
-               -H "Accept: application/vnd.github.v3+json" \
-               https://api.github.com/repos/DEV-TNK/stp-alumni | jq '.full_name, .private' || echo "API test failed"
-
+           -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/user/installations || echo "Cannot get token permissions"
+            
           # --- Git Push to Mirror Repo ---
           echo "Adding mirror remote..."
           git remote add mirror https://x-access-token:${TOKEN}@github.com/DEV-TNK/stp-alumni.git
