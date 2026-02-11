@@ -78,9 +78,10 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#E8ECF4]">
+    <div className="p-3 sm:p-0">
+    {/* <div className="min-h-screen bg-[#E8ECF4]"> */}
       {/* Header */}
-      <header className="px-52 py-4">
+      {/* <header className="px-52 py-4">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-4">
             <button className="p-3 rounded-full transition-colors bg-[rgba(2,6,24,0.08)] hover:bg-[rgba(2,6,24,0.12)]">
@@ -100,19 +101,19 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </header>
+      </header> */}
 
       {/* Main Content */}
-      <div className="px-52 py-6">
+      <div className="">
         {/* Dashboard Title */}
-        <h1 className="text-3xl font-bold text-stp-blue-light mb-6">{t("title")}</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-stp-blue-light mb-6">{t("title")}</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Feed */}
           <div className="lg:col-span-2 space-y-6">
             {/* E-Learning Course Banner */}
-            <div className="rounded-xl overflow-hidden p-8 text-white" style={{ background: 'linear-gradient(132.7deg, #ED202D -39.31%, #233389 71.64%, #FBAD17 159.79%)' }}>
+            <div className="rounded-xl overflow-hidden p-4 lg:p-8 text-white" style={{ background: 'linear-gradient(132.7deg, #ED202D -39.31%, #233389 71.64%, #FBAD17 159.79%)' }}>
               <p className="text-sm font-medium mb-3">E-LEARNING COURSE</p>
-              <h2 className="text-3xl font-bold mb-4">
+              <h2 className="text-xl lg:text-3xl font-bold mb-4">
                 {t("courseTitle")}
               </h2>
               <Button className="bg-[#ED202D] hover:bg-[#d01824] text-white rounded-full px-4 flex items-center gap-2">
@@ -124,20 +125,20 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="flex gap-4">
-              <button className="flex-1 flex flex-row items-center justify-start gap-2 py-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button className="flex-1 flex flex-row items-center justify-start gap-2 py-3 lg:py-4">
                 <div className="p-2 rounded-lg bg-[rgba(237,32,45,0.08)]">
                   <Globe className="h-5 w-5 text-[#ED202D]" />
                 </div>
                 <span className="text-sm font-medium text-gray-900">{t("networking")}</span>
               </button>
-              <button className="flex-1 flex flex-row items-center justify-start gap-2 py-4">
+              <button className="flex-1 flex flex-row items-center justify-start gap-2 py-3 lg:py-4">
                 <div className="p-2 rounded-lg bg-[rgba(54,124,255,0.08)]">
                   <Calendar className="h-5 w-5 text-[#367CFF]" />
                 </div>
                 <span className="text-sm font-medium text-gray-900">{t("events")}</span>
               </button>
-              <button className="flex-1 flex flex-row items-center justify-start gap-2 py-4">
+              <button className="flex-1 flex flex-row items-center justify-start gap-2 py-3 lg:py-4">
                 <div className="p-2 rounded-lg bg-[rgba(251,173,23,0.08)]">
                   <ShoppingBag className="h-5 w-5 text-[#FBAD17]" />
                 </div>
@@ -146,7 +147,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Post Creation */}
-            <div className="rounded-lg p-4 border border-[#233389]">
+            <div className="rounded-lg p-3 lg:p-4 border border-[#233389]">
               <div>
                 <textarea
                   placeholder={t("startPost")}
@@ -179,10 +180,10 @@ export default function DashboardPage() {
             </div>
 
             {/* News Feed Post */}
-            <div className="bg-white rounded-lg p-6">
+            <div className="bg-white rounded-lg p-4 lg:p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex gap-3">
-                  <div className="h-12 w-12 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-gray-300 overflow-hidden shrink-0">
                     <Image
                       src="/assets/Profile Image.jpg"
                       alt={t("postAuthorName")}
@@ -261,7 +262,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Second Post - Golf Tournament */}
-            <div className="bg-white rounded-lg p-6">
+            <div className="bg-white rounded-lg p-4 lg:p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex gap-3">
                   <div className="h-12 w-12 rounded-full bg-gray-300 overflow-hidden">
@@ -367,7 +368,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Invitations */}
-            <div className="bg-white rounded-lg p-6">
+            <div className="bg-white rounded-lg p-4 lg:p-6">
               <h3 className="font-semibold text-[#233389] mb-4">{t("invitations")} (10)</h3>
               <div className="space-y-3">
                 {invitations.map((invitation, index) => (
@@ -399,7 +400,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Messages */}
-            <div className="bg-white rounded-lg p-6">
+            <div className="bg-white rounded-lg p-4 lg:p-6">
               <h3 className="font-semibold text-[#233389] mb-4">{t("messages")} (5)</h3>
               <div className="space-y-3">
                 {messages.map((message, index) => (

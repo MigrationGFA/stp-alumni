@@ -5,17 +5,31 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CloudUpload, Paperclip } from 'lucide-react';
+import { CloudUpload } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useRouter } from '@/i18n/routing';
+import { setRegisteredCookie } from '@/lib/auth-cookie';
 
 export default function ProfileSetupPage() {
   const t = useTranslations('ProfileSetup');
   const router = useRouter();
+  const [sectors, setSectors] = useState([]);
+  const [sectorInput, setSectorInput] = useState('');
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState('');
   const profileImageInputRef = useRef(null);
-  const cvFileInputRef = useRef(null);
+
+  const handleAddSector = (e) => {
+    if (e.key === 'Enter' && sectorInput.trim()) {
+      e.preventDefault();
+      setSectors([...sectors, sectorInput.trim()]);
+      setSectorInput('');
+    }
+  };
+
+  const handleRemoveSector = (index) => {
+    setSectors(sectors.filter((_, i) => i !== index));
+  };
 
   const handleAddSkill = (e) => {
     if (e.key === 'Enter' && skillInput.trim()) {
@@ -41,21 +55,9 @@ export default function ProfileSetupPage() {
     }
   };
 
-  const handleCvFileClick = () => {
-    cvFileInputRef.current?.click();
-  };
-
-  const handleCvFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Handle file upload logic here if needed
-      console.log('CV file selected:', file);
-    }
-  };
-
   const handleContinue = () => {
     // TODO: Add form validation and data submission
-    // Navigate to dashboard after profile setup
+    setRegisteredCookie();
     router.push('/dashboard');
   };
 
@@ -92,7 +94,29 @@ export default function ProfileSetupPage() {
               type="text"
               placeholder={t('sectorPlaceholder')}
               className="w-full"
+              value={sectorInput}
+              onChange={(e) => setSectorInput(e.target.value)}
+              onKeyDown={handleAddSector}
             />
+            {/* Sector tags */}
+            {sectors.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {sectors.map((sector, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-[#155DFC] text-[#155DFC] text-sm bg-transparent"
+                  >
+                    {sector}
+                    <button
+                      onClick={() => handleRemoveSector(index)}
+                      className="ml-1 hover:text-gray-600"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Location Input */}
@@ -161,24 +185,17 @@ export default function ProfileSetupPage() {
             </div>
           </div>
 
-          {/* CV/Resume Upload */}
+          {/* LinkedIn URL */}
           <div className="mb-4">
-            <Label className="text-gray-700 mb-2 block">{t('cvResume')}</Label>
-            <input
-              type="file"
-              ref={cvFileInputRef}
-              onChange={handleCvFileChange}
-              accept=".pdf,.doc,.docx"
-              className="hidden"
+            <Label htmlFor="linkedin" className="text-gray-700 mb-2 block">
+              {t('linkedin')}
+            </Label>
+            <Input
+              id="linkedin"
+              type="url"
+              placeholder={t('linkedinPlaceholder')}
+              className="w-full"
             />
-            <Button
-              type="button"
-              onClick={handleCvFileClick}
-              className="w-full rounded-full bg-[#155DFC] hover:bg-[#155DFC]/90 text-white"
-            >
-              <Paperclip className="w-4 h-4 mr-2" />
-              {t('uploadFile')}
-            </Button>
           </div>
 
           {/* Goals Textarea */}

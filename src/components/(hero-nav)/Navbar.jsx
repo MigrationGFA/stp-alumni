@@ -1,33 +1,81 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/routing"; // This is the specialized Link
+import { Link, usePathname } from "@/i18n/routing"; // This is the specialized Link
 import { useTranslations } from "next-intl";
 import { ModeToggle } from "../ModeToggle";
 import LanguageSwitcher from "../LanguageSwitcher";
+import Container from "../container";
+import { useSize } from "react-haiku";
+import { useNavbar } from "@/contexts/NavbarContext";
 
 const Navbar = () => {
   const t = useTranslations("Navbar");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+   const elementRef = useRef(null);
+  const { width, height } = useSize(elementRef);
+
+  const { setSize } = useNavbar();
+
+  useEffect(() => {
+    setSize({ width, height });
+  }, [width, height]);
+
+  // console.log("Navbar size:", { width, height });
+
+
+  const pathname = usePathname()
+
+  const isPublicPage = ["/marketplace", "/events"].includes(pathname);
+
+  // console.log("Current pathname:", isPublicPage);
+
   // Using translation keys for the labels
   const navLinks = [
-    { label: t("features"), href: "/features" },
+    { label: t("market"), href: "/marketplace" },
+    { label: t("events"), href: "/events" },
     { label: t("about"), href: "/about" },
-    { label: t("community"), href: "/community" },
     { label: t("contact"), href: "/contact" },
   ];
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const useDarkText = isScrolled || isPublicPage;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 ">
-      <div className="container mx-auto flex items-center justify-between px-6 py-4">
-        {/* Logo - Link ensures locale prefix like /en or /fr */}
+    // <nav className="fixed top-0 left-0 right-0 z-50 ">
+   <nav 
+      ref={elementRef}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isScrolled 
+          ? "bg-white/70 dark:bg-[#0A192F]/60 backdrop-blur-xl border-b border-black/5 py-2 shadow-sm" 
+          : isPublicPage 
+            ? "bg-white dark:bg-[#0A192F] py-2 border-b" 
+            : "bg-transparent py-4"
+      }`}
+    >
+      <Container className="flex items-center justify-between py-4">
+        {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2B7FFF] text-white font-bold text-sm">
-            S
-          </div>
-          <span className="text-lg font-semibold text-white">STP Alumni</span>
+          <Image
+            src="/assets/Blazing-Torrent-Color-logo.png"
+            alt="STP Alumni"
+            width={240}
+            height={62}
+            className="object-contain h-[62px] w-auto"
+            priority
+          />
         </Link>
 
         {/* Desktop Navigation */}
@@ -36,7 +84,11 @@ const Navbar = () => {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm text-white transition-colors hover:text-foreground"
+              className={`text-sm font-medium transition-colors duration-300 ${
+                useDarkText 
+                  ? "text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-white" 
+                  : "text-white/90 hover:text-white"
+              }`}
             >
               {link.label}
             </Link>
@@ -48,22 +100,23 @@ const Navbar = () => {
           <Button
             variant="ghost"
             size="sm"
-            className={"border border-white dark:border-[#2B7FFF] text-white dark:text-[#2B7FFF] rounded-sm p-3.75"}
+            className={`border rounded-sm p-3.75 transition-all duration-300 ${
+              useDarkText 
+                ? "border-slate-200 text-slate-900 hover:bg-slate-100 dark:border-blue-500 dark:text-blue-500" 
+                : "border-white text-white hover:bg-white/10"
+            }`}
             asChild
           >
-            <Link href="/login">
-              {t("login")}
-            </Link>
+            <Link href="/login">{t("login")}</Link>
           </Button>
+          
           <Button
             variant="default"
             size="sm"
             className="gradient-btn-primary-rtl hover:opacity-90 transition-opacity rounded-sm p-3.75"
             asChild
           >
-            <Link href="/signup">
-              {t("join")}
-            </Link>
+            <Link href="/signup">{t("join")}</Link>
           </Button>
 
           <ModeToggle/>
@@ -73,16 +126,12 @@ const Navbar = () => {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="text-foreground md:hidden"
+          className={`md:hidden transition-colors ${useDarkText ? "text-slate-900 dark:text-white" : "text-white"}`}
           aria-label="Toggle menu"
         >
-          {isMobileMenuOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
+          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
-      </div>
+      </Container>
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
@@ -100,7 +149,7 @@ const Navbar = () => {
                 </Link>
               ))}
 
-              <div className="flex flex-col gap-2 pt-4">
+              <div className="flex flex-col gap-2 pt-4">   
                 <Button 
                   variant="default" 
                   size="sm" 

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import {
@@ -19,9 +20,14 @@ import {
  * Sidebar component for the dashboard and portal pages
  * @returns {JSX.Element}
  */
-const Sidebar = () => {
+const Sidebar = ({ isCollapsed }) => {
   const t = useTranslations("Sidebar");
   const pathname = usePathname();
+
+  const [isHovered, setIsHovered] = useState(false);
+
+  // It is "expanded" if the user hasn't collapsed it OR if they are hovering
+  const isExpanded = !isCollapsed || isHovered;
 
   const navItems = [
     { label: t("dashboard"), href: "/dashboard", icon: Home },
@@ -38,20 +44,30 @@ const Sidebar = () => {
     { label: t("settings"), href: "/settings", icon: Settings },
   ];
 
-  const isActive = (href) => pathname === href;
+  const isActive = (href) => pathname.includes(href);
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[#1B2F5B] text-white flex flex-col">
-      {/* Logo */}
-      <div className="flex items-center justify-center gap-3 px-6 py-6 border-b border-white/10">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2B7FFF] text-white font-bold text-lg">
-          S
-        </div>
-        <span className="text-xl font-semibold">STP Alumni</span>
-      </div>
+    <aside
+      onMouseEnter={() => isCollapsed && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`fixed left-0 top-0 h-screen bg-[#1B2F5B] text-white transition-all duration-300 z-50 flex flex-col overflow-hidden ${
+        isExpanded ? "w-60" : "w-20"
+      } -translate-x-full lg:translate-x-0`}
+    >
+      {/* Logo - click goes to landing page */}
+      <Link href="/" className="flex items-center justify-center gap-3 px-6 pt-6 pb-3">
+        <Image
+          src="/assets/Blazing-Torrent-Black-Color-logo.png"
+          alt="STP Alumni"
+          width={200}
+          height={50}
+          className={`object-contain object-left brightness-0 invert opacity-100 ${isExpanded ? "max-w-[200px]" : "max-w-12"}`}
+          priority
+        />
+      </Link>
 
-      {/* Navigation Items */}
-      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+      {/* Nav Items */}
+      <nav className="flex-1 px-4 py-6 space-y-2  overflow-hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -60,23 +76,29 @@ const Sidebar = () => {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center justify-center w-full py-3 rounded-lg transition-all ${
+              className={`flex items-center h-12 rounded-lg transition-all px-3 ${
                 active
-                  ? "bg-[rgba(43,127,255,0.15)] text-[#155DFC]"
-                  : "text-white/70 hover:bg-white/5 hover:text-white"
+                  ? "bg-[#2B7FFF]/20 text-[#2B7FFF]"
+                  : "text-white/70 hover:bg-white/5"
               }`}
             >
-              <div className="flex items-center gap-3 w-[180px]">
-                <Icon className={`h-5 w-5 flex-shrink-0 ${active ? "text-[#155DFC]" : ""}`} />
-                <span className="text-sm font-medium">{item.label}</span>
-              </div>
+              <Icon className="h-5 w-5 shrink-0" />
+              <span
+                className={`ml-4 text-sm font-medium whitespace-nowrap transition-all duration-300 ${
+                  isExpanded
+                    ? "opacity-100 translate-x-0"
+                    : "opacity-0 -translate-x-10"
+                }`}
+              >
+                {item.label}
+              </span>
             </Link>
           );
         })}
       </nav>
 
       {/* Bottom Section */}
-      <div className="px-4 py-4 border-t border-white/10 space-y-1">
+      <div className="px-4 py-4 space-y-1">
         {bottomItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -91,9 +113,13 @@ const Sidebar = () => {
                   : "text-white/70 hover:bg-white/5 hover:text-white"
               }`}
             >
-              <div className="flex items-center gap-3 w-[180px]">
-                <Icon className={`h-5 w-5 flex-shrink-0 ${active ? "text-[#155DFC]" : ""}`} />
-                <span className="text-sm font-medium">{item.label}</span>
+              <div className="flex items-center gap-3 w-45">
+                <Icon
+                  className={`h-5 w-5 shrink-0 ${
+                    active ? "text-[#155DFC]" : ""
+                  }`}
+                />
+                <span className={`text-sm font-medium ${isExpanded ? "block" : "hidden opacity-0"}`}>{item.label}</span>
               </div>
             </Link>
           );
@@ -107,9 +133,9 @@ const Sidebar = () => {
           }}
           className="flex items-center justify-center w-full py-3 rounded-lg text-[#ED202D] hover:bg-white/5 transition-all"
         >
-          <div className="flex items-center gap-3 w-[180px]">
-            <LogOut className="h-5 w-5 flex-shrink-0" />
-            <span className="text-sm font-medium">{t("signOut")}</span>
+          <div className="flex items-center gap-3 w-45">
+            <LogOut className="h-5 w-5 shrink-0" />
+            <span className={`text-sm font-medium ${isExpanded ? "block" : "hidden opacity-0"}`}>{t("signOut")}</span>
           </div>
         </button>
       </div>
@@ -118,6 +144,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-
-
-

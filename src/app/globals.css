@@ -61,6 +61,15 @@
   .text-balance {
     text-wrap: balance;
   }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
 }
 
 @layer base {
@@ -309,6 +318,11 @@
            dark:bg-gradient-to-l dark:from-[#00D3F2] dark:to-[#2B7FFF]
            text-white transition-all duration-200;
   }
+  .gradient-btn-primary-grew {
+    @apply bg-gradient-to-l from-[#ED202D] to-[#FBAD17] 
+           dark:bg-gradient-to-r dark:from-[#00D3F2] dark:to-[#FBAD17]
+           bg-clip-text text-transparent font-bold;
+  }
   
 
   /* Interactive states */
@@ -322,6 +336,9 @@
 
   .text-grow-together {
     @apply bg-gradient-to-r from-[#00D3F2] via-[#FBAD17] to-[#ED202D] bg-clip-text text-transparent font-bold;
+  }
+  .text-gradient-primary {
+    @apply  bg-gradient-to-r from-[#ED202D] to-[#FBAD17] bg-clip-text text-transparent font-bold;
   }
   
   .gradient-dashboard {

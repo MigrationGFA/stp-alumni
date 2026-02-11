@@ -1,20 +1,96 @@
 {
 
   "Navbar": {
-    "features": "Features",
-    "about": "About Us",
-    "community": "Community",
-    "contact": "Contact",
+    "market": "Marketplace",
+    "events": "Events",
+    "about": "About",
+    "contact": "Contact Us",
     "login": "Log In",
     "join": "Join as Alumni"
   }
 ,
+
   "Hero": {
-    "welcome": "Welcome to the STP Platform",
-    "subtitle": "The official network for alumni.",
-    "getStarted": "Get Started",
-    "watchDemo": "Watch Demo"
+    "imageAlt": "Alumni networking and connecting at professional event",
+    "badgeText": "Connecting 10,000+ Alumni Worldwide",
+    "headlineMain": "Stay Connected.",
+    "headlineSub": "Grow Together.",
+    "description": "Connect with graduates, entrepreneurs, and professionals across sectors. Build your network, find mentors, and unlock opportunities.",
+    "getStarted": "Get Started Free",
+    "watchDemo": "Watch Demo",
+    "featureFree": "Free to Join",
+    "featureIndustries": "50+ Industries",
+    "featureNetwork": "Global Network"
   },
+  "Footer": {
+    "brandName": "STP Alumni",
+    "tagline": "Empowering graduates, entrepreneurs, and professionals through networking, mentorship, and opportunities.",
+    "copyright": "© {year} STP Alumni. All rights reserved.",
+    "email": "support@stpalumni.com",
+    "product": {
+      "title": "Product",
+      "features": "Features",
+      "marketplace": "Marketplace",
+      "mentorship": "Mentorship",
+      "learning": "Learning",
+      "pricing": "Pricing"
+    },
+    "company": {
+      "title": "Company",
+      "aboutUs": "About Us",
+      "careers": "Careers",
+      "blog": "Blog",
+      "pressKit": "Press Kit",
+      "contact": "Contact"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "cookiePolicy": "Cookie Policy",
+      "gdpr": "GDPR",
+      "accessibility": "Accessibility"
+    }
+  },
+  "JoinToday": {
+    "imageAlt": "Alumni networking and connecting at professional event",
+    "badgeText": "Join Today - It's Free",
+    "headlineMain": "Ready to unlock your ",
+    "headlineSub": "full potential?",
+    "description": "Join 10,000+ alumni who are networking, learning, and growing together in the STP community.",
+    "getStarted": "Get Started Free",
+    "watchDemo": "Watch Demo",
+    "featureFree": "Trusted by professionals",
+    "featureIndustries": "Secure & Private",
+    "featureNetwork": "No credit card required"
+  },
+  "Professional": {
+    "network": {
+      "title": "Build Your Professional Network",
+      "desc": "Connect with alumni across 50+ industries worldwide. Filter by sector, location, and skills to find the perfect connections for your career goals.",
+      "item1": "Advanced search filters",
+      "item2": "Direct messaging",
+      "item3": "Group discussions",
+      "item4": "Resource sharing"
+    },
+    "growth": {
+      "title": "Connect & Grow Together",
+      "desc": "Access exclusive masterclasses, structured courses, and mentorship programs. Upskill with content created by industry experts and fellow alumni..",
+      "item1": "Video masterclasses",
+      "item2": "1-on-1 mentorship",
+      "item3": "Interactive workshops",
+      "item4": "Certification programs"
+    },
+    "opportunities": {
+      "title": "Discover Opportunities",
+      "desc": "Explore the alumni marketplace to buy, sell, and partner. Showcase your products and services to a trusted community of professionals.",
+      "item1": "Product listing",
+      "item2": "Service marketplace",
+      "item3": "Partnership opportunities",
+      "item4": "Secure transactions"
+    }
+  }
+,
   "Login": {
     "title": "Login",
     "subtitle": "Enter your credentials to access your account",
@@ -56,14 +132,14 @@
     "title": "Profile setup",
     "subtitle": "Provide your information to streamline your experience",
     "sector": "Sector",
-    "sectorPlaceholder": "What sector are you in?",
+    "sectorPlaceholder": "What sectors are you in? (Press Enter to add)",
     "location": "Location",
     "locationPlaceholder": "Enter your location",
     "skills": "Skills",
     "skillsPlaceholder": "What skill do you have?",
     "uploadProfileImage": "Upload your profile image",
-    "cvResume": "CV/resume:",
-    "uploadFile": "Upload file",
+    "linkedin": "LinkedIn Profile",
+    "linkedinPlaceholder": "https://linkedin.com/in/yourprofile",
     "goals": "What are your Goals?",
     "goalsPlaceholder": "Kindly share your goals here",
     "continueButton": "Continue",
@@ -77,6 +153,15 @@
     "featureFree": "Free to Join",
     "featureIndustries": "50+ Industries",
     "featureNetwork": "Global Network"
+  },
+  "BuildTogether": {
+    "titleMain": "Building together,",
+    "titleStronger": "growing stronger",
+    "description": "Join thousands of alumni who are creating opportunities and making impact",
+    "activeMember": "Active member",
+    "industries": "Industries",
+    "opportunityShared": "Opportunity Shared",
+    "sanctionRate": "Sanction Rate"
   },
   "Sidebar": {
     "dashboard": "Dashboard",
@@ -124,5 +209,107 @@
     "message2": "i'll be sending it soon seunsa!",
     "message3": "James, hello good morning",
     "message4": "yo yo, i'd like you to know"
+  },
+  "Everything": {
+    "headingMain": "Everything you need to",
+    "headingGradient": "succeed together",
+    "description": "Powerful tools and features designed to amplify your professional journey",
+    "networkTitle": "Network",
+    "networkDesc": "Connect with fellow alumni across industries",
+    "marketplaceTitle": "Public",
+    "marketplaceDesc": "Buy, sell, and partner within the alumni community",
+    "mentorshipTitle": "Events",
+    "mentorshipDesc": "Participate in exclusive alumni events and workshops",
+    "learningTitle": "Resources",
+    "learningDesc": "Access guides, templates, and training materials"
+  },
+  "Messaging": {
+    "title": "Messaging",
+    "searchPlaceholder": "Search messages",
+    "typeMessage": "Type your message...",
+    "available": "Available",
+    "send": "Send",
+    "conversations": {
+      "preview1": "Bayu: i want to get more information on the...",
+      "preview2": "Oreoluwa: Thanks Emmanuel",
+      "preview3": "James: Hello good morning",
+      "preview4": "Bisola: i would love to get to know you better...",
+      "preview5": "Sarah: Can we schedule a meeting?",
+      "preview6": "Michael: Thanks for the update!",
+      "preview7": "Emma: Looking forward to our collaboration",
+      "preview8": "David: The project is progressing well",
+      "preview9": "Lisa: Let's discuss this further",
+      "preview10": "Robert: Great work on the presentation",
+      "preview11": "Maria: I'll send the files tomorrow",
+      "preview12": "John: The meeting was productive",
+      "preview13": "Jennifer: Thanks for your help!"
+    },
+    "messages": {
+      "message1": "Hi Oreoluwa, it's great to connect with you. Looking forward to staying in touch.",
+      "message2": "Awesome! Can I see a couple of pictures?"
+    }
+  },
+  "Resources": {
+    "title": "Resources Directory",
+    "searchPlaceholder": "Search by title, tag or keyword",
+    "uploadResources": "Upload Resources",
+    "all": "All",
+    "guides": "Guides",
+    "trainingMaterials": "Training Materials",
+    "templates": "Templates",
+    "policies": "Policies",
+    "sharedDocs": "Shared Docs",
+    "videos": "Videos",
+    "download": "Download",
+    "daysAgo": "{{count}} days ago",
+    "dayAgo": "1 day ago",
+    "2daysAgo": "2 days ago",
+    "3daysAgo": "3 days ago",
+    "authorName": "Sarah Hope",
+    "resource1Title": "How to Write a Business Plan",
+    "resource1Desc": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor",
+    "resource2Title": "Procedures and Policies manual",
+    "resource2Desc": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor",
+    "resource3Title": "Financial Planning Template",
+    "resource3Desc": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor",
+    "resource4Title": "Marketing Strategy Guide",
+    "resource4Desc": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor",
+    "resource5Title": "Employee Handbook Template",
+    "resource5Desc": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor",
+    "resource6Title": "Project Management Guide",
+    "resource6Desc": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor"
+  },
+  "Marketplace": {
+    "title": "Marketplace",
+    "searchPlaceholder": "Search by role, name, sector, and location",
+    "role": "Role",
+    "roleAll": "All",
+    "roleDeveloper": "Web Developer",
+    "roleDesigner": "Product Designer",
+    "roleManager": "Project Manager",
+    "sectorIndustry": "Sector/Industry",
+    "sectorAll": "All Sectors",
+    "sectorHealthcare": "Healthcare",
+    "sectorIT": "Information Technology",
+    "sectorFinance": "Finance",
+    "sectorEducation": "Education",
+    "location": "Location",
+    "locationAll": "All Locations",
+    "locationNearMe": "Near me",
+    "locationLagos": "Lagos, Nigeria",
+    "locationAbuja": "Abuja, Nigeria",
+    "locationLondon": "London, UK",
+    "locationNewYork": "New York, USA",
+    "contact": "Contact",
+    "yearsExperience": "{{count}} years Experience",
+    "roleIT": "Web Developer | IT sector",
+    "educationPhD": "Ph.D in Software Engineering",
+    "educationMSc": "MSc Business Admin",
+    "experience10": "10 years Experience",
+    "experience5": "5 years Experience"
+  },
+  "ComingSoon": {
+    "message": "Coming Soon",
+    "description": "We're working hard to bring you this page. Check back soon!"
   }
 }
