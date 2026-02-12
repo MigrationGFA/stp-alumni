@@ -29,7 +29,7 @@ const Navbar = () => {
 
   const pathname = usePathname()
 
-  const isPublicPage = ["/marketplace", "/events"].includes(pathname);
+  const isPublicPage = ["/marketplace", "/events","/contact"].includes(pathname);
 
   // console.log("Current pathname:", isPublicPage);
 
@@ -69,10 +69,10 @@ const Navbar = () => {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/assets/Blazing-Torrent-Color-logo.png"
+            src="/assets/logo-removebg-preview.png"
             alt="STP Alumni"
             width={240}
-            height={62}
+            height={50}
             className="object-contain h-[62px] w-auto"
             priority
           />

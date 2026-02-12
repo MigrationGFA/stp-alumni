@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import Sidebar from "@/components/shared/Sidebar";
-import UserHeader from "./user-header";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import UserHeader from "../user-header";
 
 export default function PortalLayout({ children }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -14,14 +14,15 @@ export default function PortalLayout({ children }) {
 
       {/* Dynamic margin based on collapse state */}
       <main 
-        className={`flex-1 flex flex-col transition-all duration-300 ${
+        className={`relative flex-1 flex flex-col transition-all duration-300 ${
           isCollapsed ? "lg:ml-20" : "lg:ml-60"
         } ml-0`}
       >
         {/* Pass toggle function to Header */}
         <UserHeader toggleSidebar={() => setIsCollapsed(!isCollapsed)} isCollapsed={isCollapsed} />
       
-        <div className="flex-1 sm:p-4 lg:p-6 overflow-auto pb-20 lg:pb-6">
+        <div className="flex-1 sm:p-4 lg:p-6 pb-20 lg:pb-6">
+        {/* <div className="flex-1 sm:p-4 lg:p-6 overflow-auto pb-20 lg:pb-6"> */}
           {children}
         </div>
       </main>

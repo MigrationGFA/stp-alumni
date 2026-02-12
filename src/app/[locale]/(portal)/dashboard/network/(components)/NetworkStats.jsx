@@ -2,18 +2,21 @@
 import { Unplug, UsersRound, CalendarDays } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { usePathname, useRouter } from "@/i18n/routing";
+import { Link, usePathname } from "@/i18n/routing";
 
 const stats = [
-  { icon: Unplug, label: "Connections", value: 100, tab: "connections" },
-  { icon: UsersRound, label: "Groups", value: 5, tab: "groups" },
-  { icon: CalendarDays, label: "Events", value: 3, tab: "my-event" },
+  { icon: Unplug, label: "Connections", value: 100, tab: "/" },
+  { icon: UsersRound, label: "Groups", value: 5, tab: "/groups" },
+  { icon: CalendarDays, label: "Events", value: 3, tab: "/my-event" },
 ];
 
 export function NetworkStats({ onTabChange }) {
-  const router = useRouter();
+  const pathname = usePathname();
+const basePath = "/dashboard/network";
 
-  const activeTab = usePathname().split("/").pop();
+  const activeTab = pathname === basePath ? "/" : pathname.replace(basePath, "");
+  // const activeTab = usePathname().split("/").pop();
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -23,9 +26,10 @@ export function NetworkStats({ onTabChange }) {
       </CardHeader>
       <CardContent className="space-y-1">
         {stats.map((stat) => (
+          <Link key={stat.label} href={`/dashboard/network${stat.tab}`}>
           <button
-            key={stat.label}
-            onClick={() => router.replace(`/network/${stat.tab}`)}
+            
+            // onClick={() => router.replace(`/network/${stat.tab}`)}
             className={cn(
               "flex items-center justify-between py-3 border-b border-border -mx-4 px-4 transition-all duration-200 cursor-pointer w-full text-left",
               activeTab === stat.tab
@@ -65,6 +69,8 @@ export function NetworkStats({ onTabChange }) {
               {stat.value}
             </span>
           </button>
+          </Link>
+
         ))}
       </CardContent>
     </Card>

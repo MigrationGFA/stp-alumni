@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Link, redirect } from "@/i18n/routing";
 import React, { useState } from "react";
-import { CreateEventModal } from "../CreateEventModal";
+import { CreateEventModal } from "../../../../../components/(market-events)/CreateEventModal";
 
 // Combined mock data
 const allEvents = [

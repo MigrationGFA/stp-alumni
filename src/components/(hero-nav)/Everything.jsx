@@ -41,16 +41,16 @@ function Everything() {
     <Container className=" mx-auto py-20 ">
       <h1 className="text-stp-blue-light font-semibold text-5xl text-center dark:text-white">
         {t('headingMain')}
-        <p className="gradient-btn-primary-grew">{t('headingGradient')}</p>
+        <p className="gradient-btn-primary-grew leading-[1.2]">{t('headingGradient')}</p>
       </h1>
 
       <p className="text-center text-[#90A1B9] my-7">
         {t('description')}
       </p>
 
-      <div className="grid md:grid-cols-2 gap-4 justify-center">
+      <div className="grid md:grid-cols-2 gap-4 justify-center max-w-3xl mx-auto ">
         {arr.map((ele) => (
-          <div className="p-4 bg-stp-blue-dark dark:bg-[#0F172B80] rounded-md text-white space-y-2" key={ele.title}>
+          <div className="p-4 bg-stp-blue-dark dark:bg-[#0F172B80] rounded-md text-white space-y-2 flex flex-col items-center" key={ele.title}>
             <div className={`bg-linear-to-r ${ele.iconColor} p-2 w-fit rounded-lg`}>
               <ele.icon />
             </div>

@@ -13,113 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-
-const posts = [
-  {
-    id: 1,
-    title:
-      "Leon Cooperman says future stock market returns will be 'unimpressive for a long time'. We totally, generally disagree.",
-    excerpt:
-      "Billionaire investor Leon Cooperman warned on Monday that long-term market returns could be lackluster because this year's incredible comeback will likely rob returns from the future.",
-    content:
-      '"The overall market, we\'ve been pulling a lot of demand forward. I would expect that future returns will be relatively unimpressive for a long time," Cooperman said Monday on CNBC\'s "Squawk Box."\n\nCooperman said when people realize most of the gains are because of government help, valuations for the stock market will come down.',
-    author: {
-      name: "Axe Capital",
-      avatar:
-        "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop",
-    },
-    timestamp: "Today, 7:00PM",
-    image:
-      "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&h=400&fit=crop",
-    likes: 42,
-    comments: 12,
-    category: "popular",
-  },
-  {
-    id: 2,
-    title: "Unlocking the Mysteries of Space: Humanity's Final Frontier",
-    excerpt:
-      "Space exploration continues to push the boundaries of human knowledge and technological innovation.",
-    content:
-      "From the depths of black holes to the search for extraterrestrial life, scientists are making groundbreaking discoveries that reshape our understanding of the cosmos.",
-    author: {
-      name: "Space Monger",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
-    },
-    timestamp: "30 minutes ago",
-    image:
-      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=400&fit=crop",
-    likes: 128,
-    comments: 34,
-    category: "technology",
-  },
-  {
-    id: 3,
-    title: "The Rise of AI in Healthcare: Transforming Patient Care",
-    excerpt:
-      "Artificial intelligence is revolutionizing how we diagnose and treat diseases.",
-    content:
-      "Machine learning algorithms can now detect cancer earlier than ever before, while AI-powered robots assist in complex surgeries with unprecedented precision.",
-    author: {
-      name: "Health Tech Daily",
-      avatar:
-        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop",
-    },
-    timestamp: "2 hours ago",
-    image:
-      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&h=400&fit=crop",
-    likes: 89,
-    comments: 23,
-    category: "technology",
-  },
-  {
-    id: 4,
-    title: "Sustainable Investing: The Future of Finance",
-    excerpt:
-      "ESG investing is no longer a niche strategy but a mainstream approach.",
-    content:
-      "Investors are increasingly recognizing that companies with strong environmental, social, and governance practices often outperform their peers over the long term.",
-    author: {
-      name: "Green Finance Hub",
-      avatar:
-        "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&h=100&fit=crop",
-    },
-    timestamp: "4 hours ago",
-    image:
-      "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=800&h=400&fit=crop",
-    likes: 56,
-    comments: 18,
-    category: "sector",
-  },
-];
-
-const hotTopics = [
-  {
-    id: 1,
-    title: "Lead with a Grounded Confidence in a Changing...",
-    date: "Fri, Dec 15, 2025",
-    time: "7:00PM",
-    image:
-      "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=100&h=100&fit=crop",
-  },
-  {
-    id: 2,
-    title: "Lead with a Grounded Confidence in a Changing...",
-    date: "Fri, Dec 15, 2025",
-    time: "7:00PM",
-    image:
-      "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=100&h=100&fit=crop",
-  },
-  {
-    id: 3,
-    title: "Lead with a Grounded Confidence in a Changing...",
-    date: "Fri, Dec 15, 2025",
-    time: "7:00PM",
-    image:
-      "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=100&h=100&fit=crop",
-  },
-];
+import { hotTopics, posts } from "@/lib/data";
 
 const filterTabs = [
   { key: "popular", label: "Popular" },
@@ -274,7 +168,7 @@ export default function NewsFeed() {
           </div>
 
           {/* Sidebar - Hidden on mobile, shown on lg+ */}
-          <div className="hidden lg:block lg:w-80 space-y-6">
+          <div className="hidden lg:block lg:w-80 space-y-6 lg:sticky lg:top-25 lg:left-0 self-start max-h-[calc(100vh-2rem)] overflow-y-auto">
             {/* Hot Topics */}
             <div className="bg-card rounded-xl border border-border p-5 space-y-4">
               <h3 className="font-semibold text-sm">Hot topics right now</h3>
