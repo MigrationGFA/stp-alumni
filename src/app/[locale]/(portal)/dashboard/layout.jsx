@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import Sidebar from "@/components/shared/Sidebar";
-import UserHeader from "./user-header";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import UserHeader from "../user-header";
 
 export default function PortalLayout({ children }) {
   const [isCollapsed, setIsCollapsed] = useState(false);

@@ -5,10 +5,12 @@ import { NavbarProvider } from "@/contexts/NavbarContext";
 
 export default function MarketingLayout({ children }) {
   return (
-    <NavbarProvider>
+    // <NavbarProvider>
+    <>
       <Navbar />
       <div className="min-h-screen bg-background">{children}</div>
       <Footer />
-    </NavbarProvider>
+      </>
+    // </NavbarProvider>
   );
 }

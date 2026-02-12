@@ -39,11 +39,11 @@ export default async function RootLayout({ children, params }) {
         >
           <NextIntlClientProvider locale={locale} messages={messages}>
             <Toaster position="center" />
-            {/* <NavbarProvider>
-              <Navbar /> */}
+            <NavbarProvider>
+              {/* <Navbar /> */}
               <div className="min-h-screen bg-background">{children}</div>
-              {/* <Footer />
-            </NavbarProvider> */}
+              {/* <Footer /> */}
+            </NavbarProvider>
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

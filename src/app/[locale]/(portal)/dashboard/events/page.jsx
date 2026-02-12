@@ -1,5 +1,3 @@
-
-
 import EventUi from '@/components/(market-events)/EventUi'
 import React from 'react'
 

@@ -31,20 +31,21 @@ const Sidebar = ({ isCollapsed }) => {
 
   const navItems = [
     { label: t("dashboard"), href: "/dashboard", icon: Home },
-    { label: t("network"), href: "/network", icon: Users },
-    { label: t("messaging"), href: "/messaging", icon: MessageSquare },
-    { label: t("resources"), href: "/resources", icon: BookOpen },
-    { label: t("newsfeed"), href: "/newsfeed", icon: Newspaper },
-    { label: t("marketplace"), href: "/marketplace", icon: ShoppingBag },
-    { label: t("events"), href: "/events", icon: Calendar },
-    { label: t("dealRoom"), href: "/deal-room", icon: Briefcase },
+    { label: t("network"), href: "/dashboard/network", icon: Users },
+    { label: t("messaging"), href: "/dashboard/messaging", icon: MessageSquare },
+    { label: t("resources"), href: "/dashboard/resources", icon: BookOpen },
+    { label: t("newsfeed"), href: "/dashboard/newsfeed", icon: Newspaper },
+    { label: t("marketplace"), href: "/dashboard/marketplace", icon: ShoppingBag },
+    { label: t("events"), href: "/dashboard/events", icon: Calendar },
+    { label: t("dealRoom"), href: "/dashboard/deal-room", icon: Briefcase },
   ];
 
   const bottomItems = [
     { label: t("settings"), href: "/settings", icon: Settings },
   ];
 
-  const isActive = (href) => pathname.includes(href);
+  const isActive = (href) => pathname.endsWith(href);
+  // console.log(pathname,"path")
 
   return (
     <aside
@@ -55,13 +56,13 @@ const Sidebar = ({ isCollapsed }) => {
       } -translate-x-full lg:translate-x-0`}
     >
       {/* Logo - click goes to landing page */}
-      <Link href="/" className="flex items-center ml-6 gap-3 px-6 pt-6 pb-3">
+      <Link href="/" className={`flex items-center ${!isExpanded ? "ml-0 px-3": "ml-6 px-6"}  gap-3  pt-6 pb-3`}>
         <Image
           src="/assets/logo-removebg-preview.png"
           alt="STP Alumni"
           width={75}
           height={50}
-          className={`object-contain object-left opacity-100 ${isExpanded ? "max-w-[200px]" : "max-w-12"}`}
+          className={`object-contain object-left opacity-100 ${isExpanded ? "max-w-50" : "max-w-12"}`}
           priority
         />
       </Link>
@@ -75,7 +76,7 @@ const Sidebar = ({ isCollapsed }) => {
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={`${item.href}`}
               className={`flex items-center h-12 rounded-lg transition-all px-3 ${
                 active
                   ? "bg-[#2B7FFF]/20 text-[#2B7FFF]"
