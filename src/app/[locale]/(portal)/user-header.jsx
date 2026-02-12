@@ -43,7 +43,7 @@ function UserHeader({toggleSidebar, isCollapsed}) {
       {/* Logo - click goes to landing page */}
       <Link href="/" className="flex lg:hidden items-center justify-center gap-3 6 md:py-6 border-b border-white/10">
         <Image
-          src="/assets/Blazing-Torrent-Color-logo.png"
+          src="/assets/logo-removebg-preview.png"
           alt="STP Alumni"
           width={140}
           height={40}

@@ -55,13 +55,13 @@ const Sidebar = ({ isCollapsed }) => {
       } -translate-x-full lg:translate-x-0`}
     >
       {/* Logo - click goes to landing page */}
-      <Link href="/" className="flex items-center justify-center gap-3 px-6 pt-6 pb-3">
+      <Link href="/" className="flex items-center ml-6 gap-3 px-6 pt-6 pb-3">
         <Image
-          src="/assets/Blazing-Torrent-Black-Color-logo.png"
+          src="/assets/logo-removebg-preview.png"
           alt="STP Alumni"
-          width={150}
+          width={75}
           height={50}
-          className={`object-contain object-left brightness-0 invert opacity-100 ${isExpanded ? "max-w-[200px]" : "max-w-12"}`}
+          className={`object-contain object-left opacity-100 ${isExpanded ? "max-w-[200px]" : "max-w-12"}`}
           priority
         />
       </Link>

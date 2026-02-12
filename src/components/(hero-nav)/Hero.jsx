@@ -6,6 +6,8 @@ import HeroBadge from "./HeroBadge";
 import Image from "next/image";
 import React from "react";
 import { useTranslations } from "next-intl";
+import { useNavbar } from "@/contexts/NavbarContext";
+import { useWindowSize } from 'react-haiku';
 
 const Hero = () => {
   const t = useTranslations("Hero");
@@ -14,10 +16,13 @@ const Hero = () => {
     t("featureIndustries"),
     t("featureNetwork"),
   ];
+  const { size:{height} } = useNavbar();
+  const {width} = useWindowSize()
 
+  console.log(width,"wd")
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[linear-gradient(135deg,#233389_0%,#162456_50%,#233389_100%)]">
-    {/* <section className="relative min-h-screen flex items-center justify-center overflow-hidden dark:bg-linear-to-r dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]"> */}
+      {/* <section className="relative min-h-screen flex items-center justify-center overflow-hidden dark:bg-linear-to-r dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]"> */}
       {/* Background Image */}
       <div className="absolute inset-0 z-0 dark:hidden">
         <Image
@@ -39,17 +44,21 @@ const Hero = () => {
       {/* Content */}
       <div className="container relative z-10 mx-auto px-6 py-20 text-center ">
         {/* Badge */}
-        <div className="mb-8 ">
-          <HeroBadge text={t("badgeText")} className={"gradient-primary-rtl dark:border dark:border-[#314158]"} iconClass="dark:text-[#00D3F2]"/>
+        <div className="mb-8 " style={width < 650 ? {marginTop: `${height-80}px`}: {}}>
+          <HeroBadge
+            text={t("badgeText")}
+            className={"gradient-primary-rtl dark:border dark:border-[#314158]"}
+            iconClass="dark:text-[#00D3F2]"
+          />
         </div>
 
         {/* Headlines */}
         <h1 className="mb-0 font-display text-5xl font-medium tracking-tight text-white md:text-6xl lg:text-7xl  animate-fade-up">
           {t("headlineMain")}
         </h1>
-       <h2 className="mb-6 font-display text-5xl font-medium tracking-tight leading-[1.2] md:text-6xl lg:text-7xl animate-fade-up text-grow-together pb-2">
-  <span className="inline-block pb-1">{t("headlineSub")}</span>
-</h2>
+        <h2 className="mb-6 font-display text-5xl font-medium tracking-tight leading-[1.2] md:text-6xl lg:text-7xl animate-fade-up text-grow-together pb-2">
+          <span className="inline-block pb-1">{t("headlineSub")}</span>
+        </h2>
 
         {/* Subheadline */}
         <p className="mx-auto mb-10 max-w-2xl text-lg text-[#DDEBFF] md:text-xl animate-fade-up ">
