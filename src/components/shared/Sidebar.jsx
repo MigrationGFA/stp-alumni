@@ -32,21 +32,41 @@ const Sidebar = ({ isCollapsed }) => {
   const navItems = [
     { label: t("dashboard"), href: "/dashboard", icon: Home },
     { label: t("network"), href: "/dashboard/network", icon: Users },
-    { label: t("messaging"), href: "/dashboard/messaging", icon: MessageSquare },
+    {
+      label: t("messaging"),
+      href: "/dashboard/messaging",
+      icon: MessageSquare,
+    },
     { label: t("resources"), href: "/dashboard/resources", icon: BookOpen },
     { label: t("newsfeed"), href: "/dashboard/newsfeed", icon: Newspaper },
-    { label: t("marketplace"), href: "/dashboard/marketplace", icon: ShoppingBag },
+    {
+      label: t("marketplace"),
+      href: "/dashboard/marketplace",
+      icon: ShoppingBag,
+    },
     { label: t("events"), href: "/dashboard/events", icon: Calendar },
     { label: t("dealRoom"), href: "/dashboard/deal-room", icon: Briefcase },
   ];
 
   const bottomItems = [
-    { label: t("settings"), href: "/settings", icon: Settings },
+    { label: t("settings"), href: "/dashboard/settings", icon: Settings },
   ];
 
-  const isActive = (href) => pathname.endsWith(href);
-  // console.log(pathname,"path")
+  // const isActive = (href) => pathname.split("/").join(" ").startsWith(href) || pathname.includes(href);
+  // console.log(pathname.split("/").length,"path")
+  const isActive = (href) => {
+    // For all items, exact match is always active
+    if (pathname === href) return true;
 
+    if (
+      href === "/dashboard/network" &&
+      pathname.startsWith("/dashboard/network/")
+    ) {
+      return true;
+    }
+
+    return false;
+  };
   return (
     <aside
       onMouseEnter={() => isCollapsed && setIsHovered(true)}
@@ -56,7 +76,10 @@ const Sidebar = ({ isCollapsed }) => {
       } -translate-x-full lg:translate-x-0`}
     >
       {/* Logo - click goes to landing page */}
-      <Link href="/" className={`flex items-center ${!isExpanded ? "ml-0 px-3": "ml-6 px-6"}  gap-3  pt-6 pb-3`}>
+      <Link
+        href="/"
+        className={`flex items-center ${!isExpanded ? "ml-0 px-3" : "ml-6 px-6"}  gap-3  pt-6 pb-3`}
+      >
         <Image
           src="/assets/logo-removebg-preview.png"
           alt="STP Alumni"
@@ -120,7 +143,11 @@ const Sidebar = ({ isCollapsed }) => {
                     active ? "text-[#155DFC]" : ""
                   }`}
                 />
-                <span className={`text-sm font-medium ${isExpanded ? "block" : "hidden opacity-0"}`}>{item.label}</span>
+                <span
+                  className={`text-sm font-medium ${isExpanded ? "block" : "hidden opacity-0"}`}
+                >
+                  {item.label}
+                </span>
               </div>
             </Link>
           );
@@ -136,7 +163,11 @@ const Sidebar = ({ isCollapsed }) => {
         >
           <div className="flex items-center gap-3 w-45">
             <LogOut className="h-5 w-5 shrink-0" />
-            <span className={`text-sm font-medium ${isExpanded ? "block" : "hidden opacity-0"}`}>{t("signOut")}</span>
+            <span
+              className={`text-sm font-medium ${isExpanded ? "block" : "hidden opacity-0"}`}
+            >
+              {t("signOut")}
+            </span>
           </div>
         </button>
       </div>

@@ -39,11 +39,11 @@ export default function SupportSection() {
         <BackgroundPattern />
       </div> */}
 
-      <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12">
         
         {/* Left Content */}
         <div className="space-y-8">
-          <h2 className="text-5xl font-bold text-slate-900">Support</h2>
+          <h2 className="text-5xl font-semibold text-slate-900">Support</h2>
           <p className="text-slate-500 text-lg max-w-md leading-relaxed">
             Have Any <span className="text-indigo-900 font-bold">Questions or need Help?</span> Fill Out The Form Below, And We'll Get Back To You As Soon As Possible.
           </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import {
@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileDrawer } from "@/components/ProfileDrawer";
+import { useSize } from "react-haiku";
+import { useNavbar } from "@/contexts/NavbarContext";
 
 function UserHeader({toggleSidebar, isCollapsed}) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -22,6 +24,15 @@ function UserHeader({toggleSidebar, isCollapsed}) {
     name: "Emannuel",
     img: "/assets/Profile Image.jpg",
   };
+
+     const elementRef = useRef(null);
+    const { width, height } = useSize(elementRef);
+  
+    const { setUserSize } = useNavbar();
+  
+    useEffect(() => {
+      setUserSize({ width, height });
+    }, [width, height]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,11 +45,12 @@ function UserHeader({toggleSidebar, isCollapsed}) {
   }, []);
   return (
     <header
-      className={`sticky top-0 z-30 w-full px-6 md:px-8 py-4 transition-all duration-300 flex  items-center  justify-between ${
+      className={`sticky top-0 z-30 w-full px-6 md:px-8 py-4 transition-all duration-300 flex items-center justify-between ${
         isScrolled
           ? "bg-[#E8ECF4]/60 backdrop-blur-md border-b border-white/20 shadow-sm"
           : "bg-[#E8ECF4] border-b border-transparent"
       }`}
+      ref={elementRef}
     >
       {/* Logo - click goes to landing page */}
       <Link href="/" className="flex lg:hidden items-center justify-center gap-3 6 md:py-6 border-b border-white/10">

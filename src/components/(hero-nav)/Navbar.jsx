@@ -29,7 +29,7 @@ const Navbar = () => {
 
   const pathname = usePathname()
 
-  const isPublicPage = ["/marketplace", "/events"].includes(pathname);
+  const isPublicPage = ["/marketplace", "/events","/contact"].includes(pathname);
 
   // console.log("Current pathname:", isPublicPage);
 
