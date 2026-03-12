@@ -4,10 +4,9 @@ import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeroBadge from "./HeroBadge";
 import Image from "next/image";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useNavbar } from "@/contexts/NavbarContext";
-import { useWindowSize } from 'react-haiku';
 
 const Hero = () => {
   const t = useTranslations("Hero");
@@ -17,9 +16,14 @@ const Hero = () => {
     t("featureNetwork"),
   ];
   const { size:{height} } = useNavbar();
-  const {width} = useWindowSize()
+  const [width, setWidth] = useState(0);
 
-  console.log(width,"wd")
+  useEffect(() => {
+    setWidth(window.innerWidth);
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[linear-gradient(135deg,#233389_0%,#162456_50%,#233389_100%)]">
       {/* <section className="relative min-h-screen flex items-center justify-center overflow-hidden dark:bg-linear-to-r dark:from-[#233389] dark:via-[#162456] dark:to-[#233389]"> */}

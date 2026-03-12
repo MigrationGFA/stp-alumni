@@ -1,8 +1,10 @@
 "use client"
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { DealRoomView } from "./DealRoomView";
 import { DealRoomList } from "./DealRoomList";
 import { useDealRoom } from "./useDealRoom";
+import { CreateDealRoomModal } from "./CreateDealRoomModal";
 
 const DealRoom = () => {
   const {
@@ -22,15 +24,25 @@ const DealRoom = () => {
     deleteRoom,
     addMember,
     removeMember,
+    createRoom,
   } = useDealRoom();
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleBack = () => {
     selectRoom(null);
   };
 
-  const handleCreateRoom = () => {
-    // TODO: Implement create room modal
-    console.log("Create a new room");
+  const handleCreateRoomClick = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateRoom = (payload) => {
+    const newRoom = createRoom(payload);
+    if (newRoom) {
+      selectRoom(newRoom.id);
+    }
+    setIsCreateModalOpen(false);
   };
 
   return (
@@ -52,7 +64,7 @@ const DealRoom = () => {
             onSearchChange={setSearchQuery}
             onSortChange={setSortBy}
             onSelect={(room) => selectRoom(room.id)}
-            onCreateRoom={handleCreateRoom}
+            onCreateRoom={handleCreateRoomClick}
           />
         </div>
 
@@ -101,6 +113,11 @@ const DealRoom = () => {
           )}
         </div>
       </div>
+      <CreateDealRoomModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onCreate={handleCreateRoom}
+      />
     </>
   );
 };

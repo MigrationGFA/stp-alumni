@@ -369,6 +369,41 @@ export function useDealRoom() {
     // TODO: Backend call
   }, [selectedRoomId]);
 
+  const createRoom = useCallback(
+    ({ name, members = [], documents = [] }) => {
+      if (!name?.trim()) return null;
+
+      const id = generateId();
+      const now = new Date();
+
+      const newRoom = {
+        id,
+        name: name.trim(),
+        avatar:
+          "https://images.unsplash.com/photo-1552664730-d307ca884978?w=100&h=100&fit=crop",
+        lastMessage: "",
+        lastMessageAt: now,
+        unread: false,
+        unreadCount: 0,
+        online: false,
+        onlineCount: members.length || 0,
+        members,
+        documents,
+      };
+
+      setRooms((prev) => [newRoom, ...prev]);
+      setMessages((prev) => ({
+        ...prev,
+        [id]: [],
+      }));
+      setSelectedRoomId(id);
+
+      // TODO: Backend call to persist room and documents
+      return newRoom;
+    },
+    [setRooms, setMessages, setSelectedRoomId]
+  );
+
   // Room members (add/remove) - updates room in place
   const addMember = useCallback((roomId, member) => {
     setRooms((prev) =>
@@ -414,5 +449,6 @@ export function useDealRoom() {
     deleteRoom,
     addMember,
     removeMember,
+    createRoom,
   };
 }
