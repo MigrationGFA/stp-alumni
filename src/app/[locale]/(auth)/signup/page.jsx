@@ -1,19 +1,33 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Link, useRouter } from '@/i18n/routing';
-import { setRegisteredCookie } from '@/lib/auth-cookie';
+import useSignupStore from '@/lib/store/useSignupStore';
+import { toast } from 'sonner';
 
 export default function SignupPage() {
   const t = useTranslations('Signup');
   const router = useRouter();
 
-  const handleContinue = () => {
-    // TODO: Add form validation and data submission
+  const { signupData, setSignupData } = useSignupStore();
+  const [firstName, setFirstName] = useState(signupData.firstName);
+  const [lastName, setLastName] = useState(signupData.lastName);
+  const [emailAddress, setEmailAddress] = useState(signupData.emailAddress);
+
+  const handleContinue = (e) => {
+    e.preventDefault();
+    if (!firstName || !lastName || !emailAddress) {
+      toast.error(t('fillAllFields', { fallback: 'Please fill in all fields' }));
+      return;
+    }
+
+    // Save to global store
+    setSignupData({ firstName, lastName, emailAddress });
     router.push('/signup-password');
   };
 
@@ -51,6 +65,8 @@ export default function SignupPage() {
             <Input
               id="firstName"
               type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
               placeholder={t('firstNamePlaceholder')}
               className="w-full"
             />
@@ -64,6 +80,8 @@ export default function SignupPage() {
             <Input
               id="lastName"
               type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
               placeholder={t('lastNamePlaceholder')}
               className="w-full"
             />
@@ -77,6 +95,8 @@ export default function SignupPage() {
             <Input
               id="email"
               type="email"
+              value={emailAddress}
+              onChange={(e) => setEmailAddress(e.target.value)}
               placeholder={t('emailPlaceholder')}
               className="w-full"
             />

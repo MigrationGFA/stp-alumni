@@ -6,8 +6,9 @@ import { EventCard } from "./EventCard";
 import { CreateEventModal } from "./CreateEventModal";
 import { useNavbar } from "@/contexts/NavbarContext";
 import Container from "@/components/container";
-import { allRecommendedEvents, yourEvents } from "@/lib/data";
 import { usePathname } from "@/i18n/routing";
+import { useQuery } from "@tanstack/react-query";
+import eventService from "@/lib/services/eventService";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -19,19 +20,44 @@ export default function EventUi() {
   const {
     size: { height },
   } = useNavbar();
-   const pathname = usePathname();
+  const pathname = usePathname();
   const isAuth = true; // Placeholder
   const isShow = pathname.includes("dashboard");
 
+  const { data: eventsResponse, isLoading } = useQuery({
+    queryKey: ["events"],
+    queryFn: eventService.getEvents,
+  });
+
+  // Safely extract the events array from various possible backend structures
+  let allEvents = [];
+  if (Array.isArray(eventsResponse)) {
+    allEvents = eventsResponse;
+  } else if (eventsResponse) {
+    if (Array.isArray(eventsResponse.data)) {
+      allEvents = eventsResponse.data;
+    } else if (Array.isArray(eventsResponse.events)) {
+      allEvents = eventsResponse.events;
+    } else if (eventsResponse.data && Array.isArray(eventsResponse.data.events)) {
+      allEvents = eventsResponse.data.events;
+    }
+  }
+
+  // Currently we use all events as "Your events" and "Recommended" if there's no backend toggle
+  // Wait, let's keep all events in recommended, and if there's no "your events" from API, empty it out or keep it mirrored for now to test.
+  // We'll place all fetched events in recommended to be safe.
+  const yourEventsStatic = []; // If you have a true way to filter "my" events, do it here
+
   const displayedYourEvents = showAllYourEvents
-    ? yourEvents
-    : yourEvents.slice(0, 3);
-  const displayedRecommendedEvents = allRecommendedEvents.slice(
+    ? yourEventsStatic
+    : yourEventsStatic.slice(0, 3);
+
+  const displayedRecommendedEvents = allEvents.slice(
     0,
     recommendedPage * ITEMS_PER_PAGE,
   );
   const hasMoreRecommended =
-    displayedRecommendedEvents.length < allRecommendedEvents.length;
+    displayedRecommendedEvents.length < allEvents.length;
 
   return (
     <>
@@ -49,7 +75,7 @@ export default function EventUi() {
                 isAuth={isAuth}
                 yourEventsData={{
                   list: displayedYourEvents,
-                  total: yourEvents.length,
+                  total: yourEventsStatic.length,
                   isExpanded: showAllYourEvents,
                   toggle: () => setShowAllYourEvents(!showAllYourEvents),
                 }}
@@ -57,6 +83,7 @@ export default function EventUi() {
                   list: displayedRecommendedEvents,
                   hasMore: hasMoreRecommended,
                   loadMore: () => setRecommendedPage((prev) => prev + 1),
+                  isLoading,
                 }}
                 onCreateClick={() => setIsCreateModalOpen(true)}
               />
@@ -72,7 +99,7 @@ export default function EventUi() {
               isShow={isShow}
               yourEventsData={{
                 list: displayedYourEvents,
-                total: yourEvents.length,
+                total: yourEventsStatic.length,
                 isExpanded: showAllYourEvents,
                 toggle: () => setShowAllYourEvents(!showAllYourEvents),
               }}
@@ -80,6 +107,7 @@ export default function EventUi() {
                 list: displayedRecommendedEvents,
                 hasMore: hasMoreRecommended,
                 loadMore: () => setRecommendedPage((prev) => prev + 1),
+                isLoading,
               }}
               onCreateClick={() => setIsCreateModalOpen(true)}
             />
@@ -145,13 +173,24 @@ function EventListContent({
       )}
 
       {/* Recommended Section */}
-      <div className="bg-card rounded-xl p-5 border border-border">
+      <div className="bg-card rounded-xl p-5 border border-border min-h-[300px]">
         <h2 className="text-sm font-semibold mb-4">Recommended for you</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recommendedData.list.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
+
+        {recommendedData.isLoading ? (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#233389]"></div>
+          </div>
+        ) : recommendedData.list.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recommendedData.list.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-10">
+            No recommended events available right now.
+          </p>
+        )}
 
         {recommendedData.hasMore && (
           <button

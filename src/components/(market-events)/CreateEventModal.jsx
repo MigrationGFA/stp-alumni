@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import eventService from "@/lib/services/eventService";
 import {
   Dialog,
   DialogContent,
@@ -56,25 +58,70 @@ export function CreateEventModal({ open, onOpenChange }) {
   });
 
   const eventType = watch("eventType");
+  const queryClient = useQueryClient();
+
+  const createEventMutation = useMutation({
+    mutationFn: eventService.createEvent,
+    onSuccess: () => {
+      toast.success("Event created successfully!");
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      onOpenChange(false);
+      reset();
+      setPreviewImage(null);
+    },
+    onError: (error) => {
+      console.error("Failed to create event:", error);
+      toast.error(error.response?.data?.message || "Failed to create event. Please try again.");
+    },
+  });
 
 
   const onSubmit = (data) => {
-    console.log("Form Data:", data);
-
     if (
       !data.eventName ||
-        !data.startDate ||
-        !data.startTime ||
-        !data.endDate ||
-        !data.endTime
+      !data.startDate ||
+      !data.startTime ||
+      !data.endDate ||
+      !data.endTime
     ) {
-        toast("Please fill in all required fields."); 
-        return 
+      toast.error("Please fill in all required fields.");
+      return;
     }
 
-    onOpenChange(false);
-    reset();
-    setPreviewImage(null);
+    const formData = new FormData();
+    formData.append("type", data.eventType);
+    formData.append("format", data.eventFormat || "json");
+    formData.append("name", data.eventName);
+    formData.append("timeZone", data.timezone);
+
+    // Combine date and time to proper ISO strings
+    try {
+      const startDateTime = new Date(`${data.startDate}T${data.startTime}:00`).toISOString();
+      formData.append("startTime", startDateTime);
+
+      const endDateTime = new Date(`${data.endDate}T${data.endTime}:00`).toISOString();
+      formData.append("endTime", endDateTime);
+    } catch (err) {
+      toast.error("Invalid date or time format selected.");
+      return;
+    }
+
+    formData.append("description", data.description);
+
+    if (data.eventLink) {
+      formData.append("externalLink", data.eventLink);
+    }
+
+    if (data.eventType === "in-person") {
+      formData.append("address", data.address);
+      formData.append("venue", data.venue);
+    }
+
+    if (data.coverImage) {
+      formData.append("coverImage", data.coverImage);
+    }
+
+    createEventMutation.mutate(formData);
   };
 
   const handleFileChange = (e) => {
@@ -294,8 +341,8 @@ export function CreateEventModal({ open, onOpenChange }) {
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Next
+          <Button type="submit" className="w-full" disabled={createEventMutation.isPending}>
+            {createEventMutation.isPending ? "Creating..." : "Next"}
           </Button>
         </form>
       </DialogContent>

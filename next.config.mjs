@@ -21,6 +21,14 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://app.gfa-tech.com/stp/api/:path*', // Proxy to Backend
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

@@ -1,18 +1,77 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter } from '@/i18n/routing';
+import { useMutation } from '@tanstack/react-query';
+import authService from '@/lib/services/authService';
+import useSignupStore from '@/lib/store/useSignupStore';
+import { toast } from 'sonner';
 
 export default function SignupPasswordPage() {
   const t = useTranslations('SignupPassword');
   const router = useRouter();
 
-  const handleContinue = () => {
-    router.push('/profile-setup');
+  const { signupData, clearSignupData } = useSignupStore();
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Redirect back if user lands here without filling step 1
+  useEffect(() => {
+    if (!signupData.emailAddress) {
+      router.replace('/signup');
+    }
+  }, [signupData, router]);
+
+  const registerMutation = useMutation({
+    mutationFn: authService.register,
+    onSuccess: () => {
+      toast.success(t('signupSuccess', { fallback: 'Account created successfully!' }));
+      // Clear the temporary store once we successfully register
+      clearSignupData();
+      // Redirect to login or automatically log them in depending on backend behavior
+      // Currently redirecting to login based on common patterns
+      router.push('/login');
+    },
+    onError: (error) => {
+      console.error('Registration error:', error);
+      let errorMessage = error.response?.data?.message;
+
+      if (errorMessage === "The email field must contain a unique value.") {
+        errorMessage = t('emailInUse', { fallback: 'Email already in use' });
+      }
+
+      toast.error(
+        errorMessage ||
+        t('signupError', { fallback: 'Registration failed. Please try again.' })
+      );
+    },
+  });
+
+  const handleContinue = (e) => {
+    e.preventDefault();
+    if (!password || !confirmPassword) {
+      toast.error(t('fillAllFields', { fallback: 'Please fill in all fields' }));
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error(t('passwordMismatch', { fallback: 'Passwords do not match' }));
+      return;
+    }
+
+    // Combine data and submit
+    const finalData = {
+      firstName: signupData.firstName,
+      lastName: signupData.lastName,
+      emailAddress: signupData.emailAddress,
+      password,
+    };
+
+    registerMutation.mutate(finalData);
   };
 
   return (
@@ -46,6 +105,8 @@ export default function SignupPasswordPage() {
             <Input
               id="password"
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder={t('passwordPlaceholder')}
               className="w-full"
             />
@@ -59,6 +120,8 @@ export default function SignupPasswordPage() {
             <Input
               id="confirmPassword"
               type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder={t('confirmPasswordPlaceholder')}
               className="w-full"
             />
@@ -67,9 +130,10 @@ export default function SignupPasswordPage() {
           {/* Continue Button */}
           <Button
             onClick={handleContinue}
+            disabled={registerMutation.isPending}
             className="w-full h-11 bg-[#155DFC] hover:bg-[#155DFC]/90 text-white"
           >
-            {t('continueButton')}
+            {registerMutation.isPending ? t('registering', { fallback: 'Creating account...' }) : t('continueButton')}
           </Button>
         </div>
       </div>

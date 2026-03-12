@@ -62,7 +62,7 @@
     "featureFree": "Approuvé par des professionnels",
     "featureIndustries": "Sécurisé et privé",
     "featureNetwork": "Aucune carte de crédit requise"
-},
+  },
   "Login": {
     "title": "Connexion",
     "subtitle": "Entrez vos identifiants pour accéder à votre compte",
@@ -71,8 +71,11 @@
     "email": "Email",
     "emailPlaceholder": "Entrez votre email",
     "password": "Mot de passe",
-    "passwordPlaceholder": "Entrez votre mot de passe",
     "loginButton": "Se connecter",
+    "loggingIn": "Connexion en cours...",
+    "loginError": "Identifiants invalides. Veuillez réessayer.",
+    "loginSuccess": "Connecté avec succès!",
+    "fillAllFields": "Veuillez remplir tous les champs",
     "notMember": "Pas encore membre?",
     "createAccount": "Créer un compte"
   },
@@ -80,6 +83,7 @@
     "title": "Bienvenue sur STP Alumni!",
     "subtitle": "Veuillez fournir votre nom et votre email.",
     "signupWithGoogle": "S'inscrire avec Google",
+    "fillAllFields": "Veuillez remplir tous les champs",
     "or": "OU",
     "firstName": "Prénom",
     "firstNamePlaceholder": "Entrez votre prénom",
@@ -98,6 +102,12 @@
     "passwordPlaceholder": "Entrez votre mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
     "confirmPasswordPlaceholder": "Confirmer le mot de passe",
+    "registering": "Création du compte...",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "fillAllFields": "Veuillez remplir tous les champs",
+    "signupSuccess": "Compte créé avec succès!",
+    "signupError": "L'inscription a échoué. Veuillez réessayer.",
+    "emailInUse": "L'email est déjà utilisé. Veuillez vous connecter.",
     "continueButton": "Continuer"
   },
   "ProfileSetup": {

@@ -12,7 +12,7 @@ const stats = [
 
 export function NetworkStats({ onTabChange }) {
   const pathname = usePathname();
-const basePath = "/dashboard/network";
+  const basePath = "/dashboard/network";
 
   const activeTab = pathname === basePath ? "/" : pathname.replace(basePath, "");
   // const activeTab = usePathname().split("/").pop();
@@ -27,48 +27,36 @@ const basePath = "/dashboard/network";
       <CardContent className="space-y-1">
         {stats.map((stat) => (
           <Link key={stat.label} href={`/dashboard/network${stat.tab}`}>
-          <button
-            
-            // onClick={() => router.replace(`/network/${stat.tab}`)}
-            className={cn(
-              "flex items-center justify-between py-3 border-b border-border -mx-4 px-4 transition-all duration-200 cursor-pointer w-full text-left",
-              activeTab === stat.tab
-                ? "bg-[#233389]/10 border-l-4 border-l-[#233389]"
-                : "hover:bg-muted/50"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <stat.icon
-                className={cn(
-                  "h-5 w-5",
-                  activeTab === stat.tab
-                    ? "text-stp-blue-light"
-                    : "text-muted-foreground"
-                )}
-              />
-              <span
-                className={cn(
-                  "text-sm font-medium",
-                  activeTab === stat.tab && "text-stp-blue-light"
-                )}
-              >
-                {stat.label}
-              </span>
-            </div>
-            {/* <span className="text-sm font-semibold text-primary">
-              {stat.value}
-            </span>{" "} */}
-            <span
+            <button
+
+              // onClick={() => router.replace(`/network/${stat.tab}`)}
               className={cn(
-                "text-sm font-semibold",
+                "flex items-center justify-between py-3 border-b border-border -mx-4 px-4 transition-all duration-200 cursor-pointer w-full text-left",
                 activeTab === stat.tab
-                  ? "text-stp-blue-light"
-                  : "text-primary/70"
+                  ? "bg-[#233389]/10 border-l-4 border-l-[#233389]"
+                  : "hover:bg-muted/50"
               )}
             >
-              {stat.value}
-            </span>
-          </button>
+              <div className="flex items-center gap-3">
+                <stat.icon
+                  className={cn(
+                    "h-5 w-5",
+                    activeTab === stat.tab
+                      ? "text-stp-blue-light"
+                      : "text-muted-foreground"
+                  )}
+                />
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    activeTab === stat.tab && "text-stp-blue-light"
+                  )}
+                >
+                  {stat.label}
+                </span>
+              </div>
+              {/* The count values have been removed as per request */}
+            </button>
           </Link>
 
         ))}
