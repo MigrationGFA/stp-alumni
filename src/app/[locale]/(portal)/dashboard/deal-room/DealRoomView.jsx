@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, MoreHorizontal, Smile, Paperclip, Image, Mic, Send, Pencil, Users, Trash2 } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Smile, Paperclip, Image, Mic, Send, Pencil, Users, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -38,6 +38,7 @@ export function DealRoomView({
   const [newMessage, setNewMessage] = useState("");
   const [editNameOpen, setEditNameOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [documentsOpen, setDocumentsOpen] = useState(false);
   const [editNameValue, setEditNameValue] = useState(room.name);
   const [addMemberSearch, setAddMemberSearch] = useState("");
   const scrollRef = useRef(null);
@@ -45,6 +46,7 @@ export function DealRoomView({
 
   const onlineCount = room.onlineCount ?? room.members?.length ?? 0;
   const members = room.members || [];
+  const documents = room.documents || [];
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -155,6 +157,10 @@ export function DealRoomView({
               <Users className="h-4 w-4 mr-2" />
               View members
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDocumentsOpen(true)}>
+              <FileText className="h-4 w-4 mr-2" />
+              Documents
+            </DropdownMenuItem>
             <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleDeleteRoom}>
               <Trash2 className="h-4 w-4 mr-2" />
               Delete deal room
@@ -225,6 +231,41 @@ export function DealRoomView({
                 ))}
               </ul>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Documents modal */}
+      <Dialog open={documentsOpen} onOpenChange={setDocumentsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Documents</DialogTitle>
+            <DialogDescription>
+              Uploaded documents for this deal room
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {documents.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No documents have been uploaded for this room yet.
+              </p>
+            ) : (
+              <ul className="space-y-2 max-h-60 overflow-y-auto">
+                {documents.map((doc) => (
+                  <li
+                    key={doc.id || doc.name}
+                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
+                  >
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-stp-blue-light text-[10px] font-semibold text-white">
+                      PDF
+                    </span>
+                    <span className="text-sm truncate flex-1">
+                      {doc.name}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </DialogContent>
       </Dialog>
