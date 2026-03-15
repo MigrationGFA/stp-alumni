@@ -74,7 +74,7 @@ const GroupItem = ({ group, variant, onToggleMembership }) => (
         )}
       </div>
       <div className="min-w-0">
-        <NavLink href={`/groups/${group.groupId}`} className="hover:underline">
+        <NavLink href={`/dashboard/groups/${group.groupId}`} className="hover:underline">
           <p className="text-sm font-medium truncate">{group.name}</p>
         </NavLink>
         <p className="text-xs text-muted-foreground truncate">

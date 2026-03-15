@@ -1,63 +1,125 @@
-# Authentication & Onboarding Flow Document
+# Comprehensive Authentication & Onboarding Flow
 
-## Overview
-This document outlines the revised authentication and onboarding flow for the STP Alumni application. The application operates on an **invite-only / admin-provisioned** model. Public users cannot sign up independently. Instead, administrators create accounts, and users claim them via a temporary password, followed by a mandatory profile onboarding sequence.
+## Overview & Context
+This document outlines the end-to-end user creation, authentication, and onboarding flow for the STP Alumni application.
+**CRITICAL CONTEXT:** This application is a **closed, secure platform strictly reserved for verified alumni of the school.** Public registration is completely disabled.
 
----
-
-## 1. User Journey
-
-1. **Admin Creation**: An administrator creates a user account in the system backend.
-2. **Email Invitation**: The system dispatches an email to the user containing their registered email address and a systematically generated temporary password.
-3. **Initial Login**: The user navigates to the `/login` page and authenticates using the provided email and temporary password.
-4. **State Evaluation**: Upon successful login, the application evaluates the user's state. 
-   - If `requiresPasswordChange === true`, divert to a Update Password screen (Optional but recommended).
-   - If `isOnboarded === false`, divert the user to the `/onboarding` (Profile Setup) flow.
-   - If `isOnboarded === true`, divert the user directly to the `/dashboard`.
-5. **Onboarding**: The user fills out their profile details (sector, skills, location, etc.). Upon successful submission, the `isOnboarded` flag is toggled to `true`.
+Accounts can only be provisioned by System Administrators. Users subsequently claim these pre-provisioned accounts via a generated temporary password and finalize their entry through a mandatory Profile Onboarding sequence.
 
 ---
 
-## 2. Required API Endpoints & Schemas
+## 1. The Core User Journeys
 
-To correctly handle this flow on the frontend, the Backend needs to expose the following endpoints and append specific state flags to the User payload.
+### Journey A: The "Request Access" Flow (For Uninvited Alumni)
+If an alumnus navigates to the platform but does not have an account or an invitation, they cannot sign up directly.
+1. **Request Submission:** The user navigates to a `Request Access` or `Contact Support` page.
+2. **Provide Verification Credentials:** The user submits a form detailing their Name, Email, Graduation Year, Cohort, and any valid proof of alumni status (e.g., Student ID number).
+3. **Admin Review:** Support/Admin staff review these credentials externally.
+4. **Approval & Provisioning:** If verified, the Admin proceeds to **Journey B** below to manually provision their account.
 
-### A. Authentication (Login)
-**Endpoint:** `POST /auth/login`
-**Purpose:** Authenticate the user and determine their current onboarding state.
+### Journey B: The Admin Provisioning Flow
+1. **Admin Creation:** An administrator logs into the backend Admin portal.
+2. **Execute Provisioning:** The admin inputs the user's basic details (Email, First Name, Last Name) and executes the creation endpoint.
+3. **Dispatch:** The backend securely generates a temporary password and dispatches an automated invitation email to the user containing these credentials.
 
+### Journey C: The Platform Onboarding Flow (User Facing)
+1. **Initial Login:** The invited user navigates to the platform's `/login` page and authenticates using their email and the temporary password.
+2. **State Evaluation:** Upon login, the platform evaluates the user's state.
+   - If `requiresPasswordChange === true`, divert to a Mandatory Password Update screen.
+   - If `isOnboarded === false`, divert the user natively to the **Profile Setup** flow.
+3. **Onboarding Submission:** The user completes their profile (sector, location, skills) via the Setup endpoint.
+4. **Completion:** Upon successful submission, the system flips `isOnboarded` to `true` and the user is redirected into the `/dashboard`.
+
+### Journey D: Profile Viewing & Restricted Management
+1. **Access Profile:** The user navigates to their `/profile` or Settings page.
+2. **Render Details:** The platform calls `GET /users/profile` to render their entire dataset (Name, Cohort, Sector, Location, etc.).
+3. **Restricted Editing:** Because the user was globally admin-provisioned, core identity fields securely remain **read-only** (e.g., Email, Graduation Year, Cohort).
+4. **Allowed Edits:** Users may only update dynamic fields like `skills`, `location`, `sector`, or `profileImage`.
+
+---
+
+## 2. Admin & Support Required API Endpoints
+
+These endpoints define the requirements for the Backend team to build or maintain for the **Admin/Support staff**.
+
+### 1. Request Access (Public Facing)
+**Endpoint:** `POST /public/request-access`
+**Purpose:** Allows uninvited alumni to submit their credentials for Admin review.
 **Request Body (JSON):**
 ```json
 {
-  "email": "user@example.com",
-  "password": "temporary_password_123"
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "email": "jane.doe@alumni.edu",
+  "cohortYear": "2020",
+  "studentId": "STP-987654",
+  "message": "I lost my original invite."
 }
 ```
-
-**Expected Response (JSON):**
-*CRITICAL:* The backend MUST return flags indicating the user's setup status.
+**Expected Response:**
 ```json
 {
   "status": true,
-  "message": "Login successful",
+  "message": "Access request submitted. Support will review your credentials."
+}
+```
+
+### 2. Admin Creates User (Admin Restricted)
+**Endpoint:** `POST /admin/users`
+**Purpose:** An authorized admin provisions a new user account, triggering the backend to generate a temporary password and dispatch the invite email.
+**Headers:** `Authorization: Bearer <AdminToken>`
+**Request Body (JSON):**
+```json
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "email": "john.smith@example.com",
+  "role": "alumni"
+}
+```
+**Expected Response:**
+```json
+{
+  "status": true,
+  "message": "User provisioned successfully. Invitation email dispatched."
+}
+```
+
+---
+
+## 3. Platform Required API Endpoints (The Alumni Codebase)
+
+These endpoints dictate the exact configurations the Alumni codebase interacts with. **It is critical that the Backend attaches the specific `isOnboarded` state flags to control routing securely.**
+
+### 1. Authentication (Login)
+**Endpoint:** `POST /auth/login`
+**Purpose:** Authenticate the user and determine their current onboarding state.
+**Request Body (JSON):**
+```json
+{
+  "email": "john.smith@example.com",
+  "password": "temporary_password_123"
+}
+```
+**Expected Response:**
+```json
+{
+  "status": true,
   "data": {
     "token": "eyJhbGciOiJIUzI1NiIsInR5c...",
     "user": {
       "id": "u-12345",
-      "email": "user@example.com",
-      "firstName": "John",
-      "lastName": "Doe",
+      "email": "john.smith@example.com",
       "isOnboarded": false,           // ← CRITICAL FLAG FOR ROUTING
-      "requiresPasswordChange": true  // ← CRITICAL FLAG (if enforcing temp password updates)
+      "requiresPasswordChange": true  // ← CRITICAL FLAG 
     }
   }
 }
 ```
 
-### B. Change Temporary Password (Recommended)
+### 2. Change Temporary Password
 **Endpoint:** `POST /auth/change-password`
-**Purpose:** Allow the user to set their own secure password after logging in with the temp password.
-
+**Purpose:** Allow the user to set a secure password mapping to `requiresPasswordChange`.
 **Request Body (JSON):**
 ```json
 {
@@ -66,31 +128,13 @@ To correctly handle this flow on the frontend, the Backend needs to expose the f
 }
 ```
 
-**Expected Response (JSON):**
-```json
-{
-  "status": true,
-  "message": "Password updated successfully"
-}
-```
-
-### C. Profile Setup / Onboarding
-*(Note: This endpoint definition already partially exists in our API documentation, but we need to ensure the backend updates the `isOnboarded` flag upon success).*
-
+### 3. Profile Setup / Onboarding
 **Endpoint:** `POST /users/profile/setup`
-**Purpose:** Submit the user's onboarding details.
+**Purpose:** Submit the user's onboarding details and toggle `isOnboarded` to true.
 **Content-Type:** `multipart/form-data`
-
 **Request Body (FormData):**
-- `sector[]` (Array of Strings)
-- `location` (String)
-- `skills[]` (Array of Strings)
-- `linkedInProfile` (String)
-- `goals` (String)
-- `cohort` (String)
-- `profileImage` (File)
-
-**Expected Response (JSON):**
+- `sector[]`, `location`, `skills[]`, `linkedInProfile`, `goals`, `cohort`, `profileImage` (File)
+**Expected Response:**
 ```json
 {
   "status": true,
@@ -98,34 +142,31 @@ To correctly handle this flow on the frontend, the Backend needs to expose the f
   "data": {
     "user": {
       "id": "u-12345",
-      "email": "user@example.com",
       "isOnboarded": true  // ← MUST return true after this completes
     }
   }
 }
 ```
 
-### D. Get Current User Profile (For persisted sessions)
+### 4. Get Current User Profile
 **Endpoint:** `GET /users/profile`
-**Purpose:** When the app reloads, fetch the user's data to know if they should be kicked back to onboarding.
-
-**Expected Response (JSON):**
+**Purpose:** Session persistence check on page reloads to prevent forced entries.
+**Expected Response:**
 ```json
 {
   "status": true,
-  "message": "Profile retrieved",
   "data": {
     "id": "u-12345",
-    "email": "user@example.com",
-    "isOnboarded": false  // ← MUST be present in the standard profile fetch
+    "isOnboarded": false  // ← Crucial fallback check
   }
 }
 ```
 
 ---
 
-## 3. Frontend Implementation Summary (For your context)
-Once the backend implements the `isOnboarded` and `requiresPasswordChange` flags inside the `POST /auth/login` and `GET /users/profile` responses:
-1. We will delete the `/signup` page routing entirely.
-2. We will add a global route guard / middleware. If a user tries to access `/dashboard` but their `isOnboarded` flag is `false`, they will be force-redirected to `/onboarding`.
-3. If they finish the `/onboarding` `POST` request, the app will update their local state to `isOnboarded: true` and push them to `/dashboard`.
+## 4. Platform Implementation Plan
+With this specification passed to Backend:
+1. We will establish a "Request Access" `/support` landing page locally.
+2. We will purge the existing `/signup` user flow entirely from this codebase.
+3. We will wrap the `/dashboard` route in a state guard to forcefully eject any user where `isOnboarded === false` into `/onboarding`.
+4. We will build a dedicated `/profile` view page mapping the full `GET /users/profile` payload, explicitly locking the inputs for admin-controlled identity fields (Email, Cohort, etc.).

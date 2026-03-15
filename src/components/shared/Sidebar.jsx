@@ -58,17 +58,10 @@ const Sidebar = ({ isCollapsed }) => {
   // const isActive = (href) => pathname.split("/").join(" ").startsWith(href) || pathname.includes(href);
   // console.log(pathname.split("/").length,"path")
   const isActive = (href) => {
-    // For all items, exact match is always active
-    if (pathname === href) return true;
-
-    if (
-      href === "/dashboard/network" &&
-      pathname.startsWith("/dashboard/network/")
-    ) {
-      return true;
-    }
-
-    return false;
+    // Dashboard home: exact match only
+    if (href === "/dashboard") return pathname === "/dashboard";
+    // All other items: match if pathname starts with the href
+    return pathname.startsWith(href);
   };
   return (
     <aside

@@ -29,6 +29,14 @@ const userService = {
     const response = await api.get('/users/profile');
     return response.data;
   },
+
+  changePassword: async ({ oldPassword, newPassword }) => {
+    const response = await api.post('/users/profile/change-password', {
+      oldPassword,
+      newPassword,
+    });
+    return response.data;
+  },
 };
 
 export default userService;

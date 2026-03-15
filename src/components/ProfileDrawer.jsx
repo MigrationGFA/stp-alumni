@@ -3,9 +3,6 @@ import {
   LogOut,
   HelpCircle,
   Moon,
-  Bell,
-  Shield,
-  CreditCard,
   User,
 } from "lucide-react";
 import {
@@ -22,18 +19,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
+import useAuthStore from "@/lib/store/useAuthStore";
 
 const menuItems = [
-  { icon: User, label: "View Profile", href: "/profile" },
-  { icon: Settings, label: "Settings", href: "/settings" },
-  { icon: Bell, label: "Notifications", href: "/notifications" },
-  { icon: Shield, label: "Privacy", href: "/privacy" },
-  { icon: CreditCard, label: "Subscription", href: "/subscription" },
-  { icon: HelpCircle, label: "Help & Support", href: "/help" },
+  { icon: User, label: "View Profile", href: "/dashboard/settings" },
+  { icon: Settings, label: "Settings", href: "/dashboard/settings" },
+  { icon: HelpCircle, label: "Help & Support", href: "/dashboard/settings" },
 ];
 
-export function ProfileDrawer({ children,data }) {
+export function ProfileDrawer({ children, data }) {
+  const initials = data?.initials || "??";
+  const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleSignOut = () => {
+    logout();
+    router.push("/login");
+  };
+
   return (
     <Drawer>
       <DrawerTrigger asChild>
@@ -45,12 +49,12 @@ export function ProfileDrawer({ children,data }) {
             <div className="flex items-center gap-3">
               <Avatar className="h-14 w-14 border-2 border-accent">
                 <AvatarImage src={data?.img} />
-                <AvatarFallback className="bg-primary text-primary-foreground">EM</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground">{initials}</AvatarFallback>
               </Avatar>
               <div>
-                <DrawerTitle className="text-lg">{data?.name}</DrawerTitle>
+                <DrawerTitle className="text-lg">{data?.name || "User"}</DrawerTitle>
                 <DrawerDescription className="text-sm">
-                  {data?.email}
+                  {data?.email || ""}
                 </DrawerDescription>
               </div>
             </div>
@@ -82,13 +86,16 @@ export function ProfileDrawer({ children,data }) {
           </div>
 
           <DrawerFooter className="pt-2">
-            <Button 
-              variant="outline" 
-              className="w-full text-destructive border-destructive/50 hover:bg-destructive/10"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign out
-            </Button>
+            <DrawerClose asChild>
+              <Button
+                variant="outline"
+                className="w-full text-destructive border-destructive/50 hover:bg-destructive/10"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign out
+              </Button>
+            </DrawerClose>
           </DrawerFooter>
         </div>
       </DrawerContent>
