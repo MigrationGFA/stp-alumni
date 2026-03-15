@@ -291,9 +291,20 @@
     "message": "Coming Soon",
     "description": "We're working hard to bring you this page. Check back soon!"
   },
+  "Newsfeed": {
+    "title": "News Feed",
+    "searchPlaceholder": "Search posts by content or author",
+    "loadError": "Failed to load posts",
+    "tryAgain": "Try Again",
+    "noPosts": "No posts yet",
+    "noPostsHint": "Be the first to share something!",
+    "postSaved": "Post saved!",
+    "linkCopied": "Link copied to clipboard!"
+  },
   "Settings": {
     "title": "Settings",
     "profileTab": "Profile",
+    "myPostsTab": "My Posts",
     "securityTab": "Security",
     "sectors": "Sectors",
     "location": "Location",
@@ -301,6 +312,11 @@
     "cohort": "Cohort",
     "linkedin": "LinkedIn",
     "goals": "Goals",
+    "myPostsCount": "{count} posts",
+    "myPostsError": "Failed to load your posts",
+    "tryAgain": "Try Again",
+    "noMyPosts": "No posts yet",
+    "noMyPostsHint": "Your posts will appear here once you share something",
     "changePassword": "Change Password",
     "changePasswordDesc": "Update your password to keep your account secure",
     "oldPassword": "Current Password",

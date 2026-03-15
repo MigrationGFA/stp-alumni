@@ -220,9 +220,9 @@ export default function DashboardPage() {
 
             {!isLoading && !error && posts && posts.length > 0 && (
               <>
-                {posts.map((post) => (
+                {posts.map((post, index) => (
                   <PostCard
-                    key={post.id}
+                    key={post.id || index}
                     post={post}
                     onLike={handleLike}
                     onComment={handleComment}

@@ -11,10 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  MapPin, Briefcase, GraduationCap, ExternalLink, Target, Sparkles, Lock,
+  MapPin, Briefcase, GraduationCap, ExternalLink, Target, Sparkles, Lock, FileText,
 } from "lucide-react";
 import useAuthStore from "@/lib/store/useAuthStore";
 import userService from "@/lib/services/userService";
+import { useMyPosts, useLikePost } from "@/lib/hooks/usePosts";
+import PostCard from "@/components/posts/PostCard";
+import PostSkeleton from "@/components/posts/PostSkeleton";
 import { toast } from "sonner";
 
 function getInitials(name) {
@@ -49,6 +52,7 @@ export default function SettingsPage() {
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="profile">{t("profileTab")}</TabsTrigger>
+          <TabsTrigger value="posts">{t("myPostsTab")}</TabsTrigger>
           <TabsTrigger value="security">{t("securityTab")}</TabsTrigger>
         </TabsList>
 
@@ -61,6 +65,10 @@ export default function SettingsPage() {
             initials={initials}
             isLoading={isLoading}
           />
+        </TabsContent>
+
+        <TabsContent value="posts">
+          <MyPostsTab t={t} />
         </TabsContent>
 
         <TabsContent value="security">
@@ -192,6 +200,61 @@ function ProfileTab({ t, profile, displayName, displayEmail, initials, isLoading
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** My Posts Tab — displays user's own posts */
+function MyPostsTab({ t }) {
+  const { data: myPosts, isLoading, error, refetch } = useMyPosts();
+  const { mutate: likePost } = useLikePost();
+
+  const handleLike = (postId) => likePost(postId);
+  const handleCopyLink = () => toast.success("Link copied!");
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <PostSkeleton />
+        <PostSkeleton />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl p-6 text-center">
+        <p className="text-red-600 mb-4">{t("myPostsError")}</p>
+        <Button onClick={() => refetch()} className="bg-[#233389] hover:bg-[#1d2a6e] text-white">
+          {t("tryAgain")}
+        </Button>
+      </div>
+    );
+  }
+
+  if (!myPosts || myPosts.length === 0) {
+    return (
+      <div className="bg-white rounded-xl p-12 text-center">
+        <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+        <p className="text-gray-500 mb-2">{t("noMyPosts")}</p>
+        <p className="text-sm text-gray-400">{t("noMyPostsHint")}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <p className="text-sm text-gray-500">
+        {t("myPostsCount", { count: myPosts.length })}
+      </p>
+      {myPosts.map((post, index) => (
+        <PostCard
+          key={post.id || index}
+          post={post}
+          onLike={handleLike}
+          onCopyLink={handleCopyLink}
+        />
+      ))}
     </div>
   );
 }

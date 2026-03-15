@@ -148,7 +148,7 @@ export default function PostCard({
       </p>
 
       {/* Post Images */}
-      {post.images && post.images.length > 0 && (
+      {Array.isArray(post.images) && post.images.length > 0 && (
         <div
           className={`mb-4 gap-2 ${
             post.images.length === 1

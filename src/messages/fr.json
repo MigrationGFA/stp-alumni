@@ -293,9 +293,20 @@
     "message": "Bientôt Disponible",
     "description": "Nous travaillons dur pour vous apporter cette page. Revenez bientôt!"
   },
+  "Newsfeed": {
+    "title": "Fil d'actualité",
+    "searchPlaceholder": "Rechercher par contenu ou auteur",
+    "loadError": "Échec du chargement des publications",
+    "tryAgain": "Réessayer",
+    "noPosts": "Aucune publication",
+    "noPostsHint": "Soyez le premier à partager quelque chose!",
+    "postSaved": "Publication enregistrée!",
+    "linkCopied": "Lien copié!"
+  },
   "Settings": {
     "title": "Paramètres",
     "profileTab": "Profil",
+    "myPostsTab": "Mes Publications",
     "securityTab": "Sécurité",
     "sectors": "Secteurs",
     "location": "Localisation",
@@ -303,6 +314,11 @@
     "cohort": "Cohorte",
     "linkedin": "LinkedIn",
     "goals": "Objectifs",
+    "myPostsCount": "{count} publications",
+    "myPostsError": "Échec du chargement de vos publications",
+    "tryAgain": "Réessayer",
+    "noMyPosts": "Aucune publication",
+    "noMyPostsHint": "Vos publications apparaîtront ici une fois que vous partagerez quelque chose",
     "changePassword": "Changer le mot de passe",
     "changePasswordDesc": "Mettez à jour votre mot de passe pour sécuriser votre compte",
     "oldPassword": "Mot de passe actuel",

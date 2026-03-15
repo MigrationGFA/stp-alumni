@@ -4,6 +4,43 @@ import usePostStore from '../store/usePostStore';
 import { toast } from 'sonner';
 
 /**
+ * Normalize a post from the API shape to the shape our components expect.
+ * API shapes vary between endpoints:
+ *   GET /posts       → imagePaths is an array of full URLs
+ *   GET /posts/mine  → imagePaths is a JSON *string* with relative paths
+ */
+function normalizePost(post) {
+  if (post._normalized) return post;
+
+  // Parse imagePaths — could be an array, a JSON string, or undefined
+  let images = post.imagePaths ?? post.images ?? [];
+  if (typeof images === 'string') {
+    try { images = JSON.parse(images); } catch { images = []; }
+  }
+  if (!Array.isArray(images)) images = [];
+
+  // Ensure each image path is a full URL
+  const baseUrl = 'https://app.gfa-tech.com/stp/';
+  images = images
+    .filter(Boolean)
+    .map((img) => (img.startsWith('http') ? img : `${baseUrl}${img}`));
+
+  return {
+    ...post,
+    _normalized: true,
+    id: post.postId || post.id,
+    images,
+    likes: {
+      count: parseInt(post.likes, 10) || 0,
+      isLiked: !!post.hasLiked,
+    },
+    comments: {
+      count: parseInt(post.comments, 10) || 0,
+    },
+  };
+}
+
+/**
  * Hook to fetch all posts for the feed
  */
 export const usePostsFeed = () => {
@@ -13,8 +50,10 @@ export const usePostsFeed = () => {
     queryKey: ['posts'],
     queryFn: async () => {
       const data = await postService.getPosts();
-      setPosts(data);
-      return data;
+      const raw = Array.isArray(data) ? data : data?.data || [];
+      const posts = raw.map(normalizePost);
+      setPosts(posts);
+      return posts;
     },
     staleTime: 30 * 1000, // 30 seconds
     onError: (error) => {
@@ -34,8 +73,10 @@ export const useMyPosts = () => {
     queryKey: ['myPosts'],
     queryFn: async () => {
       const data = await postService.getMyPosts();
-      setMyPosts(data);
-      return data;
+      const raw = Array.isArray(data) ? data : data?.data || [];
+      const posts = raw.map(normalizePost);
+      setMyPosts(posts);
+      return posts;
     },
     staleTime: 30 * 1000,
     onError: (error) => {
@@ -64,6 +105,7 @@ export const useCreatePost = () => {
       // Optimistically update with temporary post
       const tempPost = {
         id: `temp-${Date.now()}`,
+        _normalized: true,
         body: newPost.body,
         author: {
           name: 'You',
