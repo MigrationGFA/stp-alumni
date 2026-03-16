@@ -6,8 +6,6 @@ import { Link } from "@/i18n/routing";
 import {
   MessageSquareMore,
   Bell,
-  PanelTopOpen,
-  ChevronDown,
   PanelLeftOpen,
   PanelLeftClose,
 } from "lucide-react";
@@ -15,34 +13,77 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileDrawer } from "@/components/ProfileDrawer";
 import { useSize } from "react-haiku";
 import { useNavbar } from "@/contexts/NavbarContext";
+import useAuthStore from "@/lib/store/useAuthStore";
+import { useQuery } from "@tanstack/react-query";
+import userService from "@/lib/services/userService";
 
-function UserHeader({toggleSidebar, isCollapsed}) {
+/**
+ * Get initials from a full name string
+ * "Khalid Salman-Yusuf" → "KS"
+ */
+function getInitials(name) {
+  if (!name) return "??";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() || "?";
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function UserHeader({ toggleSidebar, isCollapsed }) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const elementRef = useRef(null);
+  const { width, height } = useSize(elementRef);
+  const { setUserSize } = useNavbar();
 
-  const data = {
-    email: "dev@stp-alumni.com",
-    name: "Emannuel",
-    img: "/assets/Profile Image.jpg",
+  // Auth store data (from login response)
+  const user = useAuthStore((state) => state.user);
+  const updateUser = useAuthStore((state) => state.updateUser);
+
+  // Fetch full profile from API (gives us profileImagePath, sector, etc.)
+  const { data: profileData } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: userService.getProfile,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+    onSuccess: (res) => {
+      // Sync profile data back to auth store
+      const profile = res?.data || res;
+      if (profile) {
+        updateUser({
+          profileImagePath: profile.profileImagePath,
+          sector: profile.sector,
+          location: profile.location,
+          skills: profile.skills,
+          cohort: profile.cohort,
+        });
+      }
+    },
+  });
+
+  const profile = profileData?.data || profileData || {};
+
+  // Merge: login response gives name/email, profile API gives image/details
+  const displayName = user?.name || profile?.name || "User";
+  const displayEmail = user?.email || profile?.email || "";
+  const displayImage = profile?.profileImagePath || user?.profileImagePath || null;
+  const initials = getInitials(displayName);
+
+  const headerData = {
+    name: displayName,
+    email: displayEmail,
+    img: displayImage,
+    initials,
   };
 
-     const elementRef = useRef(null);
-    const { width, height } = useSize(elementRef);
-  
-    const { setUserSize } = useNavbar();
-  
-    useEffect(() => {
-      setUserSize({ width, height });
-    }, [width, height]);
+  useEffect(() => {
+    setUserSize({ width, height });
+  }, [width, height]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      // If we've scrolled more than 10px, trigger the glass effect
-      setIsScrolled(window.scrollY > 10);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
   return (
     <header
       className={`sticky top-0 z-30 w-full px-6 md:px-8 py-4 transition-all duration-300 flex items-center justify-between ${
@@ -52,8 +93,8 @@ function UserHeader({toggleSidebar, isCollapsed}) {
       }`}
       ref={elementRef}
     >
-      {/* Logo - click goes to landing page */}
-      <Link href="/" className="flex lg:hidden items-center justify-center gap-3 6 md:py-6 border-b border-white/10">
+      {/* Mobile logo */}
+      <Link href="/" className="flex lg:hidden items-center justify-center gap-3">
         <Image
           src="/assets/logo-removebg-preview.png"
           alt="STP Alumni"
@@ -64,78 +105,53 @@ function UserHeader({toggleSidebar, isCollapsed}) {
         />
       </Link>
 
+      {/* Sidebar toggle (desktop) */}
       <button
         onClick={toggleSidebar}
-        className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-500 "
+        className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-500"
       >
-        {isCollapsed ? (
-          <PanelLeftOpen size={20} />
-        ) : (
-          <PanelLeftClose size={20} />
-        )}
+        {isCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
       </button>
 
       <div className="flex items-center justify-end">
         <div className="flex items-center gap-4">
           {/* Message Button */}
-          <button className="hidden md:block p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm ">
+          <button className="hidden md:block p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm">
             <MessageSquareMore className="h-6 w-6 text-[#020618]" />
           </button>
 
           {/* Notification Button */}
-          <button className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm ">
+          <button className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm">
             <Bell className="h-4 w-4 md:h-6 md:w-6 text-[#020618]" />
           </button>
 
           {/* Mobile: ProfileDrawer trigger */}
-          <ProfileDrawer data={data}>
+          <ProfileDrawer data={headerData}>
             <button className="lg:hidden flex items-center gap-2 cursor-pointer">
-              <Avatar className="h-10 w-10 border-2 border-accent ">
-                <AvatarImage src={data?.img} />
+              <Avatar className="h-10 w-10 border-2 border-accent">
+                <AvatarImage src={headerData.img} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
-                  EM
+                  {initials}
                 </AvatarFallback>
               </Avatar>
-
               <div className="hidden sm:block">
-                <h1 className="text-[#020618] font-semibold">
-                  {data?.name || "User"}
-                </h1>
-                <p className="text-[#02061873] font-light text-sm">
-                  {data?.email || "No email"}
-                </p>
+                <h1 className="text-[#020618] font-semibold">{headerData.name}</h1>
+                <p className="text-[#02061873] font-light text-sm">{headerData.email}</p>
               </div>
             </button>
           </ProfileDrawer>
 
-          {/* Profile Wrapper */}
-          <div className=" gap-1 items-center hidden lg:flex">
+          {/* Desktop profile */}
+          <div className="gap-1 items-center hidden lg:flex">
             <Avatar className="h-10 w-10 border-2 border-accent">
-              <AvatarImage src={data?.img} />
-
-              {/* Get a fallback avatar in form of an initials here */}
+              <AvatarImage src={headerData.img} />
               <AvatarFallback className="bg-primary text-primary-foreground">
-                EM
+                {initials}
               </AvatarFallback>
             </Avatar>
-            {/* 
-            <div className="relative h-10 w-10 rounded-full bg-white/50 overflow-hidden  shadow-sm">
-              <Image
-                src={|| "https://media.istockphoto.com/id/1495088043/vector/user-profile-icon-avatar-or-person-icon-profile-picture-portrait-symbol-default-portrait.jpg?s=612x612&w=0&k=20&c=dhV2p1JwmloBTOaGAtaA3AW1KSnjsdMt7-U_3EZElZ0="}
-                alt="Profile"
-                width={40}
-                height={40}
-                className="h-full w-full object-cover"
-              />
-            </div> */}
-
             <div className="hidden sm:block">
-              <h1 className="text-[#020618] font-semibold">
-                {data?.name || "User"}
-              </h1>
-              <p className="text-[#02061873] font-light text-sm">
-                {data?.email || "No email"}
-              </p>
+              <h1 className="text-[#020618] font-semibold">{headerData.name}</h1>
+              <p className="text-[#02061873] font-light text-sm">{headerData.email}</p>
             </div>
           </div>
         </div>

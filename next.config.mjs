@@ -15,11 +15,25 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com', // Replace with your specific CDN hostname
+        hostname: 'images.unsplash.com',
         port: '',
-        pathname: '/**', // Allows all paths under this domain
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'app.gfa-tech.com',
+        port: '',
+        pathname: '/stp/uploads/**',
       },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://app.gfa-tech.com/stp/api/:path*', // Proxy to Backend
+      },
+    ];
   },
 };
 

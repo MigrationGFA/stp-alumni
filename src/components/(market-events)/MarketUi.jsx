@@ -13,9 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavbar } from "@/contexts/NavbarContext";
-import { alumniProfiles } from "@/lib/data";
 import { usePathname } from "@/i18n/routing";
 import Container from "../container";
+import { useQuery } from "@tanstack/react-query";
+import publicService from "@/lib/services/publicService";
 
 export default function MarketplaceUi() {
   const t = useTranslations("Marketplace");
@@ -39,30 +40,43 @@ export default function MarketplaceUi() {
     setFilters((prev) => ({ ...prev, [key]: value }));
 
   const getSectorDisplay = (sector) => {
+    if (!sector) return "";
     const sectorMap = {
       it: "IT sector",
       healthcare: "Healthcare",
       finance: "Finance",
       education: "Education",
     };
-    return sectorMap[sector] || sector;
+    return sectorMap[sector.toLowerCase()] || sector;
   };
 
-  const filteredAlumni = useMemo(() => {
-    return alumniProfiles.filter((alumni) => {
-      const matchesSearch =
-        !filters.search ||
-        alumni.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-        t(alumni.roleKey).toLowerCase().includes(filters.search.toLowerCase());
+  const { data: marketplaceData, isLoading } = useQuery({
+    queryKey: ["marketplace", filters],
+    queryFn: () => {
+      const params = {};
 
-      const matchesRole =
-        filters.role === "all" || alumni.role === filters.role;
-      const matchesSector =
-        filters.sector === "all" || alumni.sector === filters.sector;
+      if (filters.search && filters.search.trim()) {
+        params.search = filters.search.trim();
+      }
 
-      return matchesSearch && matchesRole && matchesSector;
-    });
-  }, [filters, t]);
+      if (filters.sector && filters.sector !== "all") {
+        // e.g., mapping "finance" back to what the backend expects, or passing it directly.
+        params.sector = filters.sector;
+      }
+
+      if (filters.location && filters.location !== "all") {
+        params.location = filters.location;
+      }
+
+      if (filters.role && filters.role !== "all") {
+        params.role = filters.role;
+      }
+
+      return publicService.getMarketplace(params);
+    },
+  });
+
+  const apiAlumni = marketplaceData?.data || Array.isArray(marketplaceData) ? marketplaceData : [];
 
   return (
     <div
@@ -80,7 +94,8 @@ export default function MarketplaceUi() {
             t={t}
             filters={filters}
             updateFilter={updateFilter}
-            data={filteredAlumni}
+            data={apiAlumni}
+            isLoading={isLoading}
             getSectorDisplay={getSectorDisplay}
           />
         </>
@@ -96,7 +111,8 @@ export default function MarketplaceUi() {
               t={t}
               filters={filters}
               updateFilter={updateFilter}
-              data={filteredAlumni}
+              data={apiAlumni}
+              isLoading={isLoading}
               getSectorDisplay={getSectorDisplay}
             />
           </Container>
@@ -111,6 +127,7 @@ function MarketplaceContent({
   filters,
   updateFilter,
   data,
+  isLoading,
   getSectorDisplay,
 }) {
   return (
@@ -161,8 +178,12 @@ function MarketplaceContent({
         </div>
       </div>
 
-      <div className="bg-white rounded-lg p-6">
-        {data.length > 0 ? (
+      <div className="bg-white rounded-lg p-6 min-h-[300px]">
+        {isLoading ? (
+          <div className="flex justify-center items-center h-full py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#233389]"></div>
+          </div>
+        ) : data && data.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {data.map((alumni) => (
               <AlumniCard
@@ -179,6 +200,7 @@ function MarketplaceContent({
               updateFilter("search", "");
               updateFilter("role", "all");
               updateFilter("sector", "all");
+              updateFilter("location", "all");
             }}
           />
         )}
@@ -204,24 +226,29 @@ const FilterSelect = ({ label, value, onValueChange, children }) => (
 );
 
 const AlumniCard = ({ alumni, t, getSectorDisplay }) => (
-  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border">
-    <div className="relative w-full aspect-square">
+  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border flex flex-col items-center p-6 text-center">
+    <div className="relative w-24 h-24 mb-4">
       <Image
-        src={alumni.image}
-        alt={alumni.name}
+        src={alumni.profileImage || alumni.image || "/assets/Profile Image.jpg"}
+        alt={alumni.name || "Alumni"}
         fill
-        className="object-cover"
+        className="object-cover rounded-full border border-gray-200"
       />
     </div>
-    <div className="p-4 text-center">
-      <h3 className="text-lg font-bold text-gray-900">{alumni.name}</h3>
-      <p className="text-sm text-gray-600">
-        {t(alumni.roleKey)} | {getSectorDisplay(alumni.sector)}
+    <div className="w-full">
+      <h3 className="text-lg font-bold text-gray-900">{alumni.name || "Anonymous Member"}</h3>
+      <p className="text-sm text-gray-600 font-medium">
+        {(alumni.roleKey ? t(alumni.roleKey) : alumni.role) || "Member"} | {getSectorDisplay(alumni.sector) || "General Sector"}
       </p>
-      <p className="text-xs text-gray-500 mt-1">{t(alumni.educationKey)}</p>
+      <p className="text-xs text-gray-500 mt-2">
+        {alumni.educationKey ? t(alumni.educationKey) : (alumni.education || "STP Alumni")}
+      </p>
+      <div className="text-xs text-gray-500 mt-1 flex justify-center gap-1 font-medium bg-gray-50 py-1 rounded-md">
+        {alumni.location || "Location Not Set"}
+      </div>
       <Button
         variant="outline"
-        className="w-full mt-4 border-[#233389] text-[#233389] rounded-full"
+        className="w-full mt-5 border-[#233389] text-[#233389] rounded-full hover:bg-blue-50"
       >
         {t("contact")}
       </Button>

@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Footer } from "@/components/Footer";
 import Navbar from "@/components/(hero-nav)/Navbar";
 import { NavbarProvider } from "@/contexts/NavbarContext";
+import QueryProvider from "@/lib/providers/QueryProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,12 +39,14 @@ export default async function RootLayout({ children, params }) {
           disableTransitionOnChange
         >
           <NextIntlClientProvider locale={locale} messages={messages}>
-            <Toaster position="center" />
-            <NavbarProvider>
-              {/* <Navbar /> */}
-              <div className="min-h-screen bg-background">{children}</div>
-              {/* <Footer /> */}
-            </NavbarProvider>
+            <QueryProvider>
+              <Toaster position="center" />
+              <NavbarProvider>
+                {/* <Navbar /> */}
+                <div className="min-h-screen bg-background">{children}</div>
+                {/* <Footer /> */}
+              </NavbarProvider>
+            </QueryProvider>
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

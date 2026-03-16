@@ -1,22 +1,68 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link, useRouter } from '@/i18n/routing';
+import { useRouter } from '@/i18n/routing';
+import { useMutation } from '@tanstack/react-query';
+import authService from '@/lib/services/authService';
+import useAuthStore from '@/lib/store/useAuthStore';
 import { setRegisteredCookie } from '@/lib/auth-cookie';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const t = useTranslations('Login');
   const router = useRouter();
 
+  const [emailAddress, setEmailAddress] = useState('');
+  const [password, setPassword] = useState('');
+  const setLoginSession = useAuthStore((state) => state.login);
+
+  const loginMutation = useMutation({
+    mutationFn: authService.login,
+    onSuccess: (response) => {
+      const data = response?.data || response;
+      const token = data?.token;
+
+      // Build user object from the login response
+      const user = {
+        id: data?.userId,
+        email: data?.email,
+        name: data?.name,
+        role: data?.role,
+        isOnboarded: data?.isOnboarded ?? false,
+        passwordChangeRequired: data?.passwordChangeRequired ?? false,
+      };
+
+      setLoginSession(user, token);
+      setRegisteredCookie();
+      toast.success(t('loginSuccess'));
+
+      // Route based on onboarding state
+      if (!user.isOnboarded) {
+        router.push('/profile-setup');
+      } else {
+        router.push('/dashboard');
+      }
+    },
+    onError: (error) => {
+      console.error('Login error:', error);
+      toast.error(
+        error.response?.data?.message || t('loginError')
+      );
+    },
+  });
+
   const handleLogin = (e) => {
     e.preventDefault();
-    // TODO: Add actual authentication logic here
-    setRegisteredCookie();
-    router.push('/dashboard');
+    if (!emailAddress || !password) {
+      toast.error(t('fillAllFields'));
+      return;
+    }
+    loginMutation.mutate({ emailAddress, password });
   };
 
   return (
@@ -31,7 +77,6 @@ export default function LoginPage() {
             className="object-cover"
             priority
           />
-          {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#155DFC]/30 to-[#155DFC]/60" />
         </div>
       </div>
@@ -42,18 +87,6 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
           <p className="text-gray-600 mb-8">{t('subtitle')}</p>
 
-       
-
-          {/* OR separator */}
-          {/* <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">{t('or')}</span>
-            </div>
-          </div> */}
-
           {/* Email Input */}
           <div className="mb-4">
             <Label htmlFor="email" className="text-gray-700 mb-2 block">
@@ -62,6 +95,8 @@ export default function LoginPage() {
             <Input
               id="email"
               type="email"
+              value={emailAddress}
+              onChange={(e) => setEmailAddress(e.target.value)}
               placeholder={t('emailPlaceholder')}
               className="w-full"
             />
@@ -75,33 +110,27 @@ export default function LoginPage() {
             <Input
               id="password"
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder={t('passwordPlaceholder')}
               className="w-full"
             />
           </div>
 
           {/* Login Button */}
-          <Button 
+          <Button
             className="w-full h-11 bg-[#155DFC] hover:bg-[#155DFC]/90 text-white mb-6"
             onClick={handleLogin}
+            disabled={loginMutation.isPending}
           >
-            {t('loginButton')}
+            {loginMutation.isPending ? t('loggingIn') : t('loginButton')}
           </Button>
 
-          {/* Sign up link */}
-          <div className="text-center text-sm text-gray-600">
-            {t('notMember')}{' '}
-            <Link href="/signup" className="text-[#155DFC] hover:underline font-medium">
-              {t('createAccount')}
-            </Link>
-          </div>
+          <p className="text-center text-sm text-gray-500">
+            {t('inviteOnly')}
+          </p>
         </div>
       </div>
     </div>
   );
 }
-
-
-
-
-

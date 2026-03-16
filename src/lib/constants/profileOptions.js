@@ -1,0 +1,72 @@
+/**
+ * Curated list of sectors for profile setup and marketplace filtering.
+ * Keep in sync across the platform.
+ */
+export const SECTORS = [
+  "Agriculture",
+  "Architecture",
+  "Banking",
+  "Consulting",
+  "Education",
+  "Energy",
+  "Engineering",
+  "Entertainment",
+  "Finance",
+  "Healthcare",
+  "Hospitality",
+  "Human Resources",
+  "Information Technology",
+  "Insurance",
+  "Legal",
+  "Logistics",
+  "Manufacturing",
+  "Marketing",
+  "Media",
+  "Mining",
+  "Non-Profit",
+  "Real Estate",
+  "Retail",
+  "Telecommunications",
+  "Transportation",
+  "Tourism",
+];
+
+/**
+ * Common skills for autocomplete suggestions.
+ * Users can still type custom skills not in this list.
+ */
+export const SKILL_SUGGESTIONS = [
+  "Accounting",
+  "Business Development",
+  "Communication",
+  "Content Writing",
+  "Data Analysis",
+  "Design",
+  "Digital Marketing",
+  "Entrepreneurship",
+  "Event Planning",
+  "Financial Planning",
+  "Fundraising",
+  "Graphic Design",
+  "Leadership",
+  "Management",
+  "Mentoring",
+  "Negotiation",
+  "Networking",
+  "Operations",
+  "Photography",
+  "Product Management",
+  "Programming",
+  "Project Management",
+  "Public Speaking",
+  "Research",
+  "Sales",
+  "Social Media",
+  "Strategy",
+  "Teaching",
+  "Team Building",
+  "UI/UX Design",
+  "Video Production",
+  "Web Development",
+  "Writing",
+];

@@ -31,17 +31,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useGroupStore } from "@/lib/store/useGroupStore";
+import groupService from "@/lib/services/groupService";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
-// --- Data ---
-const groups = [
-  { id: 1, name: "STP Alumni Network", members: 1250, isPublic: true, description: "Official community for STP program alumni worldwide", cover: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" },
-  { id: 2, name: "Tech Founders Circle", members: 456, isPublic: false, description: "Exclusive group for tech startup founders and entrepreneurs", cover: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=200&fit=crop" },
-  { id: 3, name: "Product Managers Hub", members: 892, isPublic: true, description: "Community for product managers to share insights and learn", cover: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=200&fit=crop" },
-  { id: 4, name: "Design System Community", members: 634, isPublic: true, description: "Collaborate on design principles and UI/UX best practices", cover: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=200&fit=crop" },
-  { id: 5, name: "Data Science Collective", members: 789, isPublic: true, description: "Share data science projects, algorithms, and insights", cover: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=200&fit=crop" }
-];
-
-// --- Sub-components to avoid DRY ---
+// --- Component level handlers ---
 
 const GroupCardWrapper = ({ title, children, sortPlaceholder, selectWidth = "w-40" }) => (
   <Card>
@@ -68,18 +63,22 @@ const GroupCardWrapper = ({ title, children, sortPlaceholder, selectWidth = "w-4
   </Card>
 );
 
-const GroupItem = ({ group, variant }) => (
+const GroupItem = ({ group, variant, onToggleMembership }) => (
   <div className="rounded-lg overflow-hidden hover:shadow-card-hover transition- flex items-center justify-between">
     <div className="flex gap-2 items-center">
-      <div className="relative h-15 w-15 rounded-lg bg-white/50 overflow-hidden shadow-sm">
-        <Image src={group.cover} alt="Group Cover" width={40} height={40} className="h-full w-full object-cover" />
+      <div className="relative h-15 w-15 rounded-lg bg-white/50 overflow-hidden shadow-sm flex items-center justify-center border bg-muted">
+        {group.thumbnailUrl ? (
+          <Image src={group.thumbnailUrl} alt="Group Cover" width={40} height={40} className="h-full w-full object-cover" />
+        ) : (
+          <span className="text-xl font-bold text-muted-foreground">{group.name?.charAt(0)}</span>
+        )}
       </div>
       <div className="min-w-0">
-        <NavLink href={`/groups/${group.id}`} className="hover:underline">
+        <NavLink href={`/dashboard/groups/${group.groupId}`} className="hover:underline">
           <p className="text-sm font-medium truncate">{group.name}</p>
         </NavLink>
         <p className="text-xs text-muted-foreground truncate">
-          {group.members} members {variant === 'all-groups' && `• ${group.isPublic ? "Public" : "Private"}`}
+          {group.memberCount} members
         </p>
         {variant === 'all-groups' && (
           <p className="text-xs text-muted-foreground truncate">{group.description}</p>
@@ -96,11 +95,19 @@ const GroupItem = ({ group, variant }) => (
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem><Link className="h-4 w-4 mr-2" />Copy link to group</DropdownMenuItem>
-          <DropdownMenuItem><LogOut className="h-4 w-4 mr-2" />Leave this group</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onToggleMembership(group.groupId, "LEAVE")} className="text-red-500">
+            <LogOut className="h-4 w-4 mr-2" />
+            Leave this group
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     ) : (
-      <Button variant="outline" size="sm" className="border-stp-blue-light rounded-2xl text-stp-blue-light hover:bg-accent hover:text-accent-foreground">
+      <Button
+        variant="outline"
+        size="sm"
+        className="border-stp-blue-light rounded-2xl text-stp-blue-light hover:bg-accent hover:text-accent-foreground"
+        onClick={() => onToggleMembership(group.groupId, "JOIN")}
+      >
         <span className="hidden sm:inline">Join</span>
       </Button>
     )}
@@ -110,26 +117,70 @@ const GroupItem = ({ group, variant }) => (
 // --- Main Component ---
 
 export function GroupsContent() {
+  const { groups, isLoading, error, toggleGroupMembershipLocally } = useGroupStore();
+
   const itemsPerPage = 4;
   const [currentPage, setCurrentPage] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Compute derived state locally
+  const myGroups = groups?.filter(g => g.isMember) || [];
+  const discoverGroups = groups?.filter(g => !g.isMember) || [];
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentGroups = groups.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(groups.length / itemsPerPage);
+  const currentGroups = discoverGroups.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(discoverGroups.length / itemsPerPage);
+
+  const handleToggleMembership = async (groupId, action) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    try {
+      // Optimistically update the UI to avoid lag
+      toggleGroupMembershipLocally(groupId, action === "JOIN");
+
+      const response = await groupService.toggleMembership(groupId, action);
+      if (response.status) {
+        toast.success(response.message || "Membership updated.");
+      } else {
+        // Revert UI change if API fails
+        toggleGroupMembershipLocally(groupId, action !== "JOIN");
+        toast.error(response.message || "Failed to update membership.");
+      }
+    } catch (error) {
+      // Revert UI change on network error
+      toggleGroupMembershipLocally(groupId, action !== "JOIN");
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card><CardContent className="p-6"><Skeleton className="h-32 w-full" /></CardContent></Card>
+        <Card><CardContent className="p-6"><Skeleton className="h-64 w-full" /></CardContent></Card>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <GroupCardWrapper title="My Groups" sortPlaceholder="Recently Added" selectWidth="w-40">
-        {groups.map((group) => (
-          <GroupItem key={group.id} group={group} variant="my-groups" />
-        ))}
+    <div className="space-y-6">
+      <GroupCardWrapper title={`My Groups (${myGroups.length})`} sortPlaceholder="Recently Added" selectWidth="w-40">
+        {myGroups.length > 0 ? myGroups.map((group) => (
+          <GroupItem key={group.groupId} group={group} variant="my-groups" onToggleMembership={handleToggleMembership} />
+        )) : (
+          <p className="text-sm text-center text-muted-foreground py-4">You have not joined any groups yet.</p>
+        )}
       </GroupCardWrapper>
 
-      <GroupCardWrapper title="Groups" sortPlaceholder="All" selectWidth="w-25">
-        {currentGroups.map((group) => (
-          <GroupItem key={group.id} group={group} variant="all-groups" />
-        ))}
+      <GroupCardWrapper title="Discover Groups" sortPlaceholder="All" selectWidth="w-25">
+        {currentGroups.length > 0 ? currentGroups.map((group) => (
+          <GroupItem key={group.groupId} group={group} variant="all-groups" onToggleMembership={handleToggleMembership} />
+        )) : (
+          <p className="text-sm text-center text-muted-foreground py-4">No new groups available to join.</p>
+        )}
       </GroupCardWrapper>
 
       <Pagination>
@@ -172,11 +223,11 @@ export function GroupsContent() {
             <PaginationNext
               href="#"
               onClick={(e) => { e.preventDefault(); if (currentPage < totalPages) setCurrentPage((v) => v + 1); }}
-              className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              className={currentPage === totalPages || totalPages === 0 ? "pointer-events-none opacity-50" : "cursor-pointer"}
             />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
-    </>
+    </div>
   );
 }

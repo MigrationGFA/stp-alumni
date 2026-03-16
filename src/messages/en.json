@@ -1,5 +1,4 @@
 {
-
   "Navbar": {
     "market": "Marketplace",
     "events": "Events",
@@ -7,9 +6,7 @@
     "contact": "Contact Us",
     "login": "Log In",
     "join": "Join as Alumni"
-  }
-,
-
+  },
   "Hero": {
     "imageAlt": "Alumni networking and connecting at professional event",
     "badgeText": "Connecting 10,000+ Alumni Worldwide",
@@ -89,70 +86,52 @@
       "item3": "Partnership opportunities",
       "item4": "Secure transactions"
     }
-  }
-,
+  },
   "Login": {
     "title": "Login",
-    "subtitle": "Enter your credentials to access your account",
-    "loginWithGoogle": "Login with Google",
-    "or": "OR",
+    "subtitle": "Use the credentials sent to your email to access your account",
     "email": "Email",
     "emailPlaceholder": "Enter your email",
     "password": "Password",
     "passwordPlaceholder": "Enter your Password",
     "loginButton": "Login",
-    "notMember": "Not a member?",
-    "createAccount": "Create an account"
+    "loggingIn": "Logging in...",
+    "loginError": "Invalid credentials. Please try again.",
+    "loginSuccess": "Logged in successfully!",
+    "fillAllFields": "Please fill in all fields",
+    "inviteOnly": "This platform is invite-only. Contact your administrator if you need access."
   },
-  "Signup": {
-    "title": "Welcome to STP Alumni!",
-    "subtitle": "Please provide your name and email.",
-    "signupWithGoogle": "Sign up with Google",
-    "or": "OR",
-    "firstName": "First name",
-    "firstNamePlaceholder": "Enter your first name",
-    "lastName": "Last name",
-    "lastNamePlaceholder": "Enter your last name",
-    "email": "Email",
-    "emailPlaceholder": "Enter your email",
-    "continueButton": "Continue",
-    "alreadyMember": "Already a member?",
-    "login": "Login"
-  },
-  "SignupPassword": {
-    "title": "Choose a Password",
-    "subtitle": "Must be at least 8 characters",
-    "password": "Password",
-    "passwordPlaceholder": "Enter your password",
-    "confirmPassword": "Confirm password",
-    "confirmPasswordPlaceholder": "Confirm password",
-    "continueButton": "Continue"
+  "PasswordBanner": {
+    "message": "You're using a temporary password. Please change it as soon as possible.",
+    "changeNow": "Change now",
+    "dismiss": "Dismiss"
   },
   "ProfileSetup": {
-    "title": "Profile setup",
-    "subtitle": "Provide your information to streamline your experience",
+    "title": "Complete Your Profile",
+    "subtitle": "Tell us about yourself to get the most out of the platform",
     "sector": "Sector",
-    "sectorPlaceholder": "What sectors are you in? (Press Enter to add)",
+    "sectorPlaceholder": "Select your sectors",
+    "sectorSearch": "Search sectors...",
+    "noResults": "No results found.",
     "location": "Location",
-    "locationPlaceholder": "Enter your location",
+    "locationPlaceholder": "Select your country",
+    "locationSearch": "Search countries...",
+    "loadingCountries": "Loading countries...",
     "skills": "Skills",
-    "skillsPlaceholder": "What skill do you have?",
-    "uploadProfileImage": "Upload your profile image",
+    "skillsPlaceholder": "Type a skill or pick from suggestions (Enter to add)",
+    "cohort": "Cohort",
+    "cohortPlaceholder": "e.g. STF2026",
+    "uploadProfileImage": "Profile Image",
+    "clickToUpload": "Click to upload your profile image",
     "linkedin": "LinkedIn Profile",
     "linkedinPlaceholder": "https://linkedin.com/in/yourprofile",
     "goals": "What are your Goals?",
     "goalsPlaceholder": "Kindly share your goals here",
-    "continueButton": "Continue",
-    "imageAlt": "Alumni networking and connecting at professional event",
-    "badgeText": "Connecting 10,000+ Alumni Worldwide",
-    "headlineMain": "Stay Connected.",
-    "headlineSub": "Grow Together.",
-    "description": "Connect with graduates, entrepreneurs, and professionals across sectors. Build your network, find mentors, and unlock opportunities.",
-    "getStarted": "Get Started Free",
-    "watchDemo": "Watch Demo",
-    "featureFree": "Free to Join",
-    "featureIndustries": "50+ Industries",
-    "featureNetwork": "Global Network"
+    "continueButton": "Complete Setup",
+    "submitting": "Submitting...",
+    "setupSuccess": "Profile setup completed!",
+    "setupError": "Failed to complete profile setup. Please try again.",
+    "fillRequired": "Please fill in all required fields (sector, location, skills)"
   },
   "BuildTogether": {
     "titleMain": "Building together,",
@@ -311,5 +290,48 @@
   "ComingSoon": {
     "message": "Coming Soon",
     "description": "We're working hard to bring you this page. Check back soon!"
+  },
+  "Newsfeed": {
+    "title": "News Feed",
+    "searchPlaceholder": "Search posts by content or author",
+    "loadError": "Failed to load posts",
+    "tryAgain": "Try Again",
+    "noPosts": "No posts yet",
+    "noPostsHint": "Be the first to share something!",
+    "postSaved": "Post saved!",
+    "linkCopied": "Link copied to clipboard!"
+  },
+  "Settings": {
+    "title": "Settings",
+    "profileTab": "Profile",
+    "myPostsTab": "My Posts",
+    "securityTab": "Security",
+    "sectors": "Sectors",
+    "location": "Location",
+    "skills": "Skills",
+    "cohort": "Cohort",
+    "linkedin": "LinkedIn",
+    "goals": "Goals",
+    "myPostsCount": "{count} posts",
+    "myPostsError": "Failed to load your posts",
+    "tryAgain": "Try Again",
+    "noMyPosts": "No posts yet",
+    "noMyPostsHint": "Your posts will appear here once you share something",
+    "changePassword": "Change Password",
+    "changePasswordDesc": "Update your password to keep your account secure",
+    "oldPassword": "Current Password",
+    "oldPasswordPlaceholder": "Enter your current password",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter your new password",
+    "confirmPassword": "Confirm New Password",
+    "confirmPasswordPlaceholder": "Re-enter your new password",
+    "updatePassword": "Update Password",
+    "updating": "Updating...",
+    "passwordChanged": "Password changed successfully!",
+    "passwordError": "Failed to change password. Please try again.",
+    "fillAllFields": "Please fill in all fields",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "passwordSameAsOld": "New password must be different from the current one",
+    "passwordMismatch": "Passwords do not match"
   }
 }

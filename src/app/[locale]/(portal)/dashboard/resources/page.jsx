@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import resourceService from "@/lib/services/resourceService";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import {
   Dialog,
@@ -53,81 +56,61 @@ export default function ResourcesPage() {
     sortBy: "newest",
   });
 
+  const queryClient = useQueryClient();
+
   const categories = [
-    { id: "all", label: t("all"), count: null },
-    { id: "guides", label: t("guides"), count: 1 },
-    { id: "trainingMaterials", label: t("trainingMaterials"), count: 4 },
-    { id: "templates", label: t("templates"), count: 8 },
-    { id: "policies", label: t("policies"), count: 3 },
-    { id: "sharedDocs", label: t("sharedDocs"), count: 2 },
-    { id: "videos", label: t("videos"), count: 0 },
+    { id: "all", label: t("all") },
+    { id: "guides", label: t("guides") },
+    { id: "trainingMaterials", label: t("trainingMaterials") },
+    { id: "templates", label: t("templates") },
+    { id: "policies", label: t("policies") },
+    { id: "sharedDocs", label: t("sharedDocs") },
+    { id: "videos", label: t("videos") },
   ];
 
-  const resources = [
-    {
-      id: 1,
-      title: t("resource1Title"),
-      description: t("resource1Desc"),
-      category: "guides",
-      fileType: "PDF",
-      author: t("authorName"),
-      date: 3,
-      iconColor: "bg-blue-500",
-    },
-    {
-      id: 2,
-      title: t("resource2Title"),
-      description: t("resource2Desc"),
-      category: "policies",
-      fileType: "PDF",
-      author: t("authorName"),
-      date: 2,
-      iconColor: "bg-blue-500",
-    },
-    {
-      id: 3,
-      title: t("resource3Title"),
-      description: t("resource3Desc"),
-      category: "templates",
-      fileType: "XLS",
-      author: t("authorName"),
-      date: 3,
-      iconColor: "bg-green-500",
-    },
-    {
-      id: 4,
-      title: t("resource4Title"),
-      description: t("resource4Desc"),
-      category: "guides",
-      fileType: "DOC",
-      author: t("authorName"),
-      date: 2,
-      iconColor: "bg-blue-600",
-    },
-    {
-      id: 5,
-      title: t("resource5Title"),
-      description: t("resource5Desc"),
-      category: "templates",
-      fileType: "DOC",
-      author: t("authorName"),
-      date: 3,
-      iconColor: "bg-blue-600",
-    },
-    {
-      id: 6,
-      title: t("resource6Title"),
-      description: t("resource6Desc"),
-      category: "trainingMaterials",
-      fileType: "PPT",
-      author: t("authorName"),
-      date: 2,
-      iconColor: "bg-red-500",
-    },
-  ];
+  // Fetch resources using react-query
+  const { data: resourcesData, isLoading } = useQuery({
+    queryKey: [
+      "resources",
+      { selectedCategory, searchQuery, fileTypes: filters.fileTypes, sortBy: filters.sortBy },
+    ],
+    queryFn: () => {
+      const params = {};
 
-  const getFileTypeDisplay = (fileType) => {
-    return fileType;
+      // Use the actual labels or IDs expected by the backend
+      if (selectedCategory && selectedCategory !== "all") {
+        params.category = selectedCategory;
+      }
+
+      if (searchQuery.trim()) {
+        params.search = searchQuery.trim();
+      }
+
+      if (filters.fileTypes.length > 0) {
+        // usually passed as comma separated or multiple parameters depending on the API
+        params.fileType = filters.fileTypes.join(",");
+      }
+
+      if (filters.sortBy) {
+        params.sortBy = filters.sortBy;
+      }
+
+      return resourceService.getResources(params);
+    },
+  });
+
+  // Safely extract the data array
+  let resources = [];
+  if (Array.isArray(resourcesData?.data)) {
+    resources = resourcesData.data;
+  } else if (Array.isArray(resourcesData)) {
+    resources = resourcesData;
+  }
+
+  const getFileTypeDisplay = (fileUrl) => {
+    if (!fileUrl) return "DOC";
+    const parts = fileUrl.split('.');
+    return parts.length > 1 ? parts.pop().toUpperCase().slice(0, 4) : "DOC";
   };
 
   const getCategoryLabel = (categoryId) => {
@@ -135,60 +118,44 @@ export default function ResourcesPage() {
     return category ? category.label : categoryId;
   };
 
-  // Filter resources based on search, category, and advanced filters
+  // Optional: Some fallback client-side sort if API only returns unsorted, but API handles it generally
   const filteredResources = useMemo(() => {
-    let filtered = resources;
+    if (!Array.isArray(resources)) return [];
+    // The API handles the filtering/sorting based on query params.
+    // We just return what it provides.
+    return resources;
+  }, [resources]);
 
-    // Filter by category
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter((resource) => resource.category === selectedCategory);
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (resource) =>
-          resource.title.toLowerCase().includes(query) ||
-          resource.description.toLowerCase().includes(query) ||
-          getCategoryLabel(resource.category).toLowerCase().includes(query)
+  const uploadMutation = useMutation({
+    mutationFn: resourceService.uploadResource,
+    onSuccess: () => {
+      toast.success("Resource uploaded successfully!");
+      queryClient.invalidateQueries({ queryKey: ["resources"] });
+      setUploadForm({ title: "", description: "", category: "", file: null });
+      setIsUploadOpen(false);
+    },
+    onError: (error) => {
+      console.error("Upload error:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to upload resource. Please try again."
       );
-    }
-
-    // Filter by file types
-    if (filters.fileTypes.length > 0) {
-      filtered = filtered.filter((resource) =>
-        filters.fileTypes.includes(resource.fileType)
-      );
-    }
-
-    // Sort resources
-    const sorted = [...filtered];
-    switch (filters.sortBy) {
-      case "newest":
-        sorted.sort((a, b) => a.date - b.date);
-        break;
-      case "oldest":
-        sorted.sort((a, b) => b.date - a.date);
-        break;
-      case "title":
-        sorted.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      default:
-        break;
-    }
-
-    return sorted;
-  }, [resources, selectedCategory, searchQuery, filters]);
+    },
+  });
 
   const handleUploadSubmit = (e) => {
     e.preventDefault();
-    // Handle file upload logic here
-    console.log("Upload form:", uploadForm);
-    // Reset form and close dialog
-    setUploadForm({ title: "", description: "", category: "", file: null });
-    setIsUploadOpen(false);
-    // You can add API call here to upload the resource
+    if (!uploadForm.file) {
+      toast.error("Please select a file to upload.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("title", uploadForm.title);
+    formData.append("description", uploadForm.description);
+    formData.append("category", uploadForm.category);
+    formData.append("resourceFile", uploadForm.file);
+
+    uploadMutation.mutate(formData);
   };
 
   const handleFileChange = (e) => {
@@ -216,10 +183,10 @@ export default function ResourcesPage() {
     });
   };
 
-  const hasActiveFilters = 
-    searchQuery !== "" || 
-    selectedCategory !== "all" || 
-    filters.fileTypes.length > 0 || 
+  const hasActiveFilters =
+    searchQuery !== "" ||
+    selectedCategory !== "all" ||
+    filters.fileTypes.length > 0 ||
     filters.sortBy !== "newest";
 
   const fileTypes = ["PDF", "DOC", "XLS", "PPT"];
@@ -341,9 +308,8 @@ export default function ResourcesPage() {
               <Button
                 variant="outline"
                 size="icon"
-                className={`h-12 w-12 border-gray-300 relative ${
-                  hasActiveFilters ? "border-stp-blue-light" : ""
-                }`}
+                className={`h-12 w-12 border-gray-300 relative ${hasActiveFilters ? "border-stp-blue-light" : ""
+                  }`}
                 title="Advanced filters"
               >
                 <Filter className={`h-5 w-5 ${hasActiveFilters ? "text-stp-blue-light" : "text-gray-600"}`} />
@@ -439,29 +405,31 @@ export default function ResourcesPage() {
           <button
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
-            className={`h-11 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-[#233389] ${
-              selectedCategory === category.id
-                ? "bg-[#233389] text-white"
-                : "bg-transparent text-gray-700 hover:bg-gray-50"
-            }`}
+            className={`h-11 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-[#233389] ${selectedCategory === category.id
+              ? "bg-[#233389] text-white"
+              : "bg-transparent text-gray-700 hover:bg-gray-50"
+              }`}
           >
             {category.label}
-            {category.count !== null && ` (${category.count})`}
           </button>
         ))}
       </div>
 
       {/* Resources Grid */}
-      {filteredResources.length > 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#233389]"></div>
+        </div>
+      ) : filteredResources.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredResources.map((resource) => (
-            <Card key={resource.id} className="p-6 hover:shadow-md transition-shadow bg-white">
-              <div className="flex flex-col h-full">
+            <Card key={resource.resourceId || resource.id} className="p-6 hover:shadow-md transition-shadow bg-white flex flex-col h-full">
+              <div className="flex flex-col h-full flex-grow">
                 {/* File Type Icon and Title */}
                 <div className="flex items-start gap-3 mb-3">
-                  <div className={`${resource.iconColor} w-12 h-12 rounded flex items-center justify-center shrink-0`}>
+                  <div className={`${resource.iconColor || "bg-blue-500"} w-12 h-12 rounded flex items-center justify-center shrink-0`}>
                     <span className="text-white font-semibold text-sm">
-                      {getFileTypeDisplay(resource.fileType)}
+                      {getFileTypeDisplay(resource.resourceFileUrl || resource.fileType)}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -487,25 +455,29 @@ export default function ResourcesPage() {
                 </div>
 
                 {/* Author, Date, and Download Button */}
-                <div className="flex items-center justify-between mt-auto">
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="/assets/Profile Image.jpg" alt={resource.author} />
-                      <AvatarFallback>{resource.author.charAt(0)}</AvatarFallback>
+                      <AvatarImage src="/assets/Profile Image.jpg" alt={resource.author || "User"} />
+                      <AvatarFallback>{(resource.author || "U").charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-xs font-medium text-gray-900">{resource.author}</p>
+                      <p className="text-xs font-medium text-gray-900">{resource.author || "User"}</p>
                       <p className="text-xs text-gray-500">
-                        {resource.date === 1 
-                          ? t("dayAgo") 
-                          : resource.date === 2
-                          ? t("2daysAgo")
-                          : t("3daysAgo")
-                        }
+                        {resource.createdAt ? new Date(resource.createdAt).toLocaleDateString() : (resource.date || "Recently")}
                       </p>
                     </div>
                   </div>
                   <button
+                    onClick={() => {
+                      // Trigger download based on the resource URL or API call
+                      resourceService.downloadResource(resource.resourceId || resource.id).then((response) => {
+                        // Handle response appropriately (e.g. download blob or link)
+                        toast.success("Download started");
+                      }).catch((err) => {
+                        toast.error("Failed to download resource");
+                      });
+                    }}
                     className="inline-flex items-center justify-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium border border-[#233389] bg-white text-[#233389] hover:bg-[#233389] hover:text-white transition-colors duration-200"
                   >
                     <Download className="h-4 w-4" />

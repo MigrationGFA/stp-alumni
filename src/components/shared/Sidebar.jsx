@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
-import { Link, usePathname } from "@/i18n/routing";
+import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
+import useAuthStore from "@/lib/store/useAuthStore";
 import {
   Home,
   Users,
@@ -23,6 +24,8 @@ import {
 const Sidebar = ({ isCollapsed }) => {
   const t = useTranslations("Sidebar");
   const pathname = usePathname();
+  const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
 
   const [isHovered, setIsHovered] = useState(false);
 
@@ -55,25 +58,17 @@ const Sidebar = ({ isCollapsed }) => {
   // const isActive = (href) => pathname.split("/").join(" ").startsWith(href) || pathname.includes(href);
   // console.log(pathname.split("/").length,"path")
   const isActive = (href) => {
-    // For all items, exact match is always active
-    if (pathname === href) return true;
-
-    if (
-      href === "/dashboard/network" &&
-      pathname.startsWith("/dashboard/network/")
-    ) {
-      return true;
-    }
-
-    return false;
+    // Dashboard home: exact match only
+    if (href === "/dashboard") return pathname === "/dashboard";
+    // All other items: match if pathname starts with the href
+    return pathname.startsWith(href);
   };
   return (
     <aside
       onMouseEnter={() => isCollapsed && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`fixed left-0 top-0 h-screen bg-[#1B2F5B] text-white transition-all duration-300 z-50 flex flex-col overflow-hidden ${
-        isExpanded ? "w-60" : "w-20"
-      } -translate-x-full lg:translate-x-0`}
+      className={`fixed left-0 top-0 h-screen bg-[#1B2F5B] text-white transition-all duration-300 z-50 flex flex-col overflow-hidden ${isExpanded ? "w-60" : "w-20"
+        } -translate-x-full lg:translate-x-0`}
     >
       {/* Logo - click goes to landing page */}
       <Link
@@ -100,19 +95,17 @@ const Sidebar = ({ isCollapsed }) => {
             <Link
               key={item.href}
               href={`${item.href}`}
-              className={`flex items-center h-12 rounded-lg transition-all px-3 ${
-                active
+              className={`flex items-center h-12 rounded-lg transition-all px-3 ${active
                   ? "bg-[#2B7FFF]/20 text-[#2B7FFF]"
                   : "text-white/70 hover:bg-white/5"
-              }`}
+                }`}
             >
               <Icon className="h-5 w-5 shrink-0" />
               <span
-                className={`ml-4 text-sm font-medium whitespace-nowrap transition-all duration-300 ${
-                  isExpanded
+                className={`ml-4 text-sm font-medium whitespace-nowrap transition-all duration-300 ${isExpanded
                     ? "opacity-100 translate-x-0"
                     : "opacity-0 -translate-x-10"
-                }`}
+                  }`}
               >
                 {item.label}
               </span>
@@ -131,17 +124,15 @@ const Sidebar = ({ isCollapsed }) => {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center justify-center w-full py-3 rounded-lg transition-all ${
-                active
+              className={`flex items-center justify-center w-full py-3 rounded-lg transition-all ${active
                   ? "bg-[rgba(43,127,255,0.15)] text-[#155DFC]"
                   : "text-white/70 hover:bg-white/5 hover:text-white"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3 w-45">
                 <Icon
-                  className={`h-5 w-5 shrink-0 ${
-                    active ? "text-[#155DFC]" : ""
-                  }`}
+                  className={`h-5 w-5 shrink-0 ${active ? "text-[#155DFC]" : ""
+                    }`}
                 />
                 <span
                   className={`text-sm font-medium ${isExpanded ? "block" : "hidden opacity-0"}`}
@@ -156,8 +147,8 @@ const Sidebar = ({ isCollapsed }) => {
         {/* Sign Out */}
         <button
           onClick={() => {
-            // Handle sign out logic here
-            console.log("Sign out clicked");
+            logout();
+            router.push('/login');
           }}
           className="flex items-center justify-center w-full py-3 rounded-lg text-[#ED202D] hover:bg-white/5 transition-all"
         >

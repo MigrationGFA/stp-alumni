@@ -109,15 +109,6 @@ const Navbar = () => {
           >
             <Link href="/login">{t("login")}</Link>
           </Button>
-          
-          <Button
-            variant="default"
-            size="sm"
-            className="gradient-btn-primary-rtl hover:opacity-90 transition-opacity rounded-sm p-3.75"
-            asChild
-          >
-            <Link href="/signup">{t("join")}</Link>
-          </Button>
 
           <ModeToggle/>
           <LanguageSwitcher/>
@@ -166,8 +157,8 @@ const Navbar = () => {
                   className="w-full justify-start"
                   asChild
                 >
-                  <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
-                    {t("join")}
+                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    {t("login")}
                   </Link>
                 </Button>
               </div>

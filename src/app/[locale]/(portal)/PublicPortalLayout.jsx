@@ -31,7 +31,7 @@ export default function PublicPortalLayout({ children, pageTitle }) {
             <Link href="/login">{t("login")}</Link>
           </Button>
           <Button variant="default" size="sm" className="bg-[#2B7FFF] hover:bg-[#2563eb] text-white" asChild>
-            <Link href="/signup">{t("join")}</Link>
+            <Link href="/login">{t("login")}</Link>
           </Button>
         </div>
       </header>

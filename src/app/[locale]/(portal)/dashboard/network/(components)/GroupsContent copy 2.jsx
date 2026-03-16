@@ -133,7 +133,7 @@ export function GroupsContent() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <NavLink href={`/groups/${group.id}`} className="hover:underline">
+                    <NavLink href={`/dashboard/groups/${group.id}`} className="hover:underline">
                     <p className="text-sm font-medium truncate">{group.name}</p>
                     </NavLink>
                     <p className="text-xs text-muted-foreground truncate">
@@ -202,7 +202,7 @@ export function GroupsContent() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <NavLink href={`/groups/${group.id}`} className="hover:underline">
+                    <NavLink href={`/dashboard/groups/${group.id}`} className="hover:underline">
 
                     <p className="text-sm font-medium truncate">{group.name}</p>
                     </NavLink>

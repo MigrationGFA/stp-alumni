@@ -4,28 +4,25 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import {
   MessageCircle,
-  Bell,
-  MoreHorizontal,
   MoreVertical,
-  Plus,
-  Image as ImageIcon,
-  Video,
-  Heart,
-  MessageSquare,
-  UserPlus,
+  MoreHorizontal,
   Calendar,
   ShoppingBag,
   ChevronRight,
   Globe,
-  Send,
-  Bookmark,
-  Link as LinkIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavbar } from "@/contexts/NavbarContext";
-import { invitations, messages, networkContacts } from "@/lib/data";
+import { messages } from "@/lib/data";
+import { useQuery } from "@tanstack/react-query";
+import networkService from "@/lib/services/networkService";
+import { usePostsFeed, useLikePost } from "@/lib/hooks/usePosts";
+import CreatePost from "@/components/posts/CreatePost";
+import PostCard from "@/components/posts/PostCard";
+import PostSkeleton from "@/components/posts/PostSkeleton";
+import { toast } from "sonner";
 
 /**
  * Dashboard page - main landing page after login
@@ -33,37 +30,69 @@ import { invitations, messages, networkContacts } from "@/lib/data";
  */
 export default function DashboardPage() {
   const t = useTranslations("Dashboard");
-  const [postContent, setPostContent] = useState("");
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const dropdownRefs = useRef({});
 
   const {
     userSize: { height },
   } = useNavbar();
 
-  console.log(height, "height");
+  // Fetch posts using React Query
+  const { data: posts, isLoading, error, refetch } = usePostsFeed();
+  const { mutate: likePost } = useLikePost();
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      Object.keys(dropdownRefs.current).forEach((postId) => {
-        const ref = dropdownRefs.current[postId];
-        if (ref && !ref.contains(event.target)) {
-          setOpenDropdown(null);
-        }
-      });
-    };
+  // Fetch your network data
+  const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
+    queryKey: ["network"],
+    queryFn: () => networkService.getNetwork(),
+  });
 
-    if (openDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+  // Fetch invitations/connections data
+  const { data: connectionsData, isLoading: isLoadingConnections } = useQuery({
+    queryKey: ["connections"],
+    queryFn: () => networkService.getConnections(),
+  });
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [openDropdown]);
+  // Parse mapped network payload safely
+  const rawNetwork = networkData?.data || networkData || {};
+  const networkContacts = Array.isArray(rawNetwork.networkUsers)
+    ? rawNetwork.networkUsers.slice(0, 5)
+    : [];
 
-  const toggleDropdown = (postId) => {
-    setOpenDropdown(openDropdown === postId ? null : postId);
+  // Parse mapped invitations safely (assuming response is array or .data array)
+  // Filtering loosely for "pending" status if available; else relying on API struct
+  const rawConnections = Array.isArray(connectionsData?.data)
+    ? connectionsData.data
+    : Array.isArray(connectionsData)
+      ? connectionsData
+      : [];
+
+  const invitations = rawConnections
+    .filter((conn) => conn.status?.toLowerCase() === "pending")
+    .slice(0, 5);
+
+  // Handlers
+  const handleLike = (postId) => {
+    likePost(postId);
+  };
+
+  const handleComment = (postId) => {
+    // TODO: Open comment modal or navigate to post detail
+    console.log("Comment on post:", postId);
+  };
+
+  const handleFollow = (userId) => {
+    // TODO: Implement follow functionality
+    console.log("Follow user:", userId);
+    toast.success("Follow feature coming soon!");
+  };
+
+  const handleSave = (postId) => {
+    // TODO: Implement save functionality
+    console.log("Save post:", postId);
+    toast.success("Post saved!");
+  };
+
+  const handleCopyLink = (postId) => {
+    toast.success("Link copied to clipboard!");
   };
 
   return (
@@ -126,290 +155,91 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions */}
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    {[
-                    {
-                      href: "/dashboard/network",
-                      icon: Globe,
-                      bgColor: "bg-[rgba(237,32,45,0.08)]",
-                      iconColor: "text-[#ED202D]",
-                      labelKey: "networking",
-                      // isLink: true,
-                    },
-                    {
-                      href: "/dashboard/events",
-                      icon: Calendar,
-                      bgColor: "bg-[rgba(54,124,255,0.08)]",
-                      iconColor: "text-[#367CFF]",
-                      labelKey: "events",
-                    },
-                    {
-                      href: "/dashboard/marketplace",
-                      icon: ShoppingBag,
-                      bgColor: "bg-[rgba(251,173,23,0.08)]",
-                      iconColor: "text-[#FBAD17]",
-                      labelKey: "marketplace",
-                    },
-                    ].map((action, index) => {
-                    const Icon = action.icon;
-                    return (
-                      <Link
-                      key={index}
-                      href={action.href}
-                      className="flex-1 flex flex-row items-center justify-start gap-2 py-3 lg:py-4"
-                      >
-                      <div className={`p-2 rounded-lg ${action.bgColor}`}>
-                        <Icon className={`h-5 w-5 ${action.iconColor}`} />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">
-                        {t(action.labelKey)}
-                      </span>
-                      </Link>
-                    );
-                    })}
-                  </div>
-
-                  {/* Post Creation */}
-            <div className="rounded-lg p-3 lg:p-4 border border-[#233389]">
-              <div>
-                <textarea
-                  placeholder={t("startPost")}
-                  value={postContent}
-                  onChange={(e) => setPostContent(e.target.value)}
-                  className="w-full p-3 border-0 rounded-lg resize-none focus:outline-none focus:border focus:border-[#233389] bg-transparent"
-                  rows={3}
-                />
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-[rgba(0,0,0,0.3)]">
-                  <div className="flex gap-3">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg">
-                      <ImageIcon className="h-5 w-5 text-gray-600" />
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg">
-                      <Video className="h-5 w-5 text-gray-600" />
-                    </button>
-                  </div>
-                  <Button
-                    className={`text-white rounded-lg px-6 flex items-center gap-2 ${
-                      postContent.trim()
-                        ? "bg-[#233389] hover:bg-[#1d2a6e]"
-                        : "bg-[#23338966] hover:bg-[#23338980]"
-                    }`}
+            <div className="flex flex-col sm:flex-row gap-4">
+              {[
+                {
+                  href: "/dashboard/network",
+                  icon: Globe,
+                  bgColor: "bg-[rgba(237,32,45,0.08)]",
+                  iconColor: "text-[#ED202D]",
+                  labelKey: "networking",
+                  // isLink: true,
+                },
+                {
+                  href: "/dashboard/events",
+                  icon: Calendar,
+                  bgColor: "bg-[rgba(54,124,255,0.08)]",
+                  iconColor: "text-[#367CFF]",
+                  labelKey: "events",
+                },
+                {
+                  href: "/dashboard/marketplace",
+                  icon: ShoppingBag,
+                  bgColor: "bg-[rgba(251,173,23,0.08)]",
+                  iconColor: "text-[#FBAD17]",
+                  labelKey: "marketplace",
+                },
+              ].map((action, index) => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={index}
+                    href={action.href}
+                    className="flex-1 flex flex-row items-center justify-start gap-2 py-3 lg:py-4"
                   >
-                    {t("submitPost")}
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+                    <div className={`p-2 rounded-lg ${action.bgColor}`}>
+                      <Icon className={`h-5 w-5 ${action.iconColor}`} />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {t(action.labelKey)}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
 
-            {/* News Feed Post */}
-            <div className="bg-white rounded-lg p-4 lg:p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex gap-3">
-                  <div className="h-12 w-12 rounded-full bg-gray-300 overflow-hidden shrink-0">
-                    <Image
-                      src="/assets/Profile Image.jpg"
-                      alt={t("postAuthorName")}
-                      width={48}
-                      height={48}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-[#233389]">
-                      {t("postAuthorName")}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {t("postAuthorTitle")}
-                    </p>
-                    <p className="text-xs text-gray-500">Today, 7:00PM</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 relative">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-[#233389] border-[#233389] hover:bg-[#233389] hover:text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    {t("follow")}
-                  </Button>
-                  <div
-                    className="relative"
-                    ref={(el) => (dropdownRefs.current["post1"] = el)}
-                  >
-                    <button
-                      className="p-2 hover:bg-gray-100 rounded-lg"
-                      onClick={() => toggleDropdown("post1")}
-                    >
-                      <MoreHorizontal className="h-5 w-5 text-[#233389]" />
-                    </button>
-                    {openDropdown === "post1" && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                        <button className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-left">
-                          <Bookmark className="h-4 w-4 text-gray-600" />
-                          <span className="text-sm text-gray-900">
-                            {t("save")}
-                          </span>
-                        </button>
-                        <button className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-left rounded-b-lg">
-                          <LinkIcon className="h-4 w-4 text-gray-600" />
-                          <span className="text-sm text-gray-900">
-                            {t("copyLink")}
-                          </span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+            {/* Post Creation */}
+            <CreatePost onPostCreated={refetch} />
 
-              <p className="text-gray-700 mb-4">
-                {t("postContent")}{" "}
-                <span className="text-[#2B7FFF] cursor-pointer hover:underline">
-                  {t("more")}
-                </span>
-                "
-              </p>
+            {/* News Feed */}
+            {isLoading && (
+              <>
+                <PostSkeleton />
+                <PostSkeleton />
+              </>
+            )}
 
-              {/* Placeholder for images */}
-              <div
-                className="grid grid-cols-2 gap-2 mb-4"
-                style={{ gridTemplateRows: "repeat(2, minmax(0, 1fr))" }}
-              >
-                <div
-                  className="bg-gray-200 rounded-lg"
-                  style={{ gridRow: "1 / 3" }}
-                ></div>
-                <div className="aspect-video bg-gray-200 rounded-lg"></div>
-                <div className="aspect-video bg-gray-200 rounded-lg"></div>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    <div className="h-6 w-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-xs">
-                      👍
-                    </div>
-                    <div className="h-6 w-6 rounded-full bg-green-500 border-2 border-white flex items-center justify-center text-xs">
-                      👏
-                    </div>
-                    <div className="h-6 w-6 rounded-full bg-red-500 border-2 border-white flex items-center justify-center text-xs">
-                      🤍
-                    </div>
-                  </div>
-                  <span className="text-sm text-gray-600">{t("likedBy")}</span>
-                </div>
-                <span className="text-sm text-gray-600">
-                  {t("commentsCount")}
-                </span>
-              </div>
-
-              <div className="flex items-center pt-4 border-t border-gray-200">
-                <button className="flex-1 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                  <Heart className="h-5 w-5 text-[#ED202D]" strokeWidth={2} />
-                  <span className="text-sm font-medium">{t("like")}</span>
-                </button>
-                <button className="flex-1 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                  <MessageSquare
-                    className="h-5 w-5 text-[#2B7FFF]"
-                    strokeWidth={2}
-                  />
-                  <span className="text-sm font-medium">{t("comment")}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Second Post - Golf Tournament */}
-            <div className="bg-white rounded-lg p-4 lg:p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex gap-3">
-                  <div className="h-12 w-12 rounded-full bg-gray-300 overflow-hidden">
-                    <Image
-                      src="/assets/Profile Image.jpg"
-                      alt={t("postAuthorName")}
-                      width={48}
-                      height={48}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-[#233389]">
-                      {t("postAuthorName")}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {t("postAuthorTitle")}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 relative">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-[#233389] border-[#233389] hover:bg-[#233389] hover:text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    {t("follow")}
-                  </Button>
-                  <div
-                    className="relative"
-                    ref={(el) => (dropdownRefs.current["post2"] = el)}
-                  >
-                    <button
-                      className="p-2 hover:bg-gray-100 rounded-lg"
-                      onClick={() => toggleDropdown("post2")}
-                    >
-                      <MoreHorizontal className="h-5 w-5 text-[#233389]" />
-                    </button>
-                    {openDropdown === "post2" && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                        <button className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-left">
-                          <Bookmark className="h-4 w-4 text-gray-600" />
-                          <span className="text-sm text-gray-900">
-                            {t("save")}
-                          </span>
-                        </button>
-                        <button className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-left rounded-b-lg">
-                          <LinkIcon className="h-4 w-4 text-gray-600" />
-                          <span className="text-sm text-gray-900">
-                            {t("copyLink")}
-                          </span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="aspect-video bg-gray-300 rounded-lg mb-4 overflow-hidden relative">
-                <Image
-                  src="/assets/Trees.jpg"
-                  alt="Golf Tournament"
-                  fill
-                  className="object-cover"
-                />
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#233389]/20 to-[#233389]/80" />
-                {/* Date on gradient overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <p className="text-sm text-white font-medium mb-1">
-                    {t("eventDate")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <h3 className="text-xl font-bold text-[#233389] mb-4 pb-4 border-b border-gray-200">
-                  {t("eventTitle")}
-                </h3>
-                <Button
-                  variant="outline"
-                  className="w-full border-[#233389] text-[#233389] hover:bg-[#233389] hover:text-white rounded-2xl"
-                >
-                  {t("view")}
+            {error && (
+              <div className="bg-white rounded-lg p-6 text-center">
+                <p className="text-red-600 mb-4">Failed to load posts</p>
+                <Button onClick={() => refetch()} className="bg-[#233389] hover:bg-[#1d2a6e]">
+                  Try Again
                 </Button>
               </div>
-            </div>
+            )}
+
+            {!isLoading && !error && posts && posts.length > 0 && (
+              <>
+                {posts.map((post, index) => (
+                  <PostCard
+                    key={post.id || index}
+                    post={post}
+                    onLike={handleLike}
+                    onComment={handleComment}
+                    onFollow={handleFollow}
+                    onSave={handleSave}
+                    onCopyLink={handleCopyLink}
+                  />
+                ))}
+              </>
+            )}
+
+            {!isLoading && !error && (!posts || posts.length === 0) && (
+              <div className="bg-white rounded-lg p-12 text-center">
+                <p className="text-gray-500 mb-4">No posts yet</p>
+                <p className="text-sm text-gray-400">Be the first to share something!</p>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Sidebar Widgets */}
@@ -434,82 +264,104 @@ export default function DashboardPage() {
                     {t("yourNetwork")}
                   </h3>
                   <div className="space-y-3">
-                    {networkContacts.map((contact, index) => (
-                      <div
-                        key={index}
-                        className="bg-white rounded-lg p-4 flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
-                            <Image
-                              src="/assets/Your Newtork Image.jpg"
-                              alt={contact.name}
-                              width={40}
-                              height={40}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm text-[#233389]">
-                              {contact.name}
-                            </p>
-                            <p className="text-xs text-gray-600">
-                              {contact.email}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button className="p-1 hover:bg-gray-100 rounded">
-                            <MessageCircle className="h-4 w-4 text-[#233389]" />
-                          </button>
-                          <button className="p-1 hover:bg-gray-100 rounded">
-                            <MoreHorizontal className="h-4 w-4 text-[#233389]" />
-                          </button>
-                        </div>
+                    {isLoadingNetwork ? (
+                      <div className="flex justify-center p-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#233389]"></div>
                       </div>
-                    ))}
+                    ) : networkContacts.length > 0 ? (
+                      networkContacts.map((contact, index) => (
+                        <div
+                          key={contact.id || index}
+                          className="bg-white rounded-lg p-4 flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                              <Image
+                                src={contact.profileImage || "/assets/Your Newtork Image.jpg"}
+                                alt={contact.name || contact.firstName || "User"}
+                                width={40}
+                                height={40}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm text-[#233389] truncate">
+                                {contact.name || contact.firstName || "Anonymous"}
+                              </p>
+                              <p className="text-xs text-gray-600 truncate">
+                                {contact.role || contact.email || "Member"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button className="p-1 hover:bg-gray-100 rounded">
+                              <MessageCircle className="h-4 w-4 text-[#233389]" />
+                            </button>
+                            <button className="p-1 hover:bg-gray-100 rounded">
+                              <MoreHorizontal className="h-4 w-4 text-[#233389]" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500 text-center py-4 bg-white rounded-lg">
+                        Go connect to build your network!
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Invitations */}
                 <div className="bg-white rounded-lg p-4 lg:p-6">
                   <h3 className="font-semibold text-[#233389] mb-4">
-                    {t("invitations")} (10)
+                    {t("invitations")} {invitations.length > 0 ? `(${invitations.length})` : ''}
                   </h3>
                   <div className="space-y-3">
-                    {invitations.map((invitation, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden">
-                            <Image
-                              src={invitation.image}
-                              alt={invitation.name}
-                              width={40}
-                              height={40}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm text-[#233389]">
-                              {invitation.name}
-                            </p>
-                            <p className="text-xs text-gray-600">
-                              {t(invitation.messageKey)}
-                            </p>
-                          </div>
-                        </div>
-                        <button className="p-1 hover:bg-gray-100 rounded">
-                          <MoreVertical className="h-4 w-4 text-gray-600" />
-                        </button>
+                    {isLoadingConnections ? (
+                      <div className="flex justify-center p-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#233389]"></div>
                       </div>
-                    ))}
+                    ) : invitations.length > 0 ? (
+                      invitations.map((invitation, index) => (
+                        <div
+                          key={invitation.id || index}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                              <Image
+                                src={invitation.user?.profileImage || invitation.image || "/assets/Your Newtork Image.jpg"}
+                                alt={invitation.user?.name || invitation.name || "User"}
+                                width={40}
+                                height={40}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm text-[#233389] truncate">
+                                {invitation.user?.name || invitation.name || "Pending User"}
+                              </p>
+                              <p className="text-xs text-gray-600 truncate">
+                                Pending connection request
+                              </p>
+                            </div>
+                          </div>
+                          <button className="p-1 hover:bg-gray-100 rounded flex-shrink-0">
+                            <MoreVertical className="h-4 w-4 text-gray-600" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-2">
+                        No pending invitations.
+                      </p>
+                    )}
                   </div>
-                  <button className="w-full mt-4 text-center text-sm py-2 border border-[#233389] text-[#233389] hover:bg-[#233389] hover:text-white rounded-2xl">
-                    {t("seeMore")}
-                  </button>
+                  {invitations.length > 0 && (
+                    <button className="w-full mt-4 text-center text-sm py-2 border border-[#233389] text-[#233389] hover:bg-[#233389] hover:text-white rounded-2xl transition-colors">
+                      {t("seeMore")}
+                    </button>
+                  )}
                 </div>
 
                 {/* Messages */}
