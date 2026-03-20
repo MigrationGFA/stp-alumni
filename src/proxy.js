@@ -4,7 +4,7 @@ import { routing } from './i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
-export default function middleware(req) {
+export default function proxy(req) {
   const token = req.cookies.get('token')?.value;
   const { pathname } = req.nextUrl;
 

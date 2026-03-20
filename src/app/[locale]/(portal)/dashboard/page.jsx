@@ -38,6 +38,7 @@ export default function DashboardPage() {
   // Fetch posts using React Query
   const { data: posts, isLoading, error, refetch } = usePostsFeed();
   const { mutate: likePost } = useLikePost();
+  console.log("posts",posts)
 
   // Fetch your network data
   const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
@@ -275,7 +276,7 @@ export default function DashboardPage() {
                           className="bg-white rounded-lg p-4 flex items-center justify-between"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
                               <Image
                                 src={contact.profileImage || "/assets/Your Newtork Image.jpg"}
                                 alt={contact.name || contact.firstName || "User"}
@@ -293,7 +294,7 @@ export default function DashboardPage() {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center gap-2 shrink-0">
                             <button className="p-1 hover:bg-gray-100 rounded">
                               <MessageCircle className="h-4 w-4 text-[#233389]" />
                             </button>
@@ -328,7 +329,7 @@ export default function DashboardPage() {
                           className="flex items-center justify-between"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
                               <Image
                                 src={invitation.user?.profileImage || invitation.image || "/assets/Your Newtork Image.jpg"}
                                 alt={invitation.user?.name || invitation.name || "User"}
@@ -346,7 +347,7 @@ export default function DashboardPage() {
                               </p>
                             </div>
                           </div>
-                          <button className="p-1 hover:bg-gray-100 rounded flex-shrink-0">
+                          <button className="p-1 hover:bg-gray-100 rounded shrink-0">
                             <MoreVertical className="h-4 w-4 text-gray-600" />
                           </button>
                         </div>
@@ -372,7 +373,7 @@ export default function DashboardPage() {
                   <div className="space-y-3">
                     {messages.map((message, index) => (
                       <div key={index} className="flex items-start gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                        <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
                           <Image
                             src={message.image}
                             alt={message.name}

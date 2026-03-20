@@ -55,7 +55,7 @@ export function EventCard({ event, onView }) {
     <div className="bg-card rounded-xl overflow-hidden border border-border flex flex-col h-full hover:shadow-lg transition-shadow">
       <div className="aspect-[16/9] sm:aspect-[4/3] overflow-hidden">
         <img
-          src={event.cover}
+          src={event.coverImageUrl}
           alt={event.name}
           className="w-full h-full object-cover"
         />

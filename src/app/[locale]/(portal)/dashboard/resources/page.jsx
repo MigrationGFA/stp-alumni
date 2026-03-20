@@ -1,7 +1,15 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Search, Upload, Filter, Download, X, FileText, SlidersHorizontal } from "lucide-react";
+import {
+  Search,
+  Upload,
+  Filter,
+  Download,
+  X,
+  FileText,
+  SlidersHorizontal,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +80,12 @@ export default function ResourcesPage() {
   const { data: resourcesData, isLoading } = useQuery({
     queryKey: [
       "resources",
-      { selectedCategory, searchQuery, fileTypes: filters.fileTypes, sortBy: filters.sortBy },
+      {
+        selectedCategory,
+        searchQuery,
+        fileTypes: filters.fileTypes,
+        sortBy: filters.sortBy,
+      },
     ],
     queryFn: () => {
       const params = {};
@@ -109,7 +122,7 @@ export default function ResourcesPage() {
 
   const getFileTypeDisplay = (fileUrl) => {
     if (!fileUrl) return "DOC";
-    const parts = fileUrl.split('.');
+    const parts = fileUrl.split(".");
     return parts.length > 1 ? parts.pop().toUpperCase().slice(0, 4) : "DOC";
   };
 
@@ -137,7 +150,8 @@ export default function ResourcesPage() {
     onError: (error) => {
       console.error("Upload error:", error);
       toast.error(
-        error.response?.data?.message || "Failed to upload resource. Please try again."
+        error.response?.data?.message ||
+          "Failed to upload resource. Please try again.",
       );
     },
   });
@@ -194,7 +208,9 @@ export default function ResourcesPage() {
   return (
     <div className="p-3 sm:p-0">
       {/* Title */}
-      <h1 className="text-2xl lg:text-3xl font-bold text-stp-blue-light mb-6">{t("title")}</h1>
+      <h1 className="text-2xl lg:text-3xl font-bold text-stp-blue-light mb-6">
+        {t("title")}
+      </h1>
 
       {/* Search and Actions Bar */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -227,7 +243,8 @@ export default function ResourcesPage() {
               <DialogHeader>
                 <DialogTitle>Upload Resource</DialogTitle>
                 <DialogDescription>
-                  Share educational materials, templates, and documents with the community.
+                  Share educational materials, templates, and documents with the
+                  community.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleUploadSubmit} className="space-y-4">
@@ -236,7 +253,9 @@ export default function ResourcesPage() {
                   <Input
                     id="title"
                     value={uploadForm.title}
-                    onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
+                    onChange={(e) =>
+                      setUploadForm({ ...uploadForm, title: e.target.value })
+                    }
                     placeholder="Enter resource title"
                     required
                   />
@@ -246,7 +265,12 @@ export default function ResourcesPage() {
                   <Textarea
                     id="description"
                     value={uploadForm.description}
-                    onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
+                    onChange={(e) =>
+                      setUploadForm({
+                        ...uploadForm,
+                        description: e.target.value,
+                      })
+                    }
                     placeholder="Describe the resource"
                     rows={3}
                     required
@@ -256,7 +280,9 @@ export default function ResourcesPage() {
                   <Label htmlFor="category">Category</Label>
                   <Select
                     value={uploadForm.category}
-                    onValueChange={(value) => setUploadForm({ ...uploadForm, category: value })}
+                    onValueChange={(value) =>
+                      setUploadForm({ ...uploadForm, category: value })
+                    }
                     required
                   >
                     <SelectTrigger>
@@ -264,7 +290,9 @@ export default function ResourcesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="guides">Guides</SelectItem>
-                      <SelectItem value="trainingMaterials">Training Materials</SelectItem>
+                      <SelectItem value="trainingMaterials">
+                        Training Materials
+                      </SelectItem>
                       <SelectItem value="templates">Templates</SelectItem>
                       <SelectItem value="policies">Policies</SelectItem>
                       <SelectItem value="sharedDocs">Shared Docs</SelectItem>
@@ -284,7 +312,9 @@ export default function ResourcesPage() {
                       className="cursor-pointer"
                     />
                     {uploadForm.file && (
-                      <span className="text-sm text-gray-600">{uploadForm.file.name}</span>
+                      <span className="text-sm text-gray-600">
+                        {uploadForm.file.name}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -296,7 +326,10 @@ export default function ResourcesPage() {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-stp-blue-light hover:bg-stp-blue-light/90">
+                  <Button
+                    type="submit"
+                    className="bg-stp-blue-light hover:bg-stp-blue-light/90"
+                  >
                     Upload Resource
                   </Button>
                 </div>
@@ -308,11 +341,14 @@ export default function ResourcesPage() {
               <Button
                 variant="outline"
                 size="icon"
-                className={`h-12 w-12 border-gray-300 relative ${hasActiveFilters ? "border-stp-blue-light" : ""
-                  }`}
+                className={`h-12 w-12 border-gray-300 relative ${
+                  hasActiveFilters ? "border-stp-blue-light" : ""
+                }`}
                 title="Advanced filters"
               >
-                <Filter className={`h-5 w-5 ${hasActiveFilters ? "text-stp-blue-light" : "text-gray-600"}`} />
+                <Filter
+                  className={`h-5 w-5 ${hasActiveFilters ? "text-stp-blue-light" : "text-gray-600"}`}
+                />
                 {hasActiveFilters && (
                   <span className="absolute -top-1 -right-1 h-3 w-3 bg-stp-blue-light rounded-full" />
                 )}
@@ -334,7 +370,10 @@ export default function ResourcesPage() {
                   <Label className="text-sm font-medium">File Type</Label>
                   <div className="space-y-2">
                     {fileTypes.map((fileType) => (
-                      <div key={fileType} className="flex items-center space-x-2">
+                      <div
+                        key={fileType}
+                        className="flex items-center space-x-2"
+                      >
                         <Checkbox
                           id={`file-${fileType}`}
                           checked={filters.fileTypes.includes(fileType)}
@@ -405,10 +444,11 @@ export default function ResourcesPage() {
           <button
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
-            className={`h-11 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-[#233389] ${selectedCategory === category.id
-              ? "bg-[#233389] text-white"
-              : "bg-transparent text-gray-700 hover:bg-gray-50"
-              }`}
+            className={`h-11 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-[#233389] ${
+              selectedCategory === category.id
+                ? "bg-[#233389] text-white"
+                : "bg-transparent text-gray-700 hover:bg-gray-50"
+            }`}
           >
             {category.label}
           </button>
@@ -423,13 +463,20 @@ export default function ResourcesPage() {
       ) : filteredResources.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredResources.map((resource) => (
-            <Card key={resource.resourceId || resource.id} className="p-6 hover:shadow-md transition-shadow bg-white flex flex-col h-full">
+            <Card
+              key={resource.resourceId || resource.id}
+              className="p-6 hover:shadow-md transition-shadow bg-white flex flex-col h-full"
+            >
               <div className="flex flex-col h-full flex-grow">
                 {/* File Type Icon and Title */}
                 <div className="flex items-start gap-3 mb-3">
-                  <div className={`${resource.iconColor || "bg-blue-500"} w-12 h-12 rounded flex items-center justify-center shrink-0`}>
+                  <div
+                    className={`${resource.iconColor || "bg-blue-500"} w-12 h-12 rounded flex items-center justify-center shrink-0`}
+                  >
                     <span className="text-white font-semibold text-sm">
-                      {getFileTypeDisplay(resource.resourceFileUrl || resource.fileType)}
+                      {getFileTypeDisplay(
+                        resource.resourceFileUrl || resource.fileType,
+                      )}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -458,24 +505,51 @@ export default function ResourcesPage() {
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="/assets/Profile Image.jpg" alt={resource.author || "User"} />
-                      <AvatarFallback>{(resource.author || "U").charAt(0)}</AvatarFallback>
+                      <AvatarImage
+                        src="/assets/Profile Image.jpg"
+                        alt={resource.author || "User"}
+                      />
+                      <AvatarFallback>
+                        {(resource.author || "U").charAt(0)}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-xs font-medium text-gray-900">{resource.author || "User"}</p>
+                      <p className="text-xs font-medium text-gray-900">
+                        {resource.author || "User"}
+                      </p>
                       <p className="text-xs text-gray-500">
-                        {resource.createdAt ? new Date(resource.createdAt).toLocaleDateString() : (resource.date || "Recently")}
+                        {resource.createdAt
+                          ? new Date(resource.createdAt).toLocaleDateString()
+                          : resource.date || "Recently"}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => {
                       // Trigger download based on the resource URL or API call
-                      resourceService.downloadResource(resource.resourceId || resource.id).then((response) => {
+
+                      console.log(resource, "lol");
+                      // Create FormData object
+                      const formData = new FormData();
+
+                      // Add all required fields to formData
+                      formData.append("title", resource.title || "");
+                      formData.append(
+                        "description",
+                        resource.description || "",
+                      );
+                      formData.append("category", resource.category || "");
+
+                      // If you need to include the resource file (if available)
+                      if (resource.resourceFileUrl) {
+                        formData.append("resourceFile", resource.resourceFileUrl);
+                      }
+                      resourceService.downloadResource(resource.resourceId,formData).then((response) => {
                         // Handle response appropriately (e.g. download blob or link)
                         toast.success("Download started");
                       }).catch((err) => {
                         toast.error("Failed to download resource");
+                        console.error("Failed to download",err)
                       });
                     }}
                     className="inline-flex items-center justify-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium border border-[#233389] bg-white text-[#233389] hover:bg-[#233389] hover:text-white transition-colors duration-200"
@@ -491,7 +565,9 @@ export default function ResourcesPage() {
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <FileText className="h-16 w-16 text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No resources found</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            No resources found
+          </h3>
           <p className="text-sm text-gray-500 max-w-md">
             {searchQuery
               ? "Try adjusting your search query or filters to find what you're looking for."

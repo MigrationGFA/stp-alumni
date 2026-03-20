@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import Navbar from "@/components/(hero-nav)/Navbar";
 import { NavbarProvider } from "@/contexts/NavbarContext";
 import QueryProvider from "@/lib/providers/QueryProvider";
+import { AuthProvider } from "@/lib/hooks/useUser";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -41,11 +42,14 @@ export default async function RootLayout({ children, params }) {
           <NextIntlClientProvider locale={locale} messages={messages}>
             <QueryProvider>
               <Toaster position="center" />
+              <AuthProvider>
+
               <NavbarProvider>
                 {/* <Navbar /> */}
                 <div className="min-h-screen bg-background">{children}</div>
                 {/* <Footer /> */}
               </NavbarProvider>
+              </AuthProvider>
             </QueryProvider>
           </NextIntlClientProvider>
         </ThemeProvider>

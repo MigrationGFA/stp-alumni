@@ -18,6 +18,8 @@ export default function NewsFeed() {
   const { data: posts, isLoading, error, refetch } = usePostsFeed();
   const { mutate: likePost } = useLikePost();
 
+  // console.log(posts,"post")
+
   // Filter posts by search query
   const filteredPosts = (posts || []).filter((post) => {
     if (!searchQuery.trim()) return true;
