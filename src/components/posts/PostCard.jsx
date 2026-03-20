@@ -31,7 +31,7 @@ import { useAuth } from "@/lib/hooks/useUser";
  */
 function CommentItem({ comment }) {
 
-  console.log(comment,"comment")
+  // console.log(comment,"comment")
   return (
     <div className="flex gap-3">
       <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
@@ -85,7 +85,7 @@ function CommentModal({ open, onClose, post }) {
   
   
   const comments = data?.data || []
-  console.log(comments,"comments")
+  // console.log(comments,"comments")
 
   // POST a new comment
   const { mutate: addComment, isPending: isSubmitting } = useCommentPost();
@@ -130,7 +130,7 @@ function CommentModal({ open, onClose, post }) {
   };
  const { data:currentUser } = useAuth()
 
-  console.log(currentUser,"sdnfknke")
+  // console.log(currentUser,"sdnfknke")
 
   const commentCount = comments?.length ?? post?.comments?.count ?? 0;
 

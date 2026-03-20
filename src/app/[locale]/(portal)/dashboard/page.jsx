@@ -39,19 +39,19 @@ export default function DashboardPage() {
   // Fetch posts using React Query
   const { data: posts, isLoading, error, refetch } = usePostsFeed();
   const { mutate: likePost } = useLikePost();
-  console.log("posts",posts)
-
+  
   // Fetch your network data
   const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
     queryKey: ["network"],
     queryFn: () => networkService.getNetwork(),
   });
-
+  
   // Fetch invitations/connections data
   const { data: connectionsData, isLoading: isLoadingConnections } = useQuery({
     queryKey: ["connections"],
     queryFn: () => networkService.getConnections(),
   });
+  // console.log("networkData",networkData)
 
   // Parse mapped network payload safely
   const rawNetwork = networkData?.data || networkData || {};
@@ -279,7 +279,7 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
                               <Image
-                                src={contact.profileImage || "/assets/Your Newtork Image.jpg"}
+                                src={contact.profileImageUrl || "/assets/Your Newtork Image.jpg"}
                                 alt={contact.name || contact.firstName || "User"}
                                 width={40}
                                 height={40}
@@ -287,8 +287,8 @@ export default function DashboardPage() {
                               />
                             </div>
                             <div className="min-w-0">
-                              <p className="font-medium text-sm text-[#233389] truncate">
-                                {contact.name || contact.firstName || "Anonymous"}
+                              <p className="font-medium text-xs text-[#233389] truncate">
+                                {contact.firstName || "Anonymous"} {contact.lastName}
                               </p>
                               <p className="text-xs text-gray-600 truncate">
                                 {contact.role || contact.email || "Member"}
