@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Link as NavLink } from '@/i18n/routing';
-import { EllipsisVertical, Link, LogOut } from "lucide-react";
+import { DoorOpen, EllipsisVertical, Link, LogOut } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ import { useGroupStore } from "@/lib/store/useGroupStore";
 import groupService from "@/lib/services/groupService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/hooks/useUser";
 
 // --- Component level handlers ---
 
@@ -108,6 +109,7 @@ const GroupItem = ({ group, variant, onToggleMembership }) => (
         className="border-stp-blue-light rounded-2xl text-stp-blue-light hover:bg-accent hover:text-accent-foreground"
         onClick={() => onToggleMembership(group.groupId, "JOIN")}
       >
+        <DoorOpen/>
         <span className="hidden sm:inline">Join</span>
       </Button>
     )}
@@ -122,6 +124,9 @@ export function GroupsContent() {
   const itemsPerPage = 4;
   const [currentPage, setCurrentPage] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const {data} =useAuth()
+
 
   // Compute derived state locally
   const myGroups = groups?.filter(g => g.isMember) || [];
@@ -139,7 +144,7 @@ export function GroupsContent() {
       // Optimistically update the UI to avoid lag
       toggleGroupMembershipLocally(groupId, action === "JOIN");
 
-      const response = await groupService.toggleMembership(groupId, action);
+      const response = await groupService.toggleMembership(groupId, action,data?.data?.userId);
       if (response.status) {
         toast.success(response.message || "Membership updated.");
       } else {

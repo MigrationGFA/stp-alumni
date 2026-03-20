@@ -14,10 +14,11 @@ const groupService = {
    * Toggle membership for a group (action: "JOIN" or "LEAVE")
    * @param {string} groupId 
    * @param {string} action 
+   * @param {string} userId 
    */
-  toggleMembership: async (groupId, action) => {
+  toggleMembership: async (groupId, action,userId) => {
     const response = await api.post(`/groups/${groupId}/member`, {
-      action,
+      action,userId
     });
     return response.data;
   },
