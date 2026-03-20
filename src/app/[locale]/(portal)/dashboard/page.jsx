@@ -23,6 +23,7 @@ import CreatePost from "@/components/posts/CreatePost";
 import PostCard from "@/components/posts/PostCard";
 import PostSkeleton from "@/components/posts/PostSkeleton";
 import { toast } from "sonner";
+import { ModernScrollArea } from "@/components/shared/ScrollArea";
 
 /**
  * Dashboard page - main landing page after login
@@ -38,6 +39,7 @@ export default function DashboardPage() {
   // Fetch posts using React Query
   const { data: posts, isLoading, error, refetch } = usePostsFeed();
   const { mutate: likePost } = useLikePost();
+  console.log("posts",posts)
 
   // Fetch your network data
   const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
@@ -251,13 +253,13 @@ export default function DashboardPage() {
               height: `calc(100dvh - ${height}px)`,
             }}
           >
-            <ScrollArea
-              className={` rounded-md border-none lg:sticky lg:left-0 self-start overflow-y-auto`}
-              style={{
-                height: `calc(100vh - ${height}px - 1rem)`,
-              }}
+            <ModernScrollArea
+              className={` w-full`}
+              // style={{
+              //   height: `calc(100vh - ${height}px - 1rem)`,
+              // }}
             >
-              <div className="space-y-6 pr-4">
+              <div className="space-y-6">
                 {/* Your Network */}
                 <div>
                   <h3 className="font-semibold text-[#233389] mb-4">
@@ -275,7 +277,7 @@ export default function DashboardPage() {
                           className="bg-white rounded-lg p-4 flex items-center justify-between"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
                               <Image
                                 src={contact.profileImage || "/assets/Your Newtork Image.jpg"}
                                 alt={contact.name || contact.firstName || "User"}
@@ -293,7 +295,7 @@ export default function DashboardPage() {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center gap-2 shrink-0">
                             <button className="p-1 hover:bg-gray-100 rounded">
                               <MessageCircle className="h-4 w-4 text-[#233389]" />
                             </button>
@@ -328,7 +330,7 @@ export default function DashboardPage() {
                           className="flex items-center justify-between"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
                               <Image
                                 src={invitation.user?.profileImage || invitation.image || "/assets/Your Newtork Image.jpg"}
                                 alt={invitation.user?.name || invitation.name || "User"}
@@ -346,7 +348,7 @@ export default function DashboardPage() {
                               </p>
                             </div>
                           </div>
-                          <button className="p-1 hover:bg-gray-100 rounded flex-shrink-0">
+                          <button className="p-1 hover:bg-gray-100 rounded shrink-0">
                             <MoreVertical className="h-4 w-4 text-gray-600" />
                           </button>
                         </div>
@@ -372,7 +374,7 @@ export default function DashboardPage() {
                   <div className="space-y-3">
                     {messages.map((message, index) => (
                       <div key={index} className="flex items-start gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                        <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
                           <Image
                             src={message.image}
                             alt={message.name}
@@ -402,7 +404,7 @@ export default function DashboardPage() {
                   </button>
                 </div>
               </div>
-            </ScrollArea>
+            </ModernScrollArea>
           </aside>
         </div>
       </div>

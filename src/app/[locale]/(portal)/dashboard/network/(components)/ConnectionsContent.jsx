@@ -19,15 +19,31 @@ import {
 } from "@/components/ui/select";
 import useNetworkStore from "@/lib/store/useNetworkStore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMutation } from "@tanstack/react-query";
+import networkService from "@/lib/services/networkService";
+import { useRouter } from "next/navigation";
 
 export function ConnectionsContent() {
   const { myConnections, networkUsers, options } = useNetworkStore();
   const { isLoading, error } = options;
 
+  const router = useRouter()
+
+   const {mutate:connectToUser,isPending:isConnecting} = useMutation({
+    mutationFn: (id) => {
+
+      // console.log(id)
+     networkService.connectToUser(id)
+    },
+  })
+
+
   // Decide which list to render. If the user has connections, show them.
   // Otherwise, fallback to showing the general network (All available active users).
   const hasConnections = myConnections && myConnections.length > 0;
   const displayList = hasConnections ? myConnections : (networkUsers || []);
+
+  console.log(myConnections,"displayList")
   const titleString = hasConnections
     ? `My Connections (${myConnections.length})`
     : `Explore Network (${displayList.length})`;
@@ -133,11 +149,13 @@ export function ConnectionsContent() {
                 <Button
                   variant="outline"
                   size="sm"
+                  disabled={isConnecting}
                   className="border-0 sm:border-stp-blue-light rounded-2xl text-stp-blue-light hover:bg-accent hover:text-accent-foreground"
+                  onClick={()=>isNetworkExplorerItem ? connectToUser(connection.userId) : router.push("/dashboard/messaging")}
                 >
                   <MessageCircle className="h-4 w-4 mr-1 sm:hidden block" />
                   <span className="hidden sm:inline">
-                    {isNetworkExplorerItem ? "Connect" : "Message"}
+                    {isConnecting ? "Connecting" : isNetworkExplorerItem ? "Connect" : "Message"}
                   </span>
                 </Button>
                 <DropdownMenu>

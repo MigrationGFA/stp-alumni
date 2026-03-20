@@ -29,6 +29,8 @@ export default function EventUi() {
     queryFn: eventService.getEvents,
   });
 
+  
+  
   // Safely extract the events array from various possible backend structures
   let allEvents = [];
   if (Array.isArray(eventsResponse)) {
@@ -47,11 +49,12 @@ export default function EventUi() {
   // Wait, let's keep all events in recommended, and if there's no "your events" from API, empty it out or keep it mirrored for now to test.
   // We'll place all fetched events in recommended to be safe.
   const yourEventsStatic = []; // If you have a true way to filter "my" events, do it here
-
+  
   const displayedYourEvents = showAllYourEvents
     ? yourEventsStatic
     : yourEventsStatic.slice(0, 3);
-
+    
+    console.log(displayedYourEvents,"post")
   const displayedRecommendedEvents = allEvents.slice(
     0,
     recommendedPage * ITEMS_PER_PAGE,
@@ -152,7 +155,7 @@ function EventListContent({
       )}
 
       {/* Your Events Section */}
-      {isAuth && (
+      {isAuth && yourEventsData.list.length > 0 && (
         <div className="bg-card rounded-xl p-5 border border-border">
           <h2 className="text-sm font-semibold mb-4">Your events</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

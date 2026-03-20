@@ -14,8 +14,7 @@ import { ProfileDrawer } from "@/components/ProfileDrawer";
 import { useSize } from "react-haiku";
 import { useNavbar } from "@/contexts/NavbarContext";
 import useAuthStore from "@/lib/store/useAuthStore";
-import { useQuery } from "@tanstack/react-query";
-import userService from "@/lib/services/userService";
+import { useAuth } from "@/lib/hooks/useUser";
 
 /**
  * Get initials from a full name string
@@ -36,30 +35,13 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
 
   // Auth store data (from login response)
   const user = useAuthStore((state) => state.user);
-  const updateUser = useAuthStore((state) => state.updateUser);
 
+  
   // Fetch full profile from API (gives us profileImagePath, sector, etc.)
-  const { data: profileData } = useQuery({
-    queryKey: ["userProfile"],
-    queryFn: userService.getProfile,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1,
-    onSuccess: (res) => {
-      // Sync profile data back to auth store
-      const profile = res?.data || res;
-      if (profile) {
-        updateUser({
-          profileImagePath: profile.profileImagePath,
-          sector: profile.sector,
-          location: profile.location,
-          skills: profile.skills,
-          cohort: profile.cohort,
-        });
-      }
-    },
-  });
-
+  const { data: profileData } = useAuth()
+  
   const profile = profileData?.data || profileData || {};
+  // console.log(user,"user",profile)
 
   // Merge: login response gives name/email, profile API gives image/details
   const displayName = user?.name || profile?.name || "User";

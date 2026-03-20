@@ -9,6 +9,8 @@ export function PeopleSuggestions() {
   const { sameSkillUsers, options } = useNetworkStore();
   const { isLoading, error } = options;
 
+  console.log(sameSkillUsers,"sameSkillUsers")
+
   if (isLoading) {
     return (
       <Card>
