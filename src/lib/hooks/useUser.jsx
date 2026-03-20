@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
 
   return (
-    <AuthContext.Provider value={{data:profileData?.data,isProfileLoading}}>
+    <AuthContext.Provider value={{data:profileData,isProfileLoading}}>
       {children}
     </AuthContext.Provider>
   );

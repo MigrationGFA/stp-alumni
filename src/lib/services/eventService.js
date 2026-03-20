@@ -15,6 +15,8 @@ const eventService = {
    */
   getEventById: async (eventId) => {
     const response = await api.get(`/events/${eventId}`);
+
+    // console.log(response.data,"llo4mog")
     return response.data;
   },
 

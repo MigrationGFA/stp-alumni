@@ -37,11 +37,11 @@ function CommentItem({ comment }) {
       <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
         <Image
           src={
-            comment.profileImageUrl ||
+            comment.profileImage ||
             comment.user?.profileImage ||
             "/assets/Profile Image.jpg"
           }
-          alt={comment.authorFirstName || comment.user?.name || "User"}
+          alt={comment.firstName || comment.user?.name || "User"}
           width={36}
           height={36}
           className="h-full w-full object-cover"
@@ -50,8 +50,8 @@ function CommentItem({ comment }) {
       <div className="flex-1 min-w-0">
         <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-2.5">
           <p className="text-sm font-semibold text-[#233389] leading-tight">
-            {comment.authorFirstName || comment.user?.name || "Anonymous"}{" "}
-            {comment.authorLastName || ""}
+            {comment.firstName || comment.user?.name || "Anonymous"}{" "}
+            {comment.lastName || ""}
           </p>
           <p className="text-sm text-gray-700 mt-0.5 break-words">
             {comment.comment}
@@ -128,7 +128,7 @@ function CommentModal({ open, onClose, post }) {
       handleSubmit();
     }
   };
- const { profileData:currentUser } = useAuth()
+ const { data:currentUser } = useAuth()
 
   console.log(currentUser,"sdnfknke")
 
@@ -147,7 +147,7 @@ function CommentModal({ open, onClose, post }) {
           <div className="flex gap-3 mt-3">
             <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
               <Image
-                src={post?.profileImageUrl || "/assets/Profile Image.jpg"}
+                src={post?.profileImage || "/assets/Profile Image.jpg"}
                 alt={post?.authorFirstName || "User"}
                 width={36}
                 height={36}
@@ -206,7 +206,7 @@ function CommentModal({ open, onClose, post }) {
             <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
               <Image
                 src={
-                  currentUser?.profileImageUrl || "/assets/Profile Image.jpg"
+                  currentUser?.data?.profileImagePath || "/assets/Profile Image.jpg"
                 }
                 alt="You"
                 width={36}
@@ -246,13 +246,10 @@ function CommentModal({ open, onClose, post }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   PostCard — main export
-───────────────────────────────────────────── */
 export default function PostCard({
   post,
   onLike,
-  onComment,   // optional external callback — modal is opened internally
+  onComment,
   onFollow,
   onSave,
   onCopyLink,
@@ -304,7 +301,7 @@ export default function PostCard({
           <div className="flex gap-3">
             <div className="h-12 w-12 rounded-full bg-gray-300 overflow-hidden shrink-0">
               <Image
-                src={post.profileImageUrl || "/assets/Profile Image.jpg"}
+                src={post.profileImage || "/assets/Profile Image.jpg"}
                 alt={post.author?.name || "User"}
                 width={48}
                 height={48}

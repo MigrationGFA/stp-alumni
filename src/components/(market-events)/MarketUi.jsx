@@ -26,30 +26,49 @@ export default function MarketplaceUi() {
   const pathname = usePathname();
 
   const isShow = pathname.includes("dashboard");
-  // console.log(isShow, "lol");
 
-  // 1. Group State to reduce "prop soup"
+  // State for filters
   const [filters, setFilters] = useState({
     search: "",
     role: "all",
     sector: "all",
     location: "all",
+    cohort: "all",
   });
 
   const updateFilter = (key, value) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
 
   const getSectorDisplay = (sector) => {
-    if (!sector) return "";
+    if (!sector || sector.length === 0) return "";
+    
     const sectorMap = {
       it: "IT sector",
       healthcare: "Healthcare",
       finance: "Finance",
       education: "Education",
+      telecommunications: "Telecommunications",
+      "information technology": "Information Technology",
     };
+    
+    if (Array.isArray(sector)) {
+      return sector.map(s => {
+        const mapped = sectorMap[s.toLowerCase()];
+        return mapped || s;
+      }).join(", ");
+    }
+    
     return sectorMap[sector.toLowerCase()] || sector;
   };
 
+  // Separate query for ALL data (for filters options)
+  const { data: allData, isLoading: allDataLoading } = useQuery({
+    queryKey: ["allMarketplaceData"],
+    queryFn: () => publicService.getMarketplace({}),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Query for filtered data (used for display)
   const { data: marketplaceData, isLoading } = useQuery({
     queryKey: ["marketplace", filters],
     queryFn: () => {
@@ -60,7 +79,6 @@ export default function MarketplaceUi() {
       }
 
       if (filters.sector && filters.sector !== "all") {
-        // e.g., mapping "finance" back to what the backend expects, or passing it directly.
         params.sector = filters.sector;
       }
 
@@ -72,11 +90,40 @@ export default function MarketplaceUi() {
         params.role = filters.role;
       }
 
+      if (filters.cohort && filters.cohort !== "all") {
+        params.cohort = filters.cohort;
+      }
+
       return publicService.getMarketplace(params);
     },
   });
+  
+  // Extract unique sectors from ALL data
+  const sectors = useMemo(() => {
+    if (!allData?.data) return [];
+    const allSectors = allData.data.map(ele => ele.sector).flat();
+    return [...new Set(allSectors)].sort();
+  }, [allData]);
 
-  const apiAlumni = marketplaceData?.data || Array.isArray(marketplaceData) ? marketplaceData : [];
+  // Extract unique locations from ALL data
+  const locations = useMemo(() => {
+    if (!allData?.data) return [];
+    const allLocations = allData.data.map(ele => ele.location).filter(Boolean);
+    return [...new Set(allLocations)].sort();
+  }, [allData]);
+
+  // Extract unique cohorts from ALL data
+  const cohorts = useMemo(() => {
+    if (!allData?.data) return [];
+    const allCohorts = allData.data.map(ele => ele.cohort).filter(Boolean);
+    return [...new Set(allCohorts)].sort();
+  }, [allData]);
+
+  console.log(sectors, "sectors");
+  console.log(locations, "locations");
+  console.log(cohorts, "cohorts");
+
+  const apiAlumni = marketplaceData?.data || [];
 
   return (
     <div
@@ -89,7 +136,6 @@ export default function MarketplaceUi() {
             {t("title")}
           </h1>
 
-          {/* 2. Passing just 3 props instead of 7 */}
           <MarketplaceContent
             t={t}
             filters={filters}
@@ -97,20 +143,28 @@ export default function MarketplaceUi() {
             data={apiAlumni}
             isLoading={isLoading}
             getSectorDisplay={getSectorDisplay}
+            sectors={sectors}
+            locations={locations}
+            cohorts={cohorts}
+            filtersLoading={allDataLoading}
           />
         </>
       ) : (
         <>
           <div className="bg-linear-to-l from-[#1B2F5B] to-[#3964C1] p-7 mb-5">
-            <h1 className="text-2xl lg:text-3xl font-bold text-white text-center ">
+            <h1 className="text-2xl lg:text-3xl font-bold text-white text-center">
               {t("title")}
             </h1>
           </div>
-          <Container className=" mx-auto space-y-6">
+          <Container className="mx-auto space-y-6">
             <MarketplaceContent
               t={t}
               filters={filters}
               updateFilter={updateFilter}
+              sectors={sectors}
+              locations={locations}
+              cohorts={cohorts}
+              filtersLoading={allDataLoading}
               data={apiAlumni}
               isLoading={isLoading}
               getSectorDisplay={getSectorDisplay}
@@ -129,7 +183,20 @@ function MarketplaceContent({
   data,
   isLoading,
   getSectorDisplay,
+  sectors,
+  locations,
+  cohorts,
+  filtersLoading
 }) {
+  // Clear all filters
+  const clearAllFilters = () => {
+    updateFilter("search", "");
+    updateFilter("role", "all");
+    updateFilter("sector", "all");
+    updateFilter("location", "all");
+    updateFilter("cohort", "all");
+  };
+
   return (
     <>
       <div className="mb-6">
@@ -161,9 +228,15 @@ function MarketplaceContent({
             onValueChange={(v) => updateFilter("sector", v)}
           >
             <SelectItem value="all">{t("sectorAll")}</SelectItem>
-            <SelectItem value="it">{t("sectorIT")}</SelectItem>
-            <SelectItem value="healthcare">{t("sectorHealthcare")}</SelectItem>
-            <SelectItem value="finance">{t("sectorFinance")}</SelectItem>
+            {filtersLoading ? (
+              <SelectItem value="loading" disabled>Loading...</SelectItem>
+            ) : (
+              sectors.map((ele) => (
+                <SelectItem key={ele} value={ele.split(" ").join("_")}>
+                  {ele}
+                </SelectItem>
+              ))
+            )}
           </FilterSelect>
 
           <FilterSelect
@@ -172,10 +245,57 @@ function MarketplaceContent({
             onValueChange={(v) => updateFilter("location", v)}
           >
             <SelectItem value="all">{t("locationAll")}</SelectItem>
-            <SelectItem value="lagos">{t("locationLagos")}</SelectItem>
-            <SelectItem value="abuja">{t("locationAbuja")}</SelectItem>
+            {filtersLoading ? (
+              <SelectItem value="loading" disabled>Loading...</SelectItem>
+            ) : (
+              locations.map((loc) => (
+                <SelectItem key={loc} value={loc}>
+                  {loc}
+                </SelectItem>
+              ))
+            )}
+          </FilterSelect>
+
+          <FilterSelect
+            label={"Cohort"}
+            value={filters.cohort}
+            onValueChange={(v) => updateFilter("cohort", v)}
+          >
+            <SelectItem value="all">All</SelectItem>
+            {filtersLoading ? (
+              <SelectItem value="loading" disabled>Loading...</SelectItem>
+            ) : (
+              cohorts.map((cohort) => (
+                <SelectItem key={cohort} value={cohort}>
+                  {cohort}
+                </SelectItem>
+              ))
+            )}
           </FilterSelect>
         </div>
+
+        {/* Show active filters count */}
+        {(filters.search || filters.role !== "all" || filters.sector !== "all" || 
+          filters.location !== "all" || filters.cohort !== "all") && (
+          <div className="mt-4 flex items-center gap-2">
+            <span className="text-sm text-gray-500">
+              Active filters: 
+              {filters.search && ` Search: "${filters.search}"`}
+              {filters.role !== "all" && ` Role: ${filters.role}`}
+              {filters.sector !== "all" && ` Sector: ${filters.sector}`}
+              {filters.location !== "all" && ` Location: ${filters.location}`}
+              {filters.cohort !== "all" && ` Cohort: ${filters.cohort}`}
+            </span>
+            <Button
+              onClick={clearAllFilters}
+              variant="ghost"
+              size="sm"
+              className="text-red-500 hover:text-red-700"
+            >
+              Clear all
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-lg p-6 min-h-[300px]">
@@ -185,9 +305,9 @@ function MarketplaceContent({
           </div>
         ) : data && data.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {data.map((alumni) => (
+            {data.map((alumni, index) => (
               <AlumniCard
-                key={alumni.id}
+                key={alumni.createdAt || index}
                 alumni={alumni}
                 t={t}
                 getSectorDisplay={getSectorDisplay}
@@ -195,29 +315,21 @@ function MarketplaceContent({
             ))}
           </div>
         ) : (
-          <EmptyState
-            onClear={() => {
-              updateFilter("search", "");
-              updateFilter("role", "all");
-              updateFilter("sector", "all");
-              updateFilter("location", "all");
-            }}
-          />
+          <EmptyState onClear={clearAllFilters} />
         )}
       </div>
     </>
   );
 }
 
-// --- Minimalist Sub-components to keep things "Chop Chop" ---
-
+// Sub-components
 const FilterSelect = ({ label, value, onValueChange, children }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
       {label}
     </label>
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="w-fit h-11 border border-[#233389] rounded-md px-3 text-gray-700">
+      <SelectTrigger className="w-fit min-w-[150px] h-11 border border-[#233389] rounded-md px-3 text-gray-700">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>{children}</SelectContent>
@@ -229,22 +341,31 @@ const AlumniCard = ({ alumni, t, getSectorDisplay }) => (
   <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border flex flex-col items-center p-6 text-center">
     <div className="relative w-24 h-24 mb-4">
       <Image
-        src={alumni.profileImage || alumni.image || "/assets/Profile Image.jpg"}
-        alt={alumni.name || "Alumni"}
+        src={alumni.profileImagePath || alumni.image || "/assets/Profile Image.jpg"}
+        alt={alumni.firstName || "Alumni"}
         fill
         className="object-cover rounded-full border border-gray-200"
       />
     </div>
     <div className="w-full">
-      <h3 className="text-lg font-bold text-gray-900">{alumni.name || "Anonymous Member"}</h3>
+      <h3 className="text-lg font-bold text-gray-900">
+        {alumni.firstName || "Anonymous"} {alumni.lastName || "Member"}
+      </h3>
       <p className="text-sm text-gray-600 font-medium">
         {(alumni.roleKey ? t(alumni.roleKey) : alumni.role) || "Member"} | {getSectorDisplay(alumni.sector) || "General Sector"}
       </p>
       <p className="text-xs text-gray-500 mt-2">
         {alumni.educationKey ? t(alumni.educationKey) : (alumni.education || "STP Alumni")}
       </p>
-      <div className="text-xs text-gray-500 mt-1 flex justify-center gap-1 font-medium bg-gray-50 py-1 rounded-md">
-        {alumni.location || "Location Not Set"}
+      <div className="text-xs text-gray-500 mt-1 flex flex-col gap-1">
+        <span className="font-medium bg-gray-50 py-1 px-2 rounded-md">
+          📍 {alumni.location || "Location Not Set"}
+        </span>
+        {alumni.cohort && (
+          <span className="font-medium bg-gray-50 py-1 px-2 rounded-md">
+            🎓 {alumni.cohort}
+          </span>
+        )}
       </div>
       <Button
         variant="outline"
@@ -260,6 +381,7 @@ const EmptyState = ({ onClear }) => (
   <div className="flex flex-col items-center justify-center py-16 text-center">
     <Users className="h-16 w-16 text-gray-300 mb-4" />
     <h3 className="text-lg font-semibold text-gray-900">No alumni found</h3>
+    <p className="text-gray-500 mt-2">Try adjusting your filters</p>
     <Button
       onClick={onClear}
       variant="outline"

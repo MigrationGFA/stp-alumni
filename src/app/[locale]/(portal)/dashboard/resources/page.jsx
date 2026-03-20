@@ -526,31 +526,22 @@ export default function ResourcesPage() {
                   </div>
                   <button
                     onClick={() => {
-                      // Trigger download based on the resource URL or API call
-
-                      console.log(resource, "lol");
-                      // Create FormData object
-                      const formData = new FormData();
-
-                      // Add all required fields to formData
-                      formData.append("title", resource.title || "");
-                      formData.append(
-                        "description",
-                        resource.description || "",
-                      );
-                      formData.append("category", resource.category || "");
-
-                      // If you need to include the resource file (if available)
                       if (resource.resourceFileUrl) {
-                        formData.append("resourceFile", resource.resourceFileUrl);
-                      }
-                      resourceService.downloadResource(resource.resourceId,formData).then((response) => {
-                        // Handle response appropriately (e.g. download blob or link)
+                        // Create a temporary anchor element
+                        const link = document.createElement("a");
+                        link.href = resource.resourceFileUrl;
+                        link.download = resource.title || "download"; // Set download filename
+                        link.target = "_blank"; // Optional: open in new tab if download doesn't work
+
+                        // Append to body, click, and remove
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+
                         toast.success("Download started");
-                      }).catch((err) => {
-                        toast.error("Failed to download resource");
-                        console.error("Failed to download",err)
-                      });
+                      } else {
+                        toast.error("No file available for download");
+                      }
                     }}
                     className="inline-flex items-center justify-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium border border-[#233389] bg-white text-[#233389] hover:bg-[#233389] hover:text-white transition-colors duration-200"
                   >

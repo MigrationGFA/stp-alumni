@@ -23,6 +23,7 @@ import CreatePost from "@/components/posts/CreatePost";
 import PostCard from "@/components/posts/PostCard";
 import PostSkeleton from "@/components/posts/PostSkeleton";
 import { toast } from "sonner";
+import { ModernScrollArea } from "@/components/shared/ScrollArea";
 
 /**
  * Dashboard page - main landing page after login
@@ -252,13 +253,13 @@ export default function DashboardPage() {
               height: `calc(100dvh - ${height}px)`,
             }}
           >
-            <ScrollArea
-              className={` rounded-md border-none lg:sticky lg:left-0 self-start overflow-y-auto`}
-              style={{
-                height: `calc(100vh - ${height}px - 1rem)`,
-              }}
+            <ModernScrollArea
+              className={` w-full`}
+              // style={{
+              //   height: `calc(100vh - ${height}px - 1rem)`,
+              // }}
             >
-              <div className="space-y-6 pr-4">
+              <div className="space-y-6">
                 {/* Your Network */}
                 <div>
                   <h3 className="font-semibold text-[#233389] mb-4">
@@ -403,7 +404,7 @@ export default function DashboardPage() {
                   </button>
                 </div>
               </div>
-            </ScrollArea>
+            </ModernScrollArea>
           </aside>
         </div>
       </div>
