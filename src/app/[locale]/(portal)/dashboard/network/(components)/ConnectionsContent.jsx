@@ -21,21 +21,20 @@ import useNetworkStore from "@/lib/store/useNetworkStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMutation } from "@tanstack/react-query";
 import networkService from "@/lib/services/networkService";
-import { useRouter } from "next/navigation";
+import { useSendInvitation } from "@/lib/hooks/useMessagingQueries";
+import { useRouter } from "@/i18n/routing";
 
 export function ConnectionsContent() {
   const { myConnections, networkUsers, options } = useNetworkStore();
   const { isLoading, error } = options;
 
-  const router = useRouter()
+  const router = useRouter();
 
-   const {mutate:connectToUser,isPending:isConnecting} = useMutation({
-    mutationFn: (id) => {
+  const { mutate: connectToUser, isPending: isConnecting } = useMutation({
+    mutationFn: (id) => networkService.connectToUser(id),
+  });
 
-      // console.log(id)
-     networkService.connectToUser(id)
-    },
-  })
+  const { mutate: sendInvitation, isPending: isInviting } = useSendInvitation();
 
 
   // Decide which list to render. If the user has connections, show them.
@@ -149,13 +148,27 @@ export function ConnectionsContent() {
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={isConnecting}
+                  disabled={isConnecting || isInviting}
                   className="border-0 sm:border-stp-blue-light rounded-2xl text-stp-blue-light hover:bg-accent hover:text-accent-foreground"
-                  onClick={()=>isNetworkExplorerItem ? connectToUser(connection.userId) : router.push("/dashboard/messaging")}
+                  onClick={() => {
+                    if (isNetworkExplorerItem) {
+                      connectToUser(connection.userId);
+                    } else {
+                      // Send a messaging invitation then navigate
+                      sendInvitation(
+                        { recipientId: connection.userId, shortMessage: "" },
+                        { onSuccess: () => router.push("/dashboard/messaging") }
+                      );
+                    }
+                  }}
                 >
                   <MessageCircle className="h-4 w-4 mr-1 sm:hidden block" />
                   <span className="hidden sm:inline">
-                    {isConnecting ? "Connecting" : isNetworkExplorerItem ? "Connect" : "Message"}
+                    {isConnecting || isInviting
+                      ? "Connecting..."
+                      : isNetworkExplorerItem
+                        ? "Connect"
+                        : "Message"}
                   </span>
                 </Button>
                 <DropdownMenu>

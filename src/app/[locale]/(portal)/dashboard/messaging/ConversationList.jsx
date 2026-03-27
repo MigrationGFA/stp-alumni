@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, SlidersHorizontal, Users, Mail, Check, X } from "lucide-react";
+import { Search, SlidersHorizontal, Users, Mail, Check, X, PenSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,6 +52,7 @@ export function ConversationList({
   onAcceptInvitation,
   onDeclineInvitation,
   onBrowseGroups,
+  onNewMessage,
 }) {
   const [activeTab, setActiveTab] = useState("chats"); // "chats" | "invitations"
 
@@ -71,7 +72,19 @@ export function ConversationList({
           <h2 className="font-semibold text-lg text-stp-blue-light">
             Messages
           </h2>
-          <DropdownMenu>
+          <div className="flex items-center gap-1">
+            {onNewMessage && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onNewMessage}
+                title="New message"
+              >
+                <PenSquare className="h-4 w-4" />
+              </Button>
+            )}
+            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <SlidersHorizontal className="h-4 w-4" />
@@ -90,6 +103,7 @@ export function ConversationList({
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
 
         {/* Tabs: Chats / Invitations */}

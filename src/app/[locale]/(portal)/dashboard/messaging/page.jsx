@@ -5,6 +5,7 @@ import { ChatView } from "./ChatView";
 import { ConversationList } from "./ConversationList";
 import { GroupDiscovery } from "./GroupDiscovery";
 import { GroupSettingsDialog } from "./GroupSettings";
+import { NewMessageDialog } from "./NewMessageDialog";
 import { useMessaging } from "./useMessaging";
 
 const Messaging = () => {
@@ -30,6 +31,7 @@ const Messaging = () => {
 
   const [showGroupDiscovery, setShowGroupDiscovery] = useState(false);
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
+  const [newMessageOpen, setNewMessageOpen] = useState(false);
 
   const handleBack = () => {
     selectConversation(null);
@@ -70,8 +72,12 @@ const Messaging = () => {
             selectConversation(null);
             setShowGroupDiscovery(true);
           }}
+          onNewMessage={() => setNewMessageOpen(true)}
         />
       </div>
+
+      {/* New Message Dialog */}
+      <NewMessageDialog open={newMessageOpen} onOpenChange={setNewMessageOpen} />
 
       {/* Main content area */}
       <div
