@@ -1,0 +1,543 @@
+{
+    "info": {
+        "_postman_id": "stp-messaging-v2",
+        "name": "STP - Messaging v2",
+        "description": "Full test suite for DIRECT, PUBLIC_GROUP and PRIVATE_GROUP messaging.\n\n## Setup\n1. Set `baseUrl` variable to your server (e.g. `https://yourdomain.com`)\n2. Run **01 - Auth** logins first — tokens save automatically\n3. Follow folders in order",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        { "key": "baseUrl",            "value": "https://yourdomain.com" },
+        { "key": "tokenA",             "value": "" },
+        { "key": "tokenB",             "value": "" },
+        { "key": "userIdB",            "value": "PASTE_USER_B_user_id_HERE" },
+        { "key": "invitationId",       "value": "" },
+        { "key": "directConvId",       "value": "" },
+        { "key": "publicGroupId",      "value": "" },
+        { "key": "joinRequestId",      "value": "" },
+        { "key": "privateGroupId",     "value": "" },
+        { "key": "lastMessageId",      "value": "" },
+        { "key": "mediaMessageId",     "value": "" }
+    ],
+    "item": [
+        {
+            "name": "01 - Auth",
+            "item": [
+                {
+                    "name": "Login - User A",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "const r = pm.response.json();",
+                        "if (r.data && r.data.token) { pm.collectionVariables.set('tokenA', r.data.token); console.log('Token A saved'); }",
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                        "pm.test('Has token', () => pm.expect(r.data.token).to.be.a('string'));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": { "mode": "raw", "raw": "{\n    \"emailAddress\": \"usera@yourdomain.com\",\n    \"password\": \"Test@1234\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+                        "description": "⚠️ Replace with real User A credentials"
+                    }
+                },
+                {
+                    "name": "Login - User B",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "const r = pm.response.json();",
+                        "if (r.data && r.data.token) { pm.collectionVariables.set('tokenB', r.data.token); console.log('Token B saved'); }",
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": { "mode": "raw", "raw": "{\n    \"emailAddress\": \"userb@yourdomain.com\",\n    \"password\": \"Test@1234\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+                        "description": "⚠️ Replace with real User B credentials"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "02 - DIRECT Chat",
+            "description": "1-to-1 messaging. Requires invitation + acceptance before chatting.",
+            "item": [
+                {
+                    "name": "Send Invitation (A → B)",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "const r = pm.response.json();",
+                        "if (r.data && r.data.invitationId) { pm.collectionVariables.set('invitationId', r.data.invitationId); console.log('Invitation ID:', r.data.invitationId); }",
+                        "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                        "pm.test('Has invitationId', () => pm.expect(r.data.invitationId).to.be.a('string'));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"recipientId\": \"{{userIdB}}\",\n    \"shortMessage\": \"Hey! I came across your profile and would love to connect.\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/direct/invite", "host": ["{{baseUrl}}"], "path": ["api","messaging","direct","invite"] },
+                        "description": "⚠️ Set the `userIdB` collection variable to User B's actual user_id"
+                    }
+                },
+                {
+                    "name": "Get Pending Invitations (User B)",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                        "pm.test('Returns array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+                        "url": { "raw": "{{baseUrl}}/api/messaging/direct/invitations", "host": ["{{baseUrl}}"], "path": ["api","messaging","direct","invitations"] }
+                    }
+                },
+                {
+                    "name": "Accept Invitation (User B)",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "const r = pm.response.json();",
+                        "if (r.data && r.data.conversationId) { pm.collectionVariables.set('directConvId', r.data.conversationId); console.log('Direct conv ID:', r.data.conversationId); }",
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                        "pm.test('Has conversationId', () => pm.expect(r.data.conversationId).to.be.a('string'));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"action\": \"accept\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/direct/invitations/{{invitationId}}/respond", "host": ["{{baseUrl}}"], "path": ["api","messaging","direct","invitations","{{invitationId}}","respond"] }
+                    }
+                },
+                {
+                    "name": "Decline Invitation (User B) [alternative]",
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"action\": \"decline\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/direct/invitations/{{invitationId}}/respond", "host": ["{{baseUrl}}"], "path": ["api","messaging","direct","invitations","{{invitationId}}","respond"] }
+                    }
+                },
+                {
+                    "name": "Re-invite same user [should return existing conversation]",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('200 - Returns existing conversation', () => pm.response.to.have.status(200));",
+                        "pm.test('Has conversationId', () => pm.expect(pm.response.json().data.conversationId).to.be.a('string'));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"recipientId\": \"{{userIdB}}\",\n    \"shortMessage\": \"Trying again.\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/direct/invite", "host": ["{{baseUrl}}"], "path": ["api","messaging","direct","invite"] },
+                        "description": "Should NOT create a duplicate — returns the existing conversationId"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "03 - PUBLIC_GROUP",
+            "description": "Searchable groups. Open (instant join) or closed (request to join).",
+            "item": [
+                {
+                    "name": "Create Public Group - Open (isOpen=1)",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "const r = pm.response.json();",
+                        "if (r.data && r.data.conversationId) { pm.collectionVariables.set('publicGroupId', r.data.conversationId); console.log('Public group ID:', r.data.conversationId); }",
+                        "pm.test('201 Created', () => pm.response.to.have.status(201));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "name",        "value": "STP Tech Community", "type": "text" },
+                                { "key": "description", "value": "A public group for tech discussions", "type": "text" },
+                                { "key": "isOpen",      "value": "1", "type": "text", "description": "1 = anyone joins instantly" }
+                            ]
+                        },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/public", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","public"] }
+                    }
+                },
+                {
+                    "name": "Create Public Group - Closed (isOpen=0)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "name",        "value": "STP Founders Circle", "type": "text" },
+                                { "key": "description", "value": "Request to join — admin approval required", "type": "text" },
+                                { "key": "isOpen",      "value": "0", "type": "text", "description": "0 = join request needed" }
+                            ]
+                        },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/public", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","public"] }
+                    }
+                },
+                {
+                    "name": "List / Search Public Groups",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                        "pm.test('Returns array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/messaging/groups/public?search=STP&page=1&limit=20",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api","messaging","groups","public"],
+                            "query": [
+                                { "key": "search", "value": "STP" },
+                                { "key": "page",   "value": "1" },
+                                { "key": "limit",  "value": "20" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Join Open Group - Instant (User B)",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('200 OK - Joined instantly', () => pm.response.to.have.status(200));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{publicGroupId}}/join", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{publicGroupId}}","join"] },
+                        "description": "Works only if isOpen=1. Returns 200 and conversationId immediately."
+                    }
+                },
+                {
+                    "name": "Request to Join Closed Group (User B)",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "const r = pm.response.json();",
+                        "if (r.data && r.data.requestId) { pm.collectionVariables.set('joinRequestId', r.data.requestId); }",
+                        "pm.test('200 - Request submitted', () => pm.response.to.have.status(200));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{publicGroupId}}/join", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{publicGroupId}}","join"] },
+                        "description": "Works only if isOpen=0. Submits a join request for admin approval."
+                    }
+                },
+                {
+                    "name": "Get Join Requests (Admin - User A)",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{publicGroupId}}/requests", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{publicGroupId}}","requests"] }
+                    }
+                },
+                {
+                    "name": "Approve Join Request (Admin - User A)",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"action\": \"approve\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{publicGroupId}}/requests/{{joinRequestId}}/respond", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{publicGroupId}}","requests","{{joinRequestId}}","respond"] }
+                    }
+                },
+                {
+                    "name": "Reject Join Request (Admin - User A) [alternative]",
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"action\": \"reject\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{publicGroupId}}/requests/{{joinRequestId}}/respond", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{publicGroupId}}","requests","{{joinRequestId}}","respond"] }
+                    }
+                },
+                {
+                    "name": "Update Group Settings - Toggle isOpen (Admin)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"isOpen\": 1,\n    \"name\": \"STP Tech Community (Updated)\",\n    \"description\": \"Now open for all members to join instantly\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{publicGroupId}}/settings", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{publicGroupId}}","settings"] }
+                    }
+                },
+                {
+                    "name": "Non-admin Tries Settings [should fail 403]",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "PATCH",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"name\": \"Trying to rename\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{publicGroupId}}/settings", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{publicGroupId}}","settings"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "04 - PRIVATE_GROUP (Deal Room)",
+            "description": "Hidden, invite-only deal rooms. Accessed by ID only, not searchable.",
+            "item": [
+                {
+                    "name": "Create Private Deal Room (User A)",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "const r = pm.response.json();",
+                        "if (r.data && r.data.conversationId) { pm.collectionVariables.set('privateGroupId', r.data.conversationId); console.log('Private group ID:', r.data.conversationId); }",
+                        "pm.test('201 Created', () => pm.response.to.have.status(201));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "name",        "value": "Series A Deal Room",        "type": "text" },
+                                { "key": "description", "value": "Confidential fundraising discussions", "type": "text" },
+                                { "key": "memberLimit", "value": "10", "type": "text", "description": "Leave blank for no limit" }
+                            ]
+                        },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/private", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","private"] }
+                    }
+                },
+                {
+                    "name": "Admin Invites User B to Deal Room",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"userId\": \"{{userIdB}}\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{privateGroupId}}/invite", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{privateGroupId}}","invite"] }
+                    }
+                },
+                {
+                    "name": "Invite Same User Again [should fail 409]",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('409 Already member', () => pm.response.to.have.status(409));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"userId\": \"{{userIdB}}\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{privateGroupId}}/invite", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{privateGroupId}}","invite"] }
+                    }
+                },
+                {
+                    "name": "Non-admin Tries to Invite [should fail 403]",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"userId\": \"some-random-user-id\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{privateGroupId}}/invite", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{privateGroupId}}","invite"] }
+                    }
+                },
+                {
+                    "name": "Remove Member (Admin - User A)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"userId\": \"{{userIdB}}\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{privateGroupId}}/members/remove", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{privateGroupId}}","members","remove"] }
+                    }
+                },
+                {
+                    "name": "Update Deal Room Settings (Admin)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"name\": \"Series A Deal Room - Final\",\n    \"memberLimit\": 15\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/{{privateGroupId}}/settings", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","{{privateGroupId}}","settings"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "05 - Conversations & Messages (Shared)",
+            "item": [
+                {
+                    "name": "Get All My Conversations",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                        "pm.test('Returns array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                        "console.log('Total conversations:', pm.response.json().data.length);"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "url": { "raw": "{{baseUrl}}/api/messaging/conversations", "host": ["{{baseUrl}}"], "path": ["api","messaging","conversations"] }
+                    }
+                },
+                {
+                    "name": "Get Message History - Direct",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                        "pm.test('Has meta', () => pm.expect(pm.response.json().meta).to.have.property('total'));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/messaging/conversations/{{directConvId}}/messages?page=1&limit=30",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api","messaging","conversations","{{directConvId}}","messages"],
+                            "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "30" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Message History - Public Group",
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/messaging/conversations/{{publicGroupId}}/messages?page=1&limit=30",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api","messaging","conversations","{{publicGroupId}}","messages"],
+                            "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "30" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Message History - Private Group (Deal Room)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/messaging/conversations/{{privateGroupId}}/messages?page=1&limit=30",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api","messaging","conversations","{{privateGroupId}}","messages"],
+                            "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "30" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Non-member Tries to Get History [should fail 403]",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+                        "url": { "raw": "{{baseUrl}}/api/messaging/conversations/{{privateGroupId}}/messages", "host": ["{{baseUrl}}"], "path": ["api","messaging","conversations","{{privateGroupId}}","messages"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "06 - Media Upload",
+            "item": [
+                {
+                    "name": "Upload Image to Direct Chat",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "const r = pm.response.json();",
+                        "if (r.data && r.data.messageId) { pm.collectionVariables.set('mediaMessageId', r.data.messageId); }",
+                        "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                        "pm.test('Has mediaUrl', () => pm.expect(r.data.mediaUrl).to.be.a('string'));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "formdata", "formdata": [
+                            { "key": "mediaFile", "type": "file", "src": "", "description": "Select any JPG, PNG, WEBP — max 5MB" },
+                            { "key": "content",   "value": "Check this out!", "type": "text" }
+                        ]},
+                        "url": { "raw": "{{baseUrl}}/api/messaging/conversations/{{directConvId}}/media", "host": ["{{baseUrl}}"], "path": ["api","messaging","conversations","{{directConvId}}","media"] }
+                    }
+                },
+                {
+                    "name": "Upload Document to Group",
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "formdata", "formdata": [
+                            { "key": "mediaFile", "type": "file", "src": "", "description": "PDF, docx, xlsx — max 20MB" },
+                            { "key": "content",   "value": "Please review this", "type": "text" }
+                        ]},
+                        "url": { "raw": "{{baseUrl}}/api/messaging/conversations/{{publicGroupId}}/media", "host": ["{{baseUrl}}"], "path": ["api","messaging","conversations","{{publicGroupId}}","media"] }
+                    }
+                },
+                {
+                    "name": "Upload Unsupported File [should fail 415]",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('415 Unsupported', () => pm.response.to.have.status(415));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "formdata", "formdata": [
+                            { "key": "mediaFile", "type": "file", "src": "", "description": "Upload .exe or .bat to test rejection" }
+                        ]},
+                        "url": { "raw": "{{baseUrl}}/api/messaging/conversations/{{directConvId}}/media", "host": ["{{baseUrl}}"], "path": ["api","messaging","conversations","{{directConvId}}","media"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "07 - Delete Message",
+            "item": [
+                {
+                    "name": "Delete Own Message",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "url": { "raw": "{{baseUrl}}/api/messaging/messages/{{mediaMessageId}}", "host": ["{{baseUrl}}"], "path": ["api","messaging","messages","{{mediaMessageId}}"] }
+                    }
+                },
+                {
+                    "name": "Delete Someone Else's Message [should fail 404]",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('404 Not found', () => pm.response.to.have.status(404));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+                        "url": { "raw": "{{baseUrl}}/api/messaging/messages/{{mediaMessageId}}", "host": ["{{baseUrl}}"], "path": ["api","messaging","messages","{{mediaMessageId}}"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "08 - Edge Cases",
+            "item": [
+                {
+                    "name": "Invite Self [should fail 400]",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('400 Bad request', () => pm.response.to.have.status(400));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "raw", "raw": "{\n    \"recipientId\": \"PASTE_USER_A_OWN_ID_HERE\",\n    \"shortMessage\": \"Talking to myself\"\n}", "options": { "raw": { "language": "json" } } },
+                        "url": { "raw": "{{baseUrl}}/api/messaging/direct/invite", "host": ["{{baseUrl}}"], "path": ["api","messaging","direct","invite"] }
+                    }
+                },
+                {
+                    "name": "No Token [should fail 401]",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": { "raw": "{{baseUrl}}/api/messaging/conversations", "host": ["{{baseUrl}}"], "path": ["api","messaging","conversations"] }
+                    }
+                },
+                {
+                    "name": "Create Group Missing Name [should fail 400]",
+                    "event": [{ "listen": "test", "script": { "exec": [
+                        "pm.test('400 Validation error', () => pm.response.to.have.status(400));"
+                    ], "type": "text/javascript" } }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+                        "body": { "mode": "formdata", "formdata": [{ "key": "isOpen", "value": "1", "type": "text" }]},
+                        "url": { "raw": "{{baseUrl}}/api/messaging/groups/public", "host": ["{{baseUrl}}"], "path": ["api","messaging","groups","public"] }
+                    }
+                }
+            ]
+        }
+    ]
+}
