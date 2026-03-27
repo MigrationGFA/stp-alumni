@@ -1,12 +1,17 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import messagingService from '../services/messagingService';
 import useMessagingStore from '../store/useMessagingStore';
 import { toast } from 'sonner';
+
+// ─── Constants ───────────────────────────────────────────────────
+const CONVERSATIONS_POLL_INTERVAL = 20 * 1000; // 20s — background poll for new conversations
+const MESSAGES_POLL_INTERVAL = 8 * 1000;       // 8s — active chat poll for new messages
 
 // ─── Query Keys ──────────────────────────────────────────────────
 export const messagingKeys = {
   conversations: ['messaging', 'conversations'],
   messages: (conversationId) => ['messaging', 'messages', conversationId],
+  messagesInfinite: (conversationId) => ['messaging', 'messagesInfinite', conversationId],
   invitations: ['messaging', 'invitations'],
   publicGroups: (params) => ['messaging', 'publicGroups', params],
   joinRequests: (groupId) => ['messaging', 'joinRequests', groupId],
@@ -28,9 +33,11 @@ export function useConversations() {
       setConversations(conversations);
       return conversations;
     },
-    staleTime: 15 * 1000, // 15 seconds — chat data should be relatively fresh
+    staleTime: 15 * 1000,
+    refetchInterval: CONVERSATIONS_POLL_INTERVAL,
+    refetchIntervalInBackground: false, // Only poll when tab is visible
     onError: () => {
-      toast.error('Failed to load conversations');
+      // Silent on poll failures — only toast on first load
     },
   });
 }
@@ -54,10 +61,42 @@ export function useMessages(conversationId, params = { page: 1, limit: 30 }) {
       return data; // Return full response for meta (pagination info)
     },
     enabled: !!conversationId,
-    staleTime: 10 * 1000, // 10 seconds
+    staleTime: 8 * 1000,
+    refetchInterval: MESSAGES_POLL_INTERVAL,
+    refetchIntervalInBackground: false,
     onError: () => {
-      toast.error('Failed to load messages');
+      // Silent on poll failures
     },
+  });
+}
+
+/**
+ * Infinite query for paginated message history (load older messages on scroll up).
+ * @param {string|null} conversationId
+ * @param {number} limit - messages per page
+ */
+export function useInfiniteMessages(conversationId, limit = 30) {
+  return useInfiniteQuery({
+    queryKey: messagingKeys.messagesInfinite(conversationId),
+    queryFn: async ({ pageParam = 1 }) => {
+      const data = await messagingService.getMessages(conversationId, {
+        page: pageParam,
+        limit,
+      });
+      return data;
+    },
+    enabled: !!conversationId,
+    getNextPageParam: (lastPage) => {
+      // Determine if there are more pages from the meta response
+      const meta = lastPage?.meta;
+      if (!meta) return undefined;
+      const currentPage = meta.page || meta.currentPage || 1;
+      const totalPages = meta.totalPages || meta.lastPage || 1;
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
+    staleTime: 10 * 1000,
+    refetchInterval: MESSAGES_POLL_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -155,8 +194,10 @@ export function usePendingInvitations() {
       return invitations;
     },
     staleTime: 30 * 1000,
+    refetchInterval: CONVERSATIONS_POLL_INTERVAL,
+    refetchIntervalInBackground: false,
     onError: () => {
-      toast.error('Failed to load invitations');
+      // Silent on poll failures
     },
   });
 }

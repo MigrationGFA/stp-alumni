@@ -33,6 +33,13 @@ const useAuthStore = create(
           isOnboarded: false,
           passwordChangeRequired: false,
         });
+        // Clear messaging state on logout
+        try {
+          const { default: useMessagingStore } = require('../store/useMessagingStore');
+          useMessagingStore.getState().reset();
+        } catch {
+          // Messaging store may not be loaded yet — safe to ignore
+        }
       },
 
       updateUser: (data) =>
