@@ -100,7 +100,7 @@ export function useInfiniteMessages(conversationId, limit = 30) {
   });
 }
 
-// ─── Send Media / Message ────────────────────────────────────────
+// ─── Send Media (File Upload) ────────────────────────────────────
 
 /**
  * Upload media (or send a text message via the media endpoint).
