@@ -11,6 +11,9 @@ import {
 import useMessagingStore from "@/lib/store/useMessagingStore";
 import useAuthStore from "@/lib/store/useAuthStore";
 
+/** Stable empty array to avoid infinite re-render loops in Zustand selectors */
+const EMPTY_ARRAY = [];
+
 /**
  * Generate a temporary ID for optimistic updates.
  */
@@ -168,9 +171,10 @@ export function useMessaging() {
   }, [rawMessagesData, selectedConversationId, currentUserId]);
 
   // Also include any optimistic messages from the store
-  const storeMessages = useMessagingStore(
-    (s) => s.messages[selectedConversationId] || []
-  );
+  const allStoreMessages = useMessagingStore((s) => s.messages);
+  const storeMessages = selectedConversationId
+    ? allStoreMessages[selectedConversationId] || EMPTY_ARRAY
+    : EMPTY_ARRAY;
 
   const mergedMessages = useMemo(() => {
     // Combine API messages with optimistic store messages (temp IDs)
