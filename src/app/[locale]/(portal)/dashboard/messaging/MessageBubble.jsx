@@ -1,4 +1,4 @@
-import { Check, CheckCheck, Clock, AlertCircle, RotateCcw, Trash2 } from "lucide-react";
+import { Check, CheckCheck, Clock, AlertCircle, RotateCcw, Trash2, FileText, Download } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { formatMessageTime } from "@/lib/helper";
+import Image from "next/image";
 
 function MessageStatus({ status }) {
   switch (status) {
@@ -26,6 +27,49 @@ function MessageStatus({ status }) {
   }
 }
 
+function MediaContent({ message }) {
+  if (!message.mediaUrl) return null;
+
+  const isImage =
+    message.mediaType === "image" ||
+    /\.(jpg|jpeg|png|gif|webp)$/i.test(message.mediaUrl);
+
+  if (isImage) {
+    return (
+      <div className="relative rounded-lg overflow-hidden mt-1 mb-1 max-w-xs">
+        <Image
+          src={message.mediaUrl}
+          alt="Shared image"
+          width={300}
+          height={200}
+          className="object-cover rounded-lg"
+          unoptimized={message.mediaUrl.startsWith("blob:")}
+        />
+      </div>
+    );
+  }
+
+  // Document
+  const fileName = message.mediaUrl.split("/").pop() || "Document";
+  return (
+    <a
+      href={message.mediaUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "flex items-center gap-2 p-2 rounded-lg mt-1 mb-1 transition-colors",
+        message.isOwn
+          ? "bg-white/10 hover:bg-white/20"
+          : "bg-muted hover:bg-muted/80"
+      )}
+    >
+      <FileText className="h-5 w-5 shrink-0" />
+      <span className="text-xs truncate flex-1">{fileName}</span>
+      <Download className="h-4 w-4 shrink-0 opacity-60" />
+    </a>
+  );
+}
+
 export function MessageBubble({
   message,
   senderAvatar,
@@ -34,6 +78,10 @@ export function MessageBubble({
   onDelete,
 }) {
   const isFailed = message.status === "failed";
+  const createdAt =
+    message.createdAt instanceof Date
+      ? message.createdAt
+      : new Date(message.createdAt);
 
   return (
     <div
@@ -46,10 +94,12 @@ export function MessageBubble({
         <Avatar className="h-8 w-8 shrink-0">
           <AvatarImage src={senderAvatar} alt={senderName} />
           <AvatarFallback>
-            {senderName
+            {(senderName || "?")
               .split(" ")
               .map((n) => n[0])
-              .join("")}
+              .join("")
+              .toUpperCase()
+              .slice(0, 2)}
           </AvatarFallback>
         </Avatar>
       )}
@@ -73,12 +123,7 @@ export function MessageBubble({
               {isFailed && onRetry && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={onRetry}
-                    >
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRetry}>
                       <RotateCcw className="h-3 w-3" />
                     </Button>
                   </TooltipTrigger>
@@ -112,13 +157,16 @@ export function MessageBubble({
               isFailed && "opacity-60"
             )}
           >
-            {message.content}
+            <MediaContent message={message} />
+            {message.content && (
+              <span className="whitespace-pre-wrap">{message.content}</span>
+            )}
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 mt-1">
           <span className="text-xs text-muted-foreground">
-            {formatMessageTime(message.createdAt)}
+            {formatMessageTime(createdAt)}
           </span>
           {message.isOwn && <MessageStatus status={message.status} />}
         </div>
