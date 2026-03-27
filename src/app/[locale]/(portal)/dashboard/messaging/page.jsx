@@ -1,7 +1,10 @@
 "use client";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChatView } from "./ChatView";
 import { ConversationList } from "./ConversationList";
+import { GroupDiscovery } from "./GroupDiscovery";
+import { GroupSettingsDialog } from "./GroupSettings";
 import { useMessaging } from "./useMessaging";
 
 const Messaging = () => {
@@ -25,8 +28,18 @@ const Messaging = () => {
     declineInvitation,
   } = useMessaging();
 
+  const [showGroupDiscovery, setShowGroupDiscovery] = useState(false);
+  const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
+
   const handleBack = () => {
     selectConversation(null);
+  };
+
+  const handleGroupJoined = (conversationId) => {
+    setShowGroupDiscovery(false);
+    if (conversationId) {
+      selectConversation(conversationId);
+    }
   };
 
   return (
@@ -35,7 +48,7 @@ const Messaging = () => {
       <div
         className={cn(
           "w-full lg:w-100 border-r border-border shrink-0",
-          selectedConversation ? "hidden lg:flex" : "flex"
+          selectedConversation || showGroupDiscovery ? "hidden lg:flex" : "flex"
         )}
       >
         <ConversationList
@@ -46,31 +59,55 @@ const Messaging = () => {
           isLoading={isLoading}
           onSearchChange={setSearchQuery}
           onSortChange={setSortBy}
-          onSelect={(conv) => selectConversation(conv.id)}
+          onSelect={(conv) => {
+            setShowGroupDiscovery(false);
+            selectConversation(conv.id);
+          }}
           invitations={invitations}
           onAcceptInvitation={acceptInvitation}
           onDeclineInvitation={declineInvitation}
+          onBrowseGroups={() => {
+            selectConversation(null);
+            setShowGroupDiscovery(true);
+          }}
         />
       </div>
 
-      {/* Chat View - full width on mobile */}
+      {/* Main content area */}
       <div
         className={cn(
           "flex-1 flex flex-col",
-          !selectedConversation ? "hidden lg:flex" : "flex"
+          !selectedConversation && !showGroupDiscovery ? "hidden lg:flex" : "flex"
         )}
       >
-        {selectedConversation ? (
-          <ChatView
-            conversation={selectedConversation}
-            messages={currentMessages}
-            isLoading={isMessagesLoading}
-            onBack={handleBack}
-            onSendMessage={sendMessage}
-            onSendMediaFile={sendMediaFile}
-            onRetryMessage={retryMessage}
-            onDeleteMessage={deleteMessage}
+        {showGroupDiscovery ? (
+          <GroupDiscovery
+            onClose={() => setShowGroupDiscovery(false)}
+            onGroupJoined={handleGroupJoined}
           />
+        ) : selectedConversation ? (
+          <>
+            <ChatView
+              conversation={selectedConversation}
+              messages={currentMessages}
+              isLoading={isMessagesLoading}
+              onBack={handleBack}
+              onSendMessage={sendMessage}
+              onSendMediaFile={sendMediaFile}
+              onRetryMessage={retryMessage}
+              onDeleteMessage={deleteMessage}
+              onOpenGroupSettings={
+                selectedConversation.type === "PUBLIC_GROUP"
+                  ? () => setGroupSettingsOpen(true)
+                  : undefined
+              }
+            />
+            <GroupSettingsDialog
+              open={groupSettingsOpen}
+              onOpenChange={setGroupSettingsOpen}
+              conversation={selectedConversation}
+            />
+          </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             <div className="text-center">

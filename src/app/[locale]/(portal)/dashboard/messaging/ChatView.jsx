@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, MoreHorizontal, Smile, Paperclip, Image as ImageIcon, Send } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Smile, Paperclip, Image as ImageIcon, Send, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,6 +35,7 @@ export function ChatView({
   onSendMediaFile,
   onRetryMessage,
   onDeleteMessage,
+  onOpenGroupSettings,
   isLoading,
 }) {
   const [newMessage, setNewMessage] = useState("");
@@ -155,6 +156,15 @@ export function ChatView({
             <DropdownMenuItem>View profile</DropdownMenuItem>
             <DropdownMenuItem>Search in conversation</DropdownMenuItem>
             <DropdownMenuItem>Mute notifications</DropdownMenuItem>
+            {conversation.type === "PUBLIC_GROUP" && onOpenGroupSettings && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onOpenGroupSettings}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Group Settings
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">Delete chat</DropdownMenuItem>
           </DropdownMenuContent>

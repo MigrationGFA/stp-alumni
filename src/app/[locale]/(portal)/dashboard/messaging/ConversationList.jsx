@@ -51,6 +51,7 @@ export function ConversationList({
   invitations = [],
   onAcceptInvitation,
   onDeclineInvitation,
+  onBrowseGroups,
 }) {
   const [activeTab, setActiveTab] = useState("chats"); // "chats" | "invitations"
 
@@ -281,6 +282,20 @@ export function ConversationList({
           )
         )}
       </ScrollArea>
+
+      {/* Browse Groups Button */}
+      {onBrowseGroups && (
+        <div className="p-3 border-t border-border">
+          <Button
+            variant="outline"
+            className="w-full border-stp-blue-light text-stp-blue-light hover:bg-stp-blue-light hover:text-white"
+            onClick={onBrowseGroups}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Browse Groups
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
