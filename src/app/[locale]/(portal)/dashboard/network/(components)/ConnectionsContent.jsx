@@ -156,7 +156,7 @@ export function ConnectionsContent() {
                     } else {
                       // Send a messaging invitation then navigate
                       sendInvitation(
-                        { recipientId: connection.userId, shortMessage: "" },
+                        { recipientId: connection.userId, shortMessage: "Hi, I'd like to connect with you!" },
                         { onSuccess: () => router.push("/dashboard/messaging") }
                       );
                     }

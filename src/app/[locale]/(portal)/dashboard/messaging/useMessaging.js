@@ -311,7 +311,7 @@ export function useMessaging() {
   );
 
   const inviteUser = useCallback(
-    (recipientId, shortMessage = "") => {
+    (recipientId, shortMessage = "Hi, I'd like to connect with you!") => {
       sendInvitationMutation({ recipientId, shortMessage });
     },
     [sendInvitationMutation]
