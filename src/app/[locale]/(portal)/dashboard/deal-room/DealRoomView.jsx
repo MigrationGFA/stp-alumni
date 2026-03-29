@@ -94,10 +94,9 @@ export function DealRoomView({
 
   const handleAddMember = () => {
     if (addMemberSearch.trim()) {
-      onAddMember?.(room.id, {
-        id: `new_${Date.now()}`,
-        name: addMemberSearch.trim(),
-      });
+      // Pass the search string as userId — in a future iteration this
+      // should be a user-search autocomplete that provides real IDs
+      onAddMember?.(room.id, addMemberSearch.trim());
       setAddMemberSearch("");
     }
   };
@@ -217,12 +216,12 @@ export function DealRoomView({
                     key={member.id}
                     className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
                   >
-                    <span className="text-sm">{member.name}</span>
+                    <span className="text-sm">{member.name || member.firstName || "Member"}</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => onRemoveMember?.(room.id, member.id)}
+                      onClick={() => onRemoveMember?.(room.id, member.userId || member.id)}
                     >
                       <Trash2 className="h-4 w-4 mr-1" />
                       Remove

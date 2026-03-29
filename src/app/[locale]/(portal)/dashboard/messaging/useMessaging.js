@@ -1,166 +1,143 @@
 import { useState, useCallback, useMemo } from "react";
+import {
+  useConversations,
+  useMessages,
+  useSendMedia,
+  useDeleteMessage,
+  usePendingInvitations,
+  useRespondToInvitation,
+  useSendInvitation,
+} from "@/lib/hooks/useMessagingQueries";
+import useMessagingStore from "@/lib/store/useMessagingStore";
+import useAuthStore from "@/lib/store/useAuthStore";
 
+/** Stable empty array to avoid infinite re-render loops in Zustand selectors */
+const EMPTY_ARRAY = [];
+
+/**
+ * Generate a temporary ID for optimistic updates.
+ */
 export function generateId() {
   return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
+/**
+ * Normalize a conversation from the API shape to the shape our UI components expect.
+ * Handles both DIRECT and PUBLIC_GROUP types for the messaging page.
+ */
+function normalizeConversation(conv, currentUserId) {
+  const id = conv.conversationId || conv.id;
+  const type = conv.type || "DIRECT";
 
-// Mock data - will be replaced with backend calls
-const createMockConversations = () => [
-  {
-    id: "1",
-    name: "Bayu Saito",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
-    lastMessage: "I would like to get more information on the...",
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    unread: true,
-    unreadCount: 2,
-    online: true,
-  },
-  {
-    id: "2",
-    name: "Oreoluwa Sade",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-    lastMessage: "Thanks Emmanuel",
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-    unread: false,
-    unreadCount: 0,
-    online: false,
-  },
-  {
-    id: "3",
-    name: "James Bond",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
-    lastMessage: "Hello good morning",
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
-    unread: false,
-    unreadCount: 0,
-    online: true,
-  },
-  {
-    id: "4",
-    name: "Bisola Adura",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
-    lastMessage: "I would love to get to know you better...",
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-    unread: true,
-    unreadCount: 1,
-    online: false,
-  },
-  {
-    id: "5",
-    name: "Michael Chen",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop",
-    lastMessage: "Let's schedule a call for tomorrow",
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    unread: false,
-    unreadCount: 0,
-    online: true,
-  },
-  {
-    id: "6",
-    name: "Sarah Williams",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
-    lastMessage: "The project looks great!",
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
-    unread: false,
-    unreadCount: 0,
-    online: false,
-  },
-];
+  // For direct chats, derive name/avatar from the other participant
+  let name = conv.name || conv.title || "Unnamed";
+  let avatar = conv.avatar || conv.thumbnail || null;
 
-const createMockMessages = () => ({
-  "1": [
-    {
-      id: "m1",
-      conversationId: "1",
-      senderId: "1",
-      content: "Hi Oreoluwa, it's great to connect with you. Looking forward to staying in touch.",
-      createdAt: new Date(Date.now() - 1000 * 60 * 10),
-      isOwn: false,
-      status: "read",
-    },
-    {
-      id: "m2",
-      conversationId: "1",
-      senderId: "me",
-      content: "Awesome! Can I see a couple of pictures?",
-      createdAt: new Date(Date.now() - 1000 * 60 * 8),
-      isOwn: true,
-      status: "read",
-    },
-    {
-      id: "m3",
-      conversationId: "1",
-      senderId: "1",
-      content: "I would like to get more information on the project you mentioned. Could you share more details?",
-      createdAt: new Date(Date.now() - 1000 * 60 * 2),
-      isOwn: false,
-      status: "delivered",
-    },
-  ],
-  "2": [
-    {
-      id: "m4",
-      conversationId: "2",
-      senderId: "2",
-      content: "Thanks Emmanuel! I really appreciate your help with the project.",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),
-      isOwn: false,
-      status: "read",
-    },
-  ],
-  "3": [
-    {
-      id: "m5",
-      conversationId: "3",
-      senderId: "3",
-      content: "Hello good morning! How are you doing today?",
-      createdAt: new Date(Date.now() - 1000 * 60 * 30),
-      isOwn: false,
-      status: "read",
-    },
-  ],
-  "4": [
-    {
-      id: "m6",
-      conversationId: "4",
-      senderId: "4",
-      content: "I would love to get to know you better. Are you free for a coffee sometime?",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5),
-      isOwn: false,
-      status: "delivered",
-    },
-  ],
-});
+  if (type === "DIRECT" && Array.isArray(conv.participants)) {
+    const other = conv.participants.find((p) => p.userId !== currentUserId);
+    if (other) {
+      name = other.name || other.firstName || name;
+      avatar = other.profileImagePath || other.avatar || avatar;
+    }
+  }
 
+  return {
+    id,
+    conversationId: id,
+    type,
+    name,
+    avatar,
+    lastMessage: conv.lastMessage || conv.lastMessageContent || "",
+    lastMessageAt: conv.lastMessageAt || conv.updatedAt
+      ? new Date(conv.lastMessageAt || conv.updatedAt)
+      : new Date(),
+    unread: !!conv.unreadCount || conv.unread || false,
+    unreadCount: parseInt(conv.unreadCount, 10) || 0,
+    online: conv.online || false,
+    participants: conv.participants || [],
+    isOpen: conv.isOpen,
+    description: conv.description,
+  };
+}
+
+/**
+ * Normalize a message from the API shape to the shape our UI components expect.
+ */
+function normalizeMessage(msg, currentUserId) {
+  const senderId = msg.senderId || msg.userId;
+  const isOwn = senderId === currentUserId;
+
+  return {
+    id: msg.messageId || msg.id,
+    messageId: msg.messageId || msg.id,
+    conversationId: msg.conversationId,
+    senderId,
+    senderName: msg.senderName || msg.name || (isOwn ? "You" : "User"),
+    senderAvatar: msg.senderAvatar || msg.profileImagePath || null,
+    content: msg.content || msg.message || "",
+    mediaUrl: msg.mediaUrl || null,
+    mediaType: msg.mediaType || null,
+    createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
+    isOwn,
+    status: msg.status || (isOwn ? "sent" : "read"),
+  };
+}
+
+/**
+ * Main messaging hook — replaces the old mock-based hook.
+ * Fetches real data from the API via React Query and exposes the same
+ * interface that page.jsx and the UI components expect.
+ */
 export function useMessaging() {
-  const [conversations, setConversations] = useState(createMockConversations);
-  const [messages, setMessages] = useState(createMockMessages);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recent");
-  const [isLoading] = useState(false);
 
-  // Sort and filter conversations
+  const currentUser = useAuthStore((s) => s.user);
+  const currentUserId = currentUser?.id || currentUser?.userId;
+
+  // ─── API Queries ─────────────────────────────────────────────
+  const { data: rawConversations, isLoading: convsLoading } = useConversations();
+  const { data: rawMessagesData, isLoading: msgsLoading } = useMessages(selectedConversationId);
+  const { data: invitations, isLoading: invLoading } = usePendingInvitations();
+
+  // ─── API Mutations ───────────────────────────────────────────
+  const { mutate: sendMediaMutation } = useSendMedia();
+  const { mutate: deleteMessageMutation } = useDeleteMessage();
+  const { mutate: respondToInvitationMutation } = useRespondToInvitation();
+  const { mutate: sendInvitationMutation } = useSendInvitation();
+
+  // ─── Normalize conversations ─────────────────────────────────
+  const allConversations = useMemo(() => {
+    if (!rawConversations) return [];
+    const list = Array.isArray(rawConversations) ? rawConversations : [];
+    return list.map((c) => normalizeConversation(c, currentUserId));
+  }, [rawConversations, currentUserId]);
+
+  // Filter to DIRECT and PUBLIC_GROUP for the messaging page
+  // (PRIVATE_GROUP is handled by the Deal Room page)
+  const messagingConversations = useMemo(() => {
+    return allConversations.filter(
+      (c) => c.type === "DIRECT" || c.type === "PUBLIC_GROUP"
+    );
+  }, [allConversations]);
+
+  // ─── Sort & filter ───────────────────────────────────────────
   const filteredConversations = useMemo(() => {
-    let result = [...conversations];
+    let result = [...messagingConversations];
 
-    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (conv) =>
           conv.name.toLowerCase().includes(query) ||
-          conv.lastMessage.toLowerCase().includes(query)
+          (conv.lastMessage && conv.lastMessage.toLowerCase().includes(query))
       );
     }
 
-    // Sort conversations
     result.sort((a, b) => {
       switch (sortBy) {
         case "unread":
-          // Unread first, then by recent
           if (a.unread !== b.unread) return a.unread ? -1 : 1;
           return b.lastMessageAt.getTime() - a.lastMessageAt.getTime();
         case "name":
@@ -172,51 +149,51 @@ export function useMessaging() {
     });
 
     return result;
-  }, [conversations, searchQuery, sortBy]);
+  }, [messagingConversations, searchQuery, sortBy]);
 
-  // Get selected conversation
+  // ─── Selected conversation ───────────────────────────────────
   const selectedConversation = useMemo(
-    () => conversations.find((c) => c.id === selectedConversationId) || null,
-    [conversations, selectedConversationId]
+    () => messagingConversations.find((c) => c.id === selectedConversationId) || null,
+    [messagingConversations, selectedConversationId]
   );
 
-  // Get messages for selected conversation (sorted by time)
+  // ─── Normalize messages ──────────────────────────────────────
   const currentMessages = useMemo(() => {
-    if (!selectedConversationId) return [];
-    const convMessages = messages[selectedConversationId] || [];
-    return [...convMessages].sort(
-      (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
-    );
-  }, [messages, selectedConversationId]);
+    if (!selectedConversationId || !rawMessagesData) return [];
+    const raw = Array.isArray(rawMessagesData?.data)
+      ? rawMessagesData.data
+      : Array.isArray(rawMessagesData)
+        ? rawMessagesData
+        : [];
+    return raw
+      .map((m) => normalizeMessage(m, currentUserId))
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }, [rawMessagesData, selectedConversationId, currentUserId]);
 
-  // Select conversation and mark as read
+  // Also include any optimistic messages from the store
+  const allStoreMessages = useMessagingStore((s) => s.messages);
+  const storeMessages = selectedConversationId
+    ? allStoreMessages[selectedConversationId] || EMPTY_ARRAY
+    : EMPTY_ARRAY;
+
+  const mergedMessages = useMemo(() => {
+    // Combine API messages with optimistic store messages (temp IDs)
+    const apiIds = new Set(currentMessages.map((m) => m.id));
+    const optimistic = storeMessages.filter((m) => !apiIds.has(m.id));
+    return [...currentMessages, ...optimistic].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }, [currentMessages, storeMessages]);
+
+  // ─── Actions ─────────────────────────────────────────────────
+
   const selectConversation = useCallback((conversationId) => {
     setSelectedConversationId(conversationId);
-    
     if (conversationId) {
-      // Mark conversation as read (optimistic update)
-      setConversations((prev) =>
-        prev.map((conv) =>
-          conv.id === conversationId
-            ? { ...conv, unread: false, unreadCount: 0 }
-            : conv
-        )
-      );
-
-      // Mark messages as read
-      setMessages((prev) => ({
-        ...prev,
-        [conversationId]: (prev[conversationId] || []).map((msg) =>
-          !msg.isOwn ? { ...msg, status: "read"  } : msg
-        ),
-      }));
-
-      // TODO: Backend call to mark as read
-      // await markConversationAsRead(conversationId);
+      useMessagingStore.getState().setActiveConversation(conversationId);
     }
   }, []);
 
-  // Send a message with optimistic update
   const sendMessage = useCallback(
     (content) => {
       if (!selectedConversationId || !content.trim()) return;
@@ -224,119 +201,146 @@ export function useMessaging() {
       const tempId = generateId();
       const now = new Date();
 
-      const newMessage = {
+      const optimisticMessage = {
         id: tempId,
+        messageId: tempId,
         conversationId: selectedConversationId,
-        senderId: "me",
+        senderId: currentUserId,
+        senderName: currentUser?.name || "You",
         content: content.trim(),
         createdAt: now,
         isOwn: true,
         status: "sending",
       };
 
-      // Optimistic update - add message immediately
-      setMessages((prev) => ({
-        ...prev,
-        [selectedConversationId]: [...(prev[selectedConversationId] || []), newMessage],
-      }));
+      const formData = new FormData();
+      formData.append("content", content.trim());
 
-      // Update conversation's last message
-      setConversations((prev) =>
-        prev.map((conv) =>
-          conv.id === selectedConversationId
-            ? {
-                ...conv,
-                lastMessage: content.trim(),
-                lastMessageAt: now,
-              }
-            : conv
-        )
-      );
-
-      // Simulate sending (will be replaced with backend call)
-      setTimeout(() => {
-        setMessages((prev) => ({
-          ...prev,
-          [selectedConversationId]: (prev[selectedConversationId] || []).map((msg) =>
-            msg.id === tempId ? { ...msg, status: "sent"  } : msg
-          ),
-        }));
-
-        // Simulate delivery after a short delay
-        setTimeout(() => {
-          setMessages((prev) => ({
-            ...prev,
-            [selectedConversationId]: (prev[selectedConversationId] || []).map((msg) =>
-              msg.id === tempId ? { ...msg, status: "delivered" } : msg
-            ),
-          }));
-        }, 500);
-      }, 300);
-
-      // TODO: Backend call
-      // const result = await sendMessageToBackend(selectedConversationId, content);
-      // Update message status based on result
+      sendMediaMutation({
+        conversationId: selectedConversationId,
+        formData,
+        optimisticMessage,
+      });
     },
-    [selectedConversationId]
+    [selectedConversationId, currentUserId, currentUser, sendMediaMutation]
   );
 
-  // Retry failed message
+  const sendMediaFile = useCallback(
+    (file, caption = "") => {
+      if (!selectedConversationId || !file) return;
+
+      const tempId = generateId();
+      const now = new Date();
+
+      const optimisticMessage = {
+        id: tempId,
+        messageId: tempId,
+        conversationId: selectedConversationId,
+        senderId: currentUserId,
+        senderName: currentUser?.name || "You",
+        content: caption || file.name,
+        mediaUrl: URL.createObjectURL(file),
+        mediaType: file.type.startsWith("image/") ? "image" : "document",
+        createdAt: now,
+        isOwn: true,
+        status: "sending",
+      };
+
+      const formData = new FormData();
+      formData.append("mediaFile", file);
+      if (caption) formData.append("content", caption);
+
+      sendMediaMutation({
+        conversationId: selectedConversationId,
+        formData,
+        optimisticMessage,
+      });
+    },
+    [selectedConversationId, currentUserId, currentUser, sendMediaMutation]
+  );
+
   const retryMessage = useCallback(
     (messageId) => {
       if (!selectedConversationId) return;
+      // Find the failed message in the store and resend
+      const msgs = useMessagingStore.getState().messages[selectedConversationId] || [];
+      const failedMsg = msgs.find((m) => m.id === messageId);
+      if (!failedMsg) return;
 
-      setMessages((prev) => ({
-        ...prev,
-        [selectedConversationId]: (prev[selectedConversationId] || []).map((msg) =>
-          msg.id === messageId ? { ...msg, status: "sending" } : msg
-        ),
-      }));
+      useMessagingStore.getState().updateMessage(selectedConversationId, messageId, {
+        status: "sending",
+      });
 
-      // TODO: Retry backend call
-      setTimeout(() => {
-        setMessages((prev) => ({
-          ...prev,
-          [selectedConversationId]: (prev[selectedConversationId] || []).map((msg) =>
-            msg.id === messageId ? { ...msg, status: "sent"  } : msg
-          ),
-        }));
-      }, 500);
+      const formData = new FormData();
+      formData.append("content", failedMsg.content);
+
+      sendMediaMutation({
+        conversationId: selectedConversationId,
+        formData,
+        optimisticMessage: null, // Already in store
+      });
     },
-    [selectedConversationId]
+    [selectedConversationId, sendMediaMutation]
   );
 
-  // Delete message
   const deleteMessage = useCallback(
     (messageId) => {
       if (!selectedConversationId) return;
-
-      setMessages((prev) => ({
-        ...prev,
-        [selectedConversationId]: (prev[selectedConversationId] || []).filter(
-          (msg) => msg.id !== messageId
-        ),
-      }));
-
-      // TODO: Backend call to delete message
+      deleteMessageMutation({
+        conversationId: selectedConversationId,
+        messageId,
+      });
     },
-    [selectedConversationId]
+    [selectedConversationId, deleteMessageMutation]
+  );
+
+  // ─── Invitation actions ──────────────────────────────────────
+
+  const acceptInvitation = useCallback(
+    (invitationId) => {
+      respondToInvitationMutation({ invitationId, action: "accept" });
+    },
+    [respondToInvitationMutation]
+  );
+
+  const declineInvitation = useCallback(
+    (invitationId) => {
+      respondToInvitationMutation({ invitationId, action: "decline" });
+    },
+    [respondToInvitationMutation]
+  );
+
+  const inviteUser = useCallback(
+    (recipientId, shortMessage = "Hi, I'd like to connect with you!") => {
+      sendInvitationMutation({ recipientId, shortMessage });
+    },
+    [sendInvitationMutation]
   );
 
   return {
     // State
     conversations: filteredConversations,
     selectedConversation,
-    currentMessages,
+    currentMessages: mergedMessages,
     searchQuery,
     sortBy,
-    isLoading,
+    isLoading: convsLoading,
+    isMessagesLoading: msgsLoading,
+    invitations: invitations || [],
+    isInvitationsLoading: invLoading,
 
     // Actions
     setSearchQuery,
     setSortBy,
     selectConversation,
     sendMessage,
+    sendMediaFile,
     retryMessage,
     deleteMessage,
+
+    // Invitation actions
+    acceptInvitation,
+    declineInvitation,
+    inviteUser,
   };
 }

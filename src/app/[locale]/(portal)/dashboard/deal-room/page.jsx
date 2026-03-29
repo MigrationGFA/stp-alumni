@@ -37,8 +37,8 @@ const DealRoom = () => {
     setIsCreateModalOpen(true);
   };
 
-  const handleCreateRoom = (payload) => {
-    const newRoom = createRoom(payload);
+  const handleCreateRoom = async (payload) => {
+    const newRoom = await createRoom(payload);
     if (newRoom) {
       selectRoom(newRoom.id);
     }
