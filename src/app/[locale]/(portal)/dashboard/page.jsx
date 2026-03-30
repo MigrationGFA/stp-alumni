@@ -97,6 +97,8 @@ export default function DashboardPage() {
     toast.success("Link copied to clipboard!");
   };
 
+  console.log(posts,"jgoegnorg")
+
   return (
     <div className="p-3 sm:p-0">
       {/* <div className="min-h-screen bg-[#E8ECF4]"> */}
