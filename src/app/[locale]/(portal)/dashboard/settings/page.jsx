@@ -1,24 +1,48 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  MapPin, Briefcase, GraduationCap, ExternalLink, Target, Sparkles, Lock, FileText,
-} from "lucide-react";
+
+import { cn } from "@/lib/utils";
 import useAuthStore from "@/lib/store/useAuthStore";
 import userService from "@/lib/services/userService";
-import { useMyPosts, useLikePost } from "@/lib/hooks/usePosts";
-import PostCard from "@/components/posts/PostCard";
-import PostSkeleton from "@/components/posts/PostSkeleton";
-import { toast } from "sonner";
+
+import ProfileTab from "./ProfileTab";
+import MyPostsTab from "./PostTab";
+import SecurityTab from "./SecurityTab";
+import PreferencesTab from "./PreferenceTab";
+
+export const BUSINESS_MODELS = [
+  "B2B", "B2C", "B2B2C", "Marketplace", "SaaS", "D2C", "Franchise",
+  "Non-profit", "Social Enterprise", "Other",
+];
+
+export const COMPANY_STAGES = [
+  "Idea / Pre-revenue", "MVP / Early traction", "1–10 employees",
+  "10–50 employees", "50–200 employees", "200+ employees",
+];
+
+export const OFFER_TAGS = [
+  "Fundraising advice", "Raising Series A", "Raising Seed", "Angel investing",
+  "Technical Co-founder", "Product strategy", "Go-to-market", "Sales & BD",
+  "Marketing & Growth", "Legal & Compliance", "HR & Talent", "Finance & CFO",
+  "Design & UX", "Operations", "Mentorship", "Customer introductions",
+];
+
+export const NEED_TAGS = [
+  "Technical Co-founder", "Fundraising", "Sales leads", "Strategic partnerships",
+  "Marketing support", "Legal advice", "Hiring support", "Product feedback",
+  "Design help", "Mentorship", "Investor introductions", "Market expansion",
+];
+
+export const VISIBILITY_OPTIONS = [
+  { value: "all_alumni", label: "All Alumni", description: "Contact info visible to the entire STP community." },
+  { value: "admin_only", label: "Admin Only", description: "Only programme admins can see your contact details." },
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getInitials(name) {
   if (!name) return "??";
@@ -26,6 +50,115 @@ function getInitials(name) {
   if (parts.length === 1) return parts[0][0]?.toUpperCase() || "?";
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
+
+// ─── Reusable: Tag Pill ───────────────────────────────────────────────────────
+
+export function Tag({ label, onRemove }) {
+  return (
+    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-[#155DFC]/40 text-[#155DFC] text-sm bg-[#155DFC]/5">
+      {label}
+      {onRemove && (
+        <button onClick={onRemove} className="ml-1 hover:text-red-500 transition-colors">×</button>
+      )}
+    </span>
+  );
+}
+
+// ─── Reusable: Tag Selector (for Offers/Needs) ────────────────────────────────
+
+export function TagSelector({ tags, selected, onToggle, max = 3, label, description }) {
+  return (
+    <div>
+      <Label className="text-gray-700 mb-1 block">
+        {label}{" "}
+        {max && <span className="text-gray-400 font-normal text-xs">(up to {max})</span>}
+      </Label>
+      {description && <p className="text-xs text-gray-500 mb-2">{description}</p>}
+      <div className="flex flex-wrap gap-2">
+        {tags.map((tag) => {
+          const isSelected = selected.includes(tag);
+          const isDisabled = !isSelected && selected.length >= max;
+          return (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => !isDisabled && onToggle(tag)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-sm border transition-all duration-150",
+                isSelected && "bg-[#155DFC] border-[#155DFC] text-white",
+                !isSelected && !isDisabled && "border-gray-200 text-gray-600 hover:border-[#155DFC] hover:text-[#155DFC] bg-white",
+                isDisabled && "border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed",
+              )}
+            >
+              {tag}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Reusable: Section Header ─────────────────────────────────────────────────
+
+export function SectionHeader({ icon: Icon, title, subtitle, accent }) {
+  return (
+    <div className={cn("flex items-center gap-3 mb-6 pb-5 border-b", accent && "border-[#155DFC]/10")}>
+      <div className="p-2 bg-[#155DFC]/8 rounded-xl">
+        <Icon className="h-5 w-5 text-[#155DFC]" />
+      </div>
+      <div>
+        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+        {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+      </div>
+    </div>
+  );
+}
+
+// ─── Reusable: Immutable Field ────────────────────────────────────────────────
+
+export function ImmutableField({ label, value, icon: Icon }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-gray-400 uppercase tracking-wide">
+        {Icon && <Icon className="h-3.5 w-3.5" />}
+        {label}
+      </div>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100">
+        <span className="text-sm text-gray-700 flex-1">{value || "—"}</span>
+        <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded font-medium">LOCKED</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Toggle Switch ────────────────────────────────────────────────────────────
+
+export function Toggle({ checked, onChange, disabled }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#155DFC] focus-visible:ring-offset-2",
+        checked ? "bg-[#155DFC]" : "bg-gray-200",
+        disabled && "opacity-50 cursor-not-allowed"
+      )}
+    >
+      <span
+        className={cn(
+          "inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform",
+          checked ? "translate-x-6" : "translate-x-1"
+        )}
+      />
+    </button>
+  );
+}
+
+
 
 export default function SettingsPage() {
   const t = useTranslations("Settings");
@@ -54,6 +187,8 @@ export default function SettingsPage() {
           <TabsTrigger value="profile">{t("profileTab")}</TabsTrigger>
           <TabsTrigger value="posts">{t("myPostsTab")}</TabsTrigger>
           <TabsTrigger value="security">{t("securityTab")}</TabsTrigger>
+          {/* New tab */}
+          <TabsTrigger value="preferences">Preferences</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -74,297 +209,13 @@ export default function SettingsPage() {
         <TabsContent value="security">
           <SecurityTab t={t} updateUser={updateUser} />
         </TabsContent>
+
+        {/* New preferences tab */}
+        <TabsContent value="preferences">
+          <PreferencesTab />
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-/** Profile Tab — displays user profile data from the API */
-function ProfileTab({ t, profile, displayName, displayEmail, initials, isLoading }) {
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-xl p-6 lg:p-8 space-y-6">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-20 w-20 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-4 w-56" />
-          </div>
-        </div>
-        <Skeleton className="h-40 w-full" />
-      </div>
-    );
-  }
-
-  const sections = [
-    {
-      icon: Briefcase,
-      label: t("sectors"),
-      value: profile.sector,
-      type: "tags",
-    },
-    {
-      icon: MapPin,
-      label: t("location"),
-      value: profile.location,
-      type: "text",
-    },
-    {
-      icon: Sparkles,
-      label: t("skills"),
-      value: profile.skills,
-      type: "tags",
-    },
-    {
-      icon: GraduationCap,
-      label: t("cohort"),
-      value: profile.cohort,
-      type: "text",
-    },
-    {
-      icon: ExternalLink,
-      label: t("linkedin"),
-      value: profile.linkedin || profile.linkedInProfile,
-      type: "link",
-    },
-    {
-      icon: Target,
-      label: t("goals"),
-      value: profile.goals,
-      type: "text",
-    },
-  ];
-
-  return (
-    <div className="bg-white rounded-xl p-6 lg:p-8">
-      {/* Header with avatar */}
-      <div className="flex items-center gap-4 mb-8 pb-6 border-b">
-        <Avatar className="h-20 w-20 border-2 border-[#155DFC]/20">
-          <AvatarImage src={profile.profileImagePath} />
-          <AvatarFallback className="bg-[#155DFC] text-white text-xl">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
-          <p className="text-sm text-gray-500">{displayEmail}</p>
-          {profile.cohort && (
-            <span className="inline-block mt-1 text-xs bg-[#155DFC]/10 text-[#155DFC] px-2 py-0.5 rounded-full">
-              {profile.cohort}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Profile details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {sections.map((section) => {
-          const Icon = section.icon;
-          if (!section.value || (Array.isArray(section.value) && section.value.length === 0)) return null;
-
-          return (
-            <div key={section.label} className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
-                <Icon className="h-4 w-4" />
-                {section.label}
-              </div>
-
-              {section.type === "tags" && Array.isArray(section.value) && (
-                <div className="flex flex-wrap gap-2">
-                  {section.value.map((item) => (
-                    <span
-                      key={item}
-                      className="px-3 py-1 rounded-full border border-[#155DFC]/30 text-[#155DFC] text-sm bg-[#155DFC]/5"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {section.type === "text" && (
-                <p className="text-sm text-gray-900">{section.value}</p>
-              )}
-
-              {section.type === "link" && (
-                <a
-                  href={section.value.startsWith("http") ? section.value : `https://${section.value}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[#155DFC] hover:underline break-all"
-                >
-                  {section.value}
-                </a>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/** My Posts Tab — displays user's own posts */
-function MyPostsTab({ t }) {
-  const { data: myPosts, isLoading, error, refetch } = useMyPosts();
-  const { mutate: likePost } = useLikePost();
-
-  const handleLike = (postId) => likePost(postId);
-  const handleCopyLink = () => toast.success("Link copied!");
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <PostSkeleton />
-        <PostSkeleton />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white rounded-xl p-6 text-center">
-        <p className="text-red-600 mb-4">{t("myPostsError")}</p>
-        <Button onClick={() => refetch()} className="bg-[#233389] hover:bg-[#1d2a6e] text-white">
-          {t("tryAgain")}
-        </Button>
-      </div>
-    );
-  }
-
-  if (!myPosts || myPosts.length === 0) {
-    return (
-      <div className="bg-white rounded-xl p-12 text-center">
-        <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500 mb-2">{t("noMyPosts")}</p>
-        <p className="text-sm text-gray-400">{t("noMyPostsHint")}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <p className="text-sm text-gray-500">
-        {t("myPostsCount", { count: myPosts.length })}
-      </p>
-      {myPosts.map((post, index) => (
-        <PostCard
-          key={post.id || index}
-          post={post}
-          onLike={handleLike}
-          onCopyLink={handleCopyLink}
-        />
-      ))}
-    </div>
-  );
-}
-
-/** Security Tab — change password form */
-function SecurityTab({ t, updateUser }) {
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const changePasswordMutation = useMutation({
-    mutationFn: userService.changePassword,
-    onSuccess: () => {
-      toast.success(t("passwordChanged"));
-      updateUser({ passwordChangeRequired: false });
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || t("passwordError"));
-    },
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      toast.error(t("fillAllFields"));
-      return;
-    }
-    if (newPassword.length < 8) {
-      toast.error(t("passwordMinLength"));
-      return;
-    }
-    if (newPassword === oldPassword) {
-      toast.error(t("passwordSameAsOld"));
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error(t("passwordMismatch"));
-      return;
-    }
-
-    changePasswordMutation.mutate({ oldPassword, newPassword });
-  };
-
-  return (
-    <div className="bg-white rounded-xl p-6 lg:p-8 max-w-lg">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-[#155DFC]/10 rounded-lg">
-          <Lock className="h-5 w-5 text-[#155DFC]" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">{t("changePassword")}</h2>
-          <p className="text-sm text-gray-500">{t("changePasswordDesc")}</p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label htmlFor="oldPassword" className="text-gray-700 mb-2 block">
-            {t("oldPassword")}
-          </Label>
-          <Input
-            id="oldPassword"
-            type="password"
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-            placeholder={t("oldPasswordPlaceholder")}
-            disabled={changePasswordMutation.isPending}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="newPassword" className="text-gray-700 mb-2 block">
-            {t("newPassword")}
-          </Label>
-          <Input
-            id="newPassword"
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder={t("newPasswordPlaceholder")}
-            disabled={changePasswordMutation.isPending}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="confirmPassword" className="text-gray-700 mb-2 block">
-            {t("confirmPassword")}
-          </Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder={t("confirmPasswordPlaceholder")}
-            disabled={changePasswordMutation.isPending}
-          />
-        </div>
-
-        <Button
-          type="submit"
-          disabled={changePasswordMutation.isPending}
-          className="w-full h-11 bg-[#155DFC] hover:bg-[#155DFC]/90 text-white mt-2"
-        >
-          {changePasswordMutation.isPending ? t("updating") : t("updatePassword")}
-        </Button>
-      </form>
-    </div>
-  );
-}
