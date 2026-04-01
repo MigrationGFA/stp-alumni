@@ -1,53 +1,77 @@
 
 
 import { Bell, Check, Globe, Palette } from 'lucide-react';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner';
 import { Toggle } from './page';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
-import { useLocale } from 'next-intl';
+import { useMutation } from '@tanstack/react-query';
+import userService from '@/lib/services/userService';
+import { useAuth } from '@/lib/hooks/useUser';
 import { usePathname, useRouter } from '@/i18n/routing';
 
 function PreferencesTab() {
- const locale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
 
-  const toggleLanguage = () => {
-    const nextLocale = locale === 'fr' ? 'en' : 'fr';
-    // router.replace keeps the user on the current page but swaps the prefix
-    router.replace(pathname, { locale: nextLocale });
-  };
+   const {data} = useAuth()
+
+   const {language:lang,emailNotificationsEnabled} = data?.data || {}
+  // Language
+  const [language, setLanguage] = useState(lang?.toLowerCase()); // "en" | "fr"
 
 
+  // console.log(data,"djnd")
+  
   // Theme
   const { theme, setTheme } = useTheme()
+  
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  const toggleLanguage = () => {
+    // const nextLocale = language === 'fr' ? 'en' : 'fr';
+    // console.log(nextLocale,"nextLocale",language)
+      // router.replace keeps the user on the current page but swaps the prefix
+      router.replace(pathname, { locale: language });
+    };
+
+   
+
+
+  const {isPending,mutate} = useMutation({
+    mutationFn:(data)=>userService.updatePreference(data),
+    onError: (error)=>{
+
+    }
+  })
 
   // Notifications
-  const [notifNewPost, setNotifNewPost] = useState(true);
-  const [notifMentions, setNotifMentions] = useState(true);
-  const [notifMessages, setNotifMessages] = useState(false);
-  const [notifDigest, setNotifDigest] = useState(true);
-  const [notifMarketplace, setNotifMarketplace] = useState(true);
+  const [notifNewPost, setNotifNewPost] = useState(emailNotificationsEnabled || false);
+  // const [notifMentions, setNotifMentions] = useState(true);
+  // const [notifMessages, setNotifMessages] = useState(false);
+  // const [notifDigest, setNotifDigest] = useState(true);
+  // const [notifMarketplace, setNotifMarketplace] = useState(true);
 
   // TODO: wire all handlers to a preferences API endpoint or localStorage
   const handleSavePreferences = () => {
     const payload = {
       language,
       theme,
-      notifications: {
-        newPost: notifNewPost,
-        mentions: notifMentions,
-        messages: notifMessages,
-        weeklyDigest: notifDigest,
-        marketplace: notifMarketplace,
-      },
+      emailNotificationsEnabled: notifNewPost,
+      // notifications: {
+      //   newPost: notifNewPost,
+      //   mentions: notifMentions,
+      //   messages: notifMessages,
+      //   weeklyDigest: notifDigest,
+      //   marketplace: notifMarketplace,
+      // },
     };
-    // TODO: call userService.updatePreferences(payload)
-    console.log("Preferences payload:", payload);
-    toast.success("Preferences saved!");
+     mutate(payload,{onSuccess:()=>{
+      toggleLanguage()
+       toast.success("Preferences saved!");
+      //  console.log("Preferences payload:", payload);
+     }})
   };
 
   return (
@@ -69,6 +93,7 @@ function PreferencesTab() {
               <button
                 key={lang.value}
                 type="button"
+                disabled={isPending}
                 onClick={() => setLanguage(lang.value)}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-all",
@@ -104,6 +129,7 @@ function PreferencesTab() {
                 key={t.value}
                 type="button"
                 onClick={() => setTheme(t.value)}
+                disabled={isPending}
                 className={cn(
                   "flex flex-col items-center gap-2 p-3 rounded-xl border-2 text-xs font-medium transition-all",
                   theme === t.value ? "border-[#155DFC] text-[#155DFC]" : "border-gray-200 text-gray-500 hover:border-gray-300"
@@ -118,36 +144,37 @@ function PreferencesTab() {
       </div>
 
       {/* Notifications */}
-      {/* <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <Bell className="h-4 w-4 text-[#155DFC]" />
           <span className="text-sm font-semibold text-gray-800">Email Notifications</span>
         </div>
         <div className="p-5 space-y-4">
           {[
-            { label: "New community posts", description: "Get notified when someone posts in the feed.", state: notifNewPost, setter: setNotifNewPost },
-            { label: "Mentions & replies", description: "When someone mentions or replies to you.", state: notifMentions, setter: setNotifMentions },
-            { label: "Direct messages", description: "Receive email alerts for new messages.", state: notifMessages, setter: setNotifMessages },
-            { label: "Weekly digest", description: "A weekly summary of activity in your network.", state: notifDigest, setter: setNotifDigest },
-            { label: "Marketplace matches", description: "When your Offers or Needs get a potential match.", state: notifMarketplace, setter: setNotifMarketplace },
+            { label: "Get Email Notifications", description: "Get notified about new posts and updates.", state: notifNewPost, setter: setNotifNewPost },
+            // { label: "Mentions & replies", description: "When someone mentions or replies to you.", state: notifMentions, setter: setNotifMentions },
+            // { label: "Direct messages", description: "Receive email alerts for new messages.", state: notifMessages, setter: setNotifMessages },
+            // { label: "Weekly digest", description: "A weekly summary of activity in your network.", state: notifDigest, setter: setNotifDigest },
+            // { label: "Marketplace matches", description: "When your Offers or Needs get a potential match.", state: notifMarketplace, setter: setNotifMarketplace },
           ].map((item) => (
             <div key={item.label} className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-gray-800">{item.label}</p>
                 <p className="text-xs text-gray-500">{item.description}</p>
               </div>
-              <Toggle checked={item.state} onChange={item.setter} />
+              <Toggle checked={item.state} onChange={item.setter} disabled={isPending}/>
             </div>
           ))}
         </div>
-      </div> */}
+      </div>
 
       {/* Save */}
       <Button
         onClick={handleSavePreferences}
+        disabled={isPending}
         className="w-full h-11 bg-[#155DFC] hover:bg-[#155DFC]/90 text-white"
       >
-        Save Preferences
+        {isPending ? "Saving...": "Save Preferences"}
       </Button>
     </div>
   );

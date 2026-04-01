@@ -38,8 +38,9 @@ export const NEED_TAGS = [
 ];
 
 export const VISIBILITY_OPTIONS = [
-  { value: "all_alumni", label: "All Alumni", description: "Contact info visible to the entire STP community." },
-  { value: "admin_only", label: "Admin Only", description: "Only programme admins can see your contact details." },
+  { value: "EVERYONE", label: "All Alumni", description: "Contact info visible to the entire STP community." },
+  { value: "ADMIN_ONLY", label: "Admin Only", description: "Only programme admins can see your contact details." },
+  { value: "CONNECTIONS_ONLY", label: "Connection Only", description: "Only connected users can see your contact details." },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

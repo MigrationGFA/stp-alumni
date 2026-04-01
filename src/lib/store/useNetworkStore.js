@@ -12,7 +12,7 @@ const useNetworkStore = create((set) => ({
   
   setNetworkData: (data) =>
     set(() => ({
-      networkUsers: data.networkUsers || [],
+      networkUsers: data || [],
       sameSkillUsers: data.sameSkillUsers || [],
       sameSectorUsers: data.sameSectorUsers || [],
       myConnections: data.connections || [],

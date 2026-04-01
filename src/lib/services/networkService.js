@@ -23,10 +23,8 @@ const networkService = {
    * Request connection to a user
    * @param {string} connectedUserId 
    */
-  connectToUser: async (connectedUserId) => {
-    const response = await api.post('/connections', {
-      connectedUserId,
-    });
+  connectToUser: async (data) => {
+    const response = await api.post('/connections', data);
     return response.data;
   },
 
@@ -38,6 +36,12 @@ const networkService = {
     const response = await api.post(`/connections/${connectionId}/accept`);
     return response.data;
   },
+
+    getIncomingRequests: async (params = {}) => {
+    const response = await api.get('/connections/requests', { params });
+    return response.data;
+  },
+
 };
 
 export default networkService;

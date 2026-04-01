@@ -37,7 +37,7 @@ const Page = () => {
     if (networkError) setError(networkError);
 
     if (networkPayload?.data) {
-      setNetworkData(networkPayload.data);
+      setNetworkData(networkPayload?.data);
     }
   }, [
     networkPayload,
@@ -47,6 +47,8 @@ const Page = () => {
     setLoading,
     setError
   ]);
+
+  // console.log("Network payload:", networkPayload);
 
   return (
     <>
