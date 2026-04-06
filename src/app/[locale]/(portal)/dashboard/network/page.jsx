@@ -48,7 +48,7 @@ const Page = () => {
     setError
   ]);
 
-  // console.log("Network payload:", networkPayload);
+  console.log("Network payload:", networkPayload);
 
   return (
     <>

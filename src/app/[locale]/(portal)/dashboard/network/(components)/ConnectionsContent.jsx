@@ -23,7 +23,7 @@ export function ConnectionsContent() {
   const hasConnections = myConnections && myConnections.length > 0;
   const displayList = hasConnections ? myConnections : networkUsers || [];
 
-  console.log(networkUsers, "displayList", myConnections);
+  // console.log(networkUsers, "displayList", myConnections);
   const titleString = hasConnections
     ? `My Connections (${myConnections.length})`
     : `Explore Network (${displayList.length})`;

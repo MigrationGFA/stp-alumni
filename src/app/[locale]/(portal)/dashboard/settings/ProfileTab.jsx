@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -287,7 +287,7 @@ function PersonalEditForm({ profile, onDone }) {
       location: profile.location || "",
       linkedInProfile: profile.linkedin || profile.linkedInProfile || "",
       goals: profile.goals || "",
-      jobTitle: profile.jobTitle || "",
+      title: profile.title || "",
     },
   });
 
@@ -307,19 +307,19 @@ function PersonalEditForm({ profile, onDone }) {
   const [skillOpen, setSkillOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
-  const [countries] = useState([
-    "Nigeria",
-    "Ghana",
-    "Kenya",
-    "South Africa",
-    "United Kingdom",
-    "United States",
-    "France",
-    "Germany",
-    "Canada",
-    "Rwanda",
-    "Senegal",
-  ]);
+  // const [countries] = useState([
+  //   "Nigeria",
+  //   "Ghana",
+  //   "Kenya",
+  //   "South Africa",
+  //   "United Kingdom",
+  //   "United States",
+  //   "France",
+  //   "Germany",
+  //   "Canada",
+  //   "Rwanda",
+  //   "Senegal",
+  // ]);
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(
     profile.profileImagePath || null,
@@ -331,7 +331,25 @@ function PersonalEditForm({ profile, onDone }) {
   const location = watch("location");
   const linkedInProfile = watch("linkedInProfile");
   const goals = watch("goals");
-  const jobTitle = watch("jobTitle");
+  const title = watch("title");
+
+  const [countries, setCountries] = useState([]);
+    useEffect(() => {
+      fetch('https://restcountries.com/v3.1/all?fields=name')
+        .then((res) => res.json())
+        .then((data) => {
+          const sorted = data.map((c) => c.name.common).sort((a, b) => a.localeCompare(b));
+          setCountries(sorted);
+        })
+        .catch(() => {
+          setCountries([
+            'Benin', 'Cameroon', 'Canada', "Côte d'Ivoire", 'France',
+            'Gabon', 'Germany', 'Ghana', 'Kenya', 'Nigeria', 'Rwanda',
+            'Senegal', 'South Africa', 'Togo', 'United Kingdom', 'United States',
+          ]);
+        })
+        .finally(() => setCountriesLoading(false));
+    }, []);
 
   const filteredCountries = locationSearch
     ? countries.filter((c) =>
@@ -391,12 +409,12 @@ function PersonalEditForm({ profile, onDone }) {
       location: data.location,
       skills: data.skills,
       linkedInProfile: data.linkedInProfile,
-      goals: data.goals,
-      jobTitle: data.jobTitle,
-      // profileImagePath: uploadedImageUrl, // include the image URL
+      goal: data.goals,
+      title: data.title,
+      profileImagePath: uploadedImageUrl, // include the image URL
     };
 
-    console.log({personal},"nidnd")
+    console.log(data,"nidnd")
     // TODO: call userService.updatePersonalProfile(formData)
     mutate({ personal });
   };
@@ -427,6 +445,7 @@ function PersonalEditForm({ profile, onDone }) {
             <Button
               variant="outline"
               size="sm"
+              type="button"
               onClick={() => profileImageInputRef.current?.click()}
               className="gap-1.5"
             >
@@ -435,6 +454,7 @@ function PersonalEditForm({ profile, onDone }) {
             {imagePreview && (
               <Button
                 variant="ghost"
+                type="button"
                 size="sm"
                 onClick={() => setImagePreview(null)}
                 className="text-red-500 hover:text-red-700"
@@ -458,7 +478,7 @@ function PersonalEditForm({ profile, onDone }) {
       <div>
         <Label className="text-gray-700 mb-1.5 block text-sm">Job Title</Label>
         <Input
-          {...register("jobTitle")}
+          {...register("title")}
           placeholder="e.g. Co-founder & CEO"
           disabled={isPending}
         />
@@ -782,9 +802,7 @@ function BusinessReadView({ profile }) {
         <p className="text-xs text-gray-400">
           Contact visibility:{" "}
           <span className="text-gray-600 font-medium">
-            {profile.contactVisibility === "EVERYONE"
-              ? "All Alumni"
-              : "Admin Only"}
+            {VISIBILITY_OPTIONS.find((o) => o.value === profile.contactVisibility)?.label || profile.contactVisibility}
           </span>
         </p>
       )}
@@ -860,12 +878,12 @@ function BusinessEditForm({ profile, onDone }) {
       offers: data.offers,
       needs: data.needs,
       contactVisibility: data.visibility,
-      sector:["test1"]
+      // sector:["test1"]
     };
     // TODO: call userService.updateProfile(payload)
 
     mutate({business})
-    console.log("Business profile payload:", payload);
+    // console.log("Business profile payload:", payload);
     // toast.success("Business profile updated!");
     // onDone();
   };

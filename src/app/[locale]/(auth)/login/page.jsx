@@ -12,6 +12,7 @@ import authService from '@/lib/services/authService';
 import useAuthStore from '@/lib/store/useAuthStore';
 import { setRegisteredCookie } from '@/lib/auth-cookie';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const t = useTranslations('Login');
@@ -19,6 +20,7 @@ export default function LoginPage() {
 
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const setLoginSession = useAuthStore((state) => state.login);
 
   const loginMutation = useMutation({
@@ -103,19 +105,32 @@ export default function LoginPage() {
           </div>
 
           {/* Password Input */}
-          <div className="mb-6">
-            <Label htmlFor="password" className="text-gray-700 mb-2 block">
-              {t('password')}
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t('passwordPlaceholder')}
-              className="w-full"
-            />
-          </div>
+<div className="mb-6">
+  <Label htmlFor="password" className="text-gray-700 mb-2 block">
+    {t('password')}
+  </Label>
+  <div className="relative">
+    <Input
+      id="password"
+      type={showPassword ? "text" : "password"}
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      placeholder={t('passwordPlaceholder')}
+      className="w-full pr-10"
+    />
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+    >
+      {showPassword ? (
+        <EyeOff className="h-5 w-5" />
+      ) : (
+        <Eye className="h-5 w-5" />
+      )}
+    </button>
+  </div>
+</div>
 
           {/* Login Button */}
           <Button

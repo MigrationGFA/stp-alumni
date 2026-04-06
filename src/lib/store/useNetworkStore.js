@@ -12,6 +12,7 @@ const useNetworkStore = create((set) => ({
   
   setNetworkData: (data) =>
     set(() => ({
+      // The backend currently returns a single "users" array, so we populate all lists with the same data for now.
       networkUsers: data || [],
       sameSkillUsers: data.sameSkillUsers || [],
       sameSectorUsers: data.sameSectorUsers || [],

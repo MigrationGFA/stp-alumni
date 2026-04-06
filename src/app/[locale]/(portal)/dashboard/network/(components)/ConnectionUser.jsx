@@ -36,7 +36,7 @@ function ConnectionUser({ connection, index,connectionTotal }) {
     connection.name ||
     `${connection.firstName || ""} ${connection.lastName || ""}`.trim();
   const avatar = connection.profileImageUrl || connection.avatar;
-  const isConnected = connection.connectionStatus === "APPROVED";
+  const isConnected = connection.connectionStatus === "ACCEPTED";
   const isPending = connection.connectionStatus === "PENDING";
   const isNotConnected = connection.connectionStatus === null;
 
@@ -84,9 +84,12 @@ function ConnectionUser({ connection, index,connectionTotal }) {
             if (isNotConnected) {
               connectToUser({ userId: connection.userId });
             } else if (isPending) {
+              toast.info("Your connection request is pending approval.");
               return;
             } else {
               // Send a messaging invitation then navigate
+
+              // console.log("lol")
               sendInvitation(
                 {
                   recipientId: connection.userId,
