@@ -19,6 +19,16 @@ const userService = {
     const response = await api.put('/users/preferences', data);
     return response.data;
   },
+  uploadProfileImage: async (file) => {
+    const formData = new FormData();
+  formData.append('profileImage', file);
+    const response = await api.post('/users/profile/avatar', formData,{
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+    return response;
+  },
 
   setupProfile: async (formData) => {
     const response = await api.post('/users/profile/setup', formData, {

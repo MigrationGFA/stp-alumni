@@ -334,22 +334,37 @@ function PersonalEditForm({ profile, onDone }) {
   const title = watch("title");
 
   const [countries, setCountries] = useState([]);
-    useEffect(() => {
-      fetch('https://restcountries.com/v3.1/all?fields=name')
-        .then((res) => res.json())
-        .then((data) => {
-          const sorted = data.map((c) => c.name.common).sort((a, b) => a.localeCompare(b));
-          setCountries(sorted);
-        })
-        .catch(() => {
-          setCountries([
-            'Benin', 'Cameroon', 'Canada', "Côte d'Ivoire", 'France',
-            'Gabon', 'Germany', 'Ghana', 'Kenya', 'Nigeria', 'Rwanda',
-            'Senegal', 'South Africa', 'Togo', 'United Kingdom', 'United States',
-          ]);
-        })
-        .finally(() => setCountriesLoading(false));
-    }, []);
+  useEffect(() => {
+    fetch("https://restcountries.com/v3.1/all?fields=name")
+      .then((res) => res.json())
+      .then((data) => {
+        const sorted = data
+          .map((c) => c.name.common)
+          .sort((a, b) => a.localeCompare(b));
+        setCountries(sorted);
+      })
+      .catch(() => {
+        setCountries([
+          "Benin",
+          "Cameroon",
+          "Canada",
+          "Côte d'Ivoire",
+          "France",
+          "Gabon",
+          "Germany",
+          "Ghana",
+          "Kenya",
+          "Nigeria",
+          "Rwanda",
+          "Senegal",
+          "South Africa",
+          "Togo",
+          "United Kingdom",
+          "United States",
+        ]);
+      })
+    
+  }, []);
 
   const filteredCountries = locationSearch
     ? countries.filter((c) =>
@@ -383,27 +398,46 @@ function PersonalEditForm({ profile, onDone }) {
     }
   };
 
-  const handleProfileImageChange = (e) => {
+  function handleProfileImageChange(e) {
+
+    e.preventDefault()
     const file = e.target.files?.[0];
     if (file) {
       setProfileImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
-  };
+  }
 
-  const onSubmit = (data) => {
-    // 1. Upload image separately if there's a new one
-    let uploadedImageUrl = profile.profileImagePath; // keep existing image by default
-
-    if (profileImage) {
-      const imageFormData = new FormData();
-      imageFormData.append("profileImage", profileImage);
-
-      console.log("Uploading image:", profileImage.name);
-      uploadedImageUrl = URL.createObjectURL(profileImage); // temporary preview URL
+ async function handleProfileImgSubmit(file) {
+  if (!file) return null;
+  
+  try {
+    const res = await userService.uploadProfileImage(file);
+    
+    if (res.status) {
+      toast.success("Profile image updated!");
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      return res.data?.imageUrl || res.imageUrl; // Return the URL from response
+    } else {
+      toast.error(res.message || "Failed to upload profile image.");
+      throw new Error("Upload failed");
     }
+  } catch (error) {
+    console.error("Upload error:", error);
+    toast.error("Failed to upload profile image.");
+    throw error;
+  }
+}
 
-    // 2. Send profile data as JSON
+const onSubmit = async (data) => {
+  try {
+    let uploadedImageUrl = profile.profileImagePath;
+    
+    if (profileImage) {
+        console.log(profileImage, "selected file submit");
+      uploadedImageUrl = await handleProfileImgSubmit(profileImage);
+    }
+    
     const personal = {
       sectors: data.sectors,
       location: data.location,
@@ -411,13 +445,19 @@ function PersonalEditForm({ profile, onDone }) {
       linkedInProfile: data.linkedInProfile,
       goal: data.goals,
       title: data.title,
-      profileImagePath: uploadedImageUrl, // include the image URL
+      profileImagePath: uploadedImageUrl,
     };
-
-    console.log(data,"nidnd")
-    // TODO: call userService.updatePersonalProfile(formData)
-    mutate({ personal });
-  };
+    
+    console.log(personal, "profile data");
+    
+    // Call your update service
+    mutate(personal);
+    
+  } catch (error) {
+    console.error("Submission error:", error);
+    // Don't show another error if the image upload already showed one
+  }
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -802,7 +842,9 @@ function BusinessReadView({ profile }) {
         <p className="text-xs text-gray-400">
           Contact visibility:{" "}
           <span className="text-gray-600 font-medium">
-            {VISIBILITY_OPTIONS.find((o) => o.value === profile.contactVisibility)?.label || profile.contactVisibility}
+            {VISIBILITY_OPTIONS.find(
+              (o) => o.value === profile.contactVisibility,
+            )?.label || profile.contactVisibility}
           </span>
         </p>
       )}
@@ -825,7 +867,7 @@ function BusinessEditForm({ profile, onDone }) {
     },
   });
 
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data) => userService.updateProfile(data),
@@ -882,7 +924,7 @@ function BusinessEditForm({ profile, onDone }) {
     };
     // TODO: call userService.updateProfile(payload)
 
-    mutate({business})
+    mutate({ business });
     // console.log("Business profile payload:", payload);
     // toast.success("Business profile updated!");
     // onDone();
@@ -895,7 +937,11 @@ function BusinessEditForm({ profile, onDone }) {
         <Label className="text-gray-700 mb-1.5 block text-sm">
           Company Name
         </Label>
-        <Input {...register("companyName")} placeholder="e.g. Acme Inc." disabled={isPending}/>
+        <Input
+          {...register("companyName")}
+          placeholder="e.g. Acme Inc."
+          disabled={isPending}
+        />
       </div>
 
       {/* Business Model */}
@@ -1073,7 +1119,12 @@ function BusinessEditForm({ profile, onDone }) {
 
       {/* Actions */}
       <div className="flex gap-3 pt-2">
-        <Button variant="outline" onClick={onDone} className="flex-1" disabled={isPending}>
+        <Button
+          variant="outline"
+          onClick={onDone}
+          className="flex-1"
+          disabled={isPending}
+        >
           Cancel
         </Button>
         <Button
