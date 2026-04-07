@@ -2,21 +2,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import networkService from "@/lib/services/networkService";
 
 export function InvitationsList() {
   const [showAll, setShowAll] = useState(false);
-  
+
   const { data, isLoading } = useQuery({
     queryKey: ["invitations"],
-    queryFn: networkService.getIncomingRequests
+    queryFn: networkService.getIncomingRequests,
   });
- 
+
   const invitations = data?.data || [];
   const displayedInvitations = showAll ? invitations : invitations.slice(0, 5);
   const hasMoreInvitations = invitations.length > 5;
+
+  console.log("Invitations data:", invitations);
 
   const handleShowAll = () => {
     setShowAll(true);
@@ -26,10 +28,12 @@ export function InvitationsList() {
     return (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base font-semibold">
-            Invitations
-          </CardTitle>
-          <Button variant="link" className="text-[#020618BF] p-0 h-auto" disabled>
+          <CardTitle className="text-base font-semibold">Invitations</CardTitle>
+          <Button
+            variant="link"
+            className="text-[#020618BF] p-0 h-auto"
+            disabled
+          >
             Show all
           </Button>
         </CardHeader>
@@ -83,8 +87,8 @@ export function InvitationsList() {
           Invitations ({invitations.length})
         </CardTitle>
         {hasMoreInvitations && !showAll && (
-          <Button 
-            variant="link" 
+          <Button
+            variant="link"
             className="text-[#020618BF] p-0 h-auto"
             onClick={handleShowAll}
           >
@@ -92,8 +96,8 @@ export function InvitationsList() {
           </Button>
         )}
         {showAll && (
-          <Button 
-            variant="link" 
+          <Button
+            variant="link"
             className="text-[#020618BF] p-0 h-auto"
             onClick={() => setShowAll(false)}
           >
@@ -103,45 +107,14 @@ export function InvitationsList() {
       </CardHeader>
       <CardContent className="space-y-0">
         {displayedInvitations.map((invitation, index) => (
-          <div
-            key={invitation.id}
-            className={`flex items-center justify-between py-3 ${
-              index !== displayedInvitations.length - 1 ? "border-b border-border" : ""
-            }`}
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <Avatar className="h-10 w-10 shrink-0">
-                <AvatarImage src={invitation.avatar} />
-                <AvatarFallback className="bg-muted">
-                  {invitation.name?.charAt(0) || "?"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{invitation.name}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {invitation.message}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0 ml-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground hidden sm:inline-flex"
-              >
-                Ignore
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-stp-blue-light rounded-2xl text-stp-blue-light hover:bg-accent hover:text-accent-foreground"
-              >
-                Connect
-              </Button>
-            </div>
-          </div>
+          <InvitationItem
+            key={invitation.connectionId}
+            invitation={invitation}
+            index={index}
+            len={displayedInvitations.length}
+          />
         ))}
-        
+
         {/* Optional: Show remaining count if not showing all */}
         {hasMoreInvitations && !showAll && (
           <div className="py-3 text-center border-t border-border mt-2">
@@ -151,11 +124,83 @@ export function InvitationsList() {
               onClick={handleShowAll}
               className="text-muted-foreground text-xs"
             >
-              +{invitations.length - 5} more invitation{invitations.length - 5 !== 1 ? 's' : ''}
+              +{invitations.length - 5} more invitation
+              {invitations.length - 5 !== 1 ? "s" : ""}
             </Button>
           </div>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+export function InvitationItem({ invitation,index,len }) {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data) =>
+      networkService.acceptConnection(invitation.connectionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invitations"] });
+      queryClient.invalidateQueries({ queryKey: ["network"] });
+      toast.success("Connection request accepted")
+    },
+  });
+
+  const { mutate:ignore, isPending:isIgnoring } = useMutation({
+    mutationFn: (data) =>
+      networkService.ignoreConnection(invitation.connectionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invitations"] });
+      toast.info("Connection request ignored!")
+    },
+  });
+
+  return (
+    <div
+      key={invitation.id}
+      className={`flex items-center justify-between py-3 ${
+        index !== len- 1
+          ? "border-b border-border"
+          : ""
+      }`}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <Avatar className="h-10 w-10 shrink-0">
+          <AvatarImage src={invitation.avatar} />
+          <AvatarFallback className="bg-muted">
+            {`${invitation.firstName} ${invitation.lastName}`?.charAt(0) || "?"}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <p className="text-sm font-medium truncate">
+            {invitation.firstName} {invitation.lastName}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">
+            {invitation?.title || ""} . {invitation?.companyName || ""}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0 ml-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={isPending || isIgnoring}
+          onClick={() => ignore(invitation.connectionId)}
+          className="text-muted-foreground hover:text-foreground hidden sm:inline-flex"
+        >
+          Ignore
+        </Button>
+        <Button
+          variant="outline"
+          disabled={isPending || isIgnoring}
+          onClick={() => mutate(invitation.connectionId)}
+          size="sm"
+          className="border-stp-blue-light rounded-2xl text-stp-blue-light hover:bg-accent hover:text-accent-foreground"
+        >
+          Accept
+        </Button>
+      </div>
+    </div>
   );
 }
