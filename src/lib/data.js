@@ -1,4 +1,105 @@
 
+export const BUSINESS_MODELS = [
+  "B2B",
+  "B2C",
+  "B2B2C",
+  "Marketplace",
+  "SaaS",
+  "D2C",
+  "Franchise",
+  "Non-profit",
+  "Social Enterprise",
+  "Other",
+];
+
+export const COMPANY_STAGES = [
+  "Idea / Pre-revenue",
+  "MVP / Early traction",
+  "1–10 employees",
+  "10–50 employees",
+  "50–200 employees",
+  "200+ employees",
+];
+
+export const sidePanelContent = {
+    1: {
+      title: "Build your STP identity",
+      subtitle: "Your personal profile is your face to the alumni community.",
+      bullets: [
+        "Visible to all STP alumni",
+        "Used to match you with relevant peers",
+        "Editable any time from Settings",
+      ],
+    },
+    2: {
+      title: "Power the Marketplace",
+      subtitle:
+        "Your business details fuel the STP deal room and member directory.",
+      bullets: [
+        "Auto-populates your Marketplace card",
+        "Helps alumni find the right help",
+        "Control who sees your contact info",
+      ],
+    },
+  };
+
+export const OFFER_TAGS = [
+  "Fundraising advice",
+  "Raising Series A",
+  "Raising Seed",
+  "Angel investing",
+  "Technical Co-founder",
+  "Product strategy",
+  "Go-to-market",
+  "Sales & BD",
+  "Marketing & Growth",
+  "Legal & Compliance",
+  "HR & Talent",
+  "Finance & CFO",
+  "Design & UX",
+  "Operations",
+  "Mentorship",
+  "Customer introductions",
+  "Media & PR",
+  "M&A advisory",
+];
+
+export const NEED_TAGS = [
+  "Technical Co-founder",
+  "Fundraising",
+  "Sales leads",
+  "Strategic partnerships",
+  "Marketing support",
+  "Legal advice",
+  "Hiring support",
+  "Product feedback",
+  "Design help",
+  "Mentorship",
+  "Investor introductions",
+  "Market expansion",
+  "Finance advice",
+  "Operations help",
+  "PR & Media",
+  "Board members",
+];
+
+export const VISIBILITY_OPTIONS = [
+  {
+    value: "EVERYONE",
+    label: "All Alumni",
+    description: "Your contact info is visible to the entire STP community.",
+  },
+  {
+    value: "ADMIN_ONLY",
+    label: "Admin Only",
+    description: "Only programme admins can see your contact details.",
+  },
+  {
+    value: "CONNECTION_ONLY",
+    label: "Connection Only",
+    description: "Only your connections can see your contact details.",
+  },
+];
 
 export const alumniProfiles = [
     {
@@ -243,6 +344,7 @@ export const allRecommendedEvents = [
   },
 ];
 
+
   // Sample data for demonstration
  export const networkContacts = [
     {
@@ -418,3 +520,4 @@ export const hotTopics = [
       "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=100&h=100&fit=crop",
   },
 ];
+

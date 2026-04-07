@@ -1,0 +1,422 @@
+import React, { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+
+import { Check, ChevronsUpDown, ArrowLeft, ChevronRight } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Controller, useForm } from "react-hook-form";
+import { TagSelector } from "./page";
+import {
+  BUSINESS_MODELS,
+  COMPANY_STAGES,
+  NEED_TAGS,
+  OFFER_TAGS,
+  VISIBILITY_OPTIONS,
+} from "@/lib/data";
+import userService from "@/lib/services/userService";
+import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
+  const [businessModelOpen, setBusinessModelOpen] = useState(false);
+  const [companyStageOpen, setCompanyStageOpen] = useState(false);
+
+  // Business form
+  const businessForm = useForm({
+    defaultValues: {
+      companyName: "",
+      businessModel: "",
+      companyStage: "",
+      elevatorPitch: "",
+      offers: [],
+      needs: [],
+      visibility: "EVERYONE",
+    },
+  });
+
+  const setupMutation = useMutation({
+    mutationFn: userService.setupProfile,
+    onSuccess: () => {
+      updateUser({ isOnboarded: true });
+      toast.success(t("setupSuccess"));
+      router.push("/dashboard");
+    },
+    onError: (error) => {
+      console.error("Profile setup error:", error);
+      toast.error(error.response?.data?.message || t("setupError"));
+    },
+  });
+
+  async function handleProfileImgSubmit(file) {
+    if (!file) return null;
+    try {
+      const res = await userService.uploadProfileImage(file);
+      if (res.status) {
+        toast.success("Profile image updated!");
+        return res.data?.imageUrl || res.imageUrl;
+      } else {
+        toast.error(res.message || "Failed to upload profile image.");
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload profile image.");
+      throw error;
+    }
+  }
+
+  const handleSubmit = async () => {
+    const isValid = await businessForm.trigger();
+    if (!isValid) {
+      toast.error(t("fillRequired"));
+      return;
+    }
+
+    const personalData = personalForm.getValues();
+    const businessData = businessForm.getValues();
+
+    if (
+      personalData.sectors.length === 0 ||
+      !personalData.location ||
+      personalData.skills.length === 0
+    ) {
+      toast.error(t("fillRequired"));
+      return;
+    }
+
+    let uploadedImageUrl;
+    if (profileImage) {
+      uploadedImageUrl = await handleProfileImgSubmit(profileImage);
+    }
+
+    // Prepare payload as JSON object
+    const payload = {
+      // Personal info
+      sector: personalData.sectors,
+      location: personalData.location,
+      skills: personalData.skills,
+      linkedInProfile: personalData.linkedInProfile,
+      goals: personalData.goals,
+      cohort: personalData.cohort,
+      profileImage: uploadedImageUrl,
+      title: personalData.jobTitle,
+
+      // Business info
+      companyName: businessData.companyName,
+      businessModel: businessData.businessModel,
+      companyStage: businessData.companyStage,
+      elevatorPitch: businessData.elevatorPitch,
+      offers: businessData.offers,
+      needs: businessData.needs,
+      contactVisibility: businessData.visibility,
+    };
+
+    // Remove undefined/null values
+    Object.keys(payload).forEach((key) => {
+      if (
+        payload[key] === undefined ||
+        payload[key] === null ||
+        payload[key] === ""
+      ) {
+        delete payload[key];
+      }
+    });
+
+    setupMutation.mutate(payload);
+
+    console.log(payload, "payload");
+  };
+  return (
+    <form className="space-y-4">
+      {/* Company name */}
+      <Controller
+        name="companyName"
+        control={businessForm.control}
+        render={({ field }) => (
+          <div>
+            <Label htmlFor="companyName" className="text-gray-700 mb-2 block">
+              Company Name{" "}
+              <span className="text-gray-400 font-normal text-xs">
+                (optional)
+              </span>
+            </Label>
+            <Input
+              id="companyName"
+              type="text"
+              placeholder="e.g. Acme Inc."
+              {...field}
+              disabled={setupMutation.isPending}
+            />
+          </div>
+        )}
+      />
+
+      {/* Business Model */}
+      <Controller
+        name="businessModel"
+        control={businessForm.control}
+        render={({ field }) => (
+          <div>
+            <Label className="text-gray-700 mb-2 block">Business Model</Label>
+            <Popover
+              open={businessModelOpen}
+              onOpenChange={setBusinessModelOpen}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between font-normal"
+                  disabled={setupMutation.isPending}
+                >
+                  <span className={cn(!field.value && "text-muted-foreground")}>
+                    {field.value || "Select a model"}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-[--radix-popover-trigger-width] p-0"
+                align="start"
+              >
+                <Command>
+                  <CommandList>
+                    <CommandGroup>
+                      {BUSINESS_MODELS.map((model) => (
+                        <CommandItem
+                          key={model}
+                          value={model}
+                          onSelect={() => {
+                            field.onChange(model);
+                            setBusinessModelOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              field.value === model
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                          {model}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+      />
+
+      {/* Company Stage */}
+      <Controller
+        name="companyStage"
+        control={businessForm.control}
+        render={({ field }) => (
+          <div>
+            <Label className="text-gray-700 mb-2 block">Company Stage</Label>
+            <Popover open={companyStageOpen} onOpenChange={setCompanyStageOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between font-normal"
+                  disabled={setupMutation.isPending}
+                >
+                  <span className={cn(!field.value && "text-muted-foreground")}>
+                    {field.value || "Select stage"}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-[--radix-popover-trigger-width] p-0"
+                align="start"
+              >
+                <Command>
+                  <CommandList>
+                    <CommandGroup>
+                      {COMPANY_STAGES.map((stage) => (
+                        <CommandItem
+                          key={stage}
+                          value={stage}
+                          onSelect={() => {
+                            field.onChange(stage);
+                            setCompanyStageOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              field.value === stage
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                          {stage}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+      />
+
+      {/* Elevator Pitch */}
+      <Controller
+        name="elevatorPitch"
+        control={businessForm.control}
+        render={({ field }) => (
+          <div>
+            <Label htmlFor="pitch" className="text-gray-700 mb-2 block">
+              Elevator Pitch{" "}
+              <span className="text-gray-400 font-normal text-xs">
+                (one sentence)
+              </span>
+            </Label>
+            <textarea
+              id="pitch"
+              placeholder="We help African SMEs access affordable trade finance through a mobile-first platform."
+              className="flex min-h-[72px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none"
+              rows={2}
+              {...field}
+              disabled={setupMutation.isPending}
+            />
+          </div>
+        )}
+      />
+
+      {/* Offers */}
+      <Controller
+        name="offers"
+        control={businessForm.control}
+        render={({ field }) => (
+          <TagSelector
+            tags={OFFER_TAGS}
+            selected={field.value || []}
+            onToggle={(tag) => {
+              const current = field.value || [];
+              const updated = current.includes(tag)
+                ? current.filter((t) => t !== tag)
+                : [...current, tag];
+              field.onChange(updated);
+            }}
+            max={3}
+            label="What can you offer?"
+            description="Skills and experience you can share with fellow alumni."
+          />
+        )}
+      />
+
+      {/* Needs */}
+      <Controller
+        name="needs"
+        control={businessForm.control}
+        render={({ field }) => (
+          <TagSelector
+            tags={NEED_TAGS}
+            selected={field.value || []}
+            onToggle={(tag) => {
+              const current = field.value || [];
+              const updated = current.includes(tag)
+                ? current.filter((t) => t !== tag)
+                : [...current, tag];
+              field.onChange(updated);
+            }}
+            max={3}
+            label="What are you looking for?"
+            description="Areas where you'd welcome support from the network."
+          />
+        )}
+      />
+
+      {/* Visibility */}
+      <div className="pt-2 border-t border-gray-100">
+        <Label className="text-gray-700 mb-3 block">Contact Visibility</Label>
+        <Controller
+          name="visibility"
+          control={businessForm.control}
+          render={({ field }) => (
+            <div className="space-y-2">
+              {VISIBILITY_OPTIONS.map((opt) => (
+                <label
+                  key={opt.value}
+                  className={cn(
+                    "flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all",
+                    field.value === opt.value
+                      ? "border-[#155DFC] bg-[#155DFC]/5"
+                      : "border-gray-200 hover:border-gray-300 bg-white",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value={opt.value}
+                    checked={field.value === opt.value}
+                    onChange={() => field.onChange(opt.value)}
+                    className="mt-0.5 accent-[#155DFC]"
+                    disabled={setupMutation.isPending}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">
+                      {opt.label}
+                    </p>
+                    <p className="text-xs text-gray-500">{opt.description}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+        />
+      </div>
+
+      <p className="text-xs text-gray-400 text-center">
+        Profile details can be modified later in Settings.
+      </p>
+
+      <div className="flex gap-3 pt-1">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setStep(1)}
+          disabled={setupMutation.isPending}
+          className="flex-1 h-11"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={setupMutation.isPending}
+          className="flex-1 h-11 bg-[#155DFC] hover:bg-[#155DFC]/90 text-white"
+        >
+          {setupMutation.isPending ? t("submitting") : "Complete Setup"}
+          {!setupMutation.isPending && (
+            <ChevronRight className="ml-2 h-4 w-4" />
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export default BusinessForm;

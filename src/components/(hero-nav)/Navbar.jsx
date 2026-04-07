@@ -10,12 +10,13 @@ import LanguageSwitcher from "../LanguageSwitcher";
 import Container from "../container";
 import { useSize } from "react-haiku";
 import { useNavbar } from "@/contexts/NavbarContext";
+import { useAuth } from "@/lib/hooks/useUser";
 
 const Navbar = () => {
   const t = useTranslations("Navbar");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-   const elementRef = useRef(null);
+  const elementRef = useRef(null);
   const { width, height } = useSize(elementRef);
 
   const { setSize } = useNavbar();
@@ -26,10 +27,11 @@ const Navbar = () => {
 
   // console.log("Navbar size:", { width, height });
 
+  const pathname = usePathname();
 
-  const pathname = usePathname()
-
-  const isPublicPage = ["/marketplace", "/events","/contact"].includes(pathname);
+  const isPublicPage = ["/marketplace", "/events", "/contact"].includes(
+    pathname,
+  );
 
   // console.log("Current pathname:", isPublicPage);
 
@@ -40,6 +42,12 @@ const Navbar = () => {
     { label: t("about"), href: "/about" },
     { label: t("contact"), href: "/contact" },
   ];
+
+  const { data } = useAuth();
+
+  const isAuth = data?.userId || null;
+
+  console.log(isAuth,"isAuth")
 
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -55,13 +63,13 @@ const Navbar = () => {
 
   return (
     // <nav className="fixed top-0 left-0 right-0 z-50 ">
-   <nav 
+    <nav
       ref={elementRef}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled 
-          ? "bg-white/70 dark:bg-[#0A192F]/60 backdrop-blur-xl border-b border-black/5 py-2 shadow-sm" 
-          : isPublicPage 
-            ? "bg-white dark:bg-[#0A192F] py-2 border-b" 
+        isScrolled
+          ? "bg-white/70 dark:bg-[#0A192F]/60 backdrop-blur-xl border-b border-black/5 py-2 shadow-sm"
+          : isPublicPage
+            ? "bg-white dark:bg-[#0A192F] py-2 border-b"
             : "bg-transparent py-4"
       }`}
     >
@@ -85,8 +93,8 @@ const Navbar = () => {
               key={link.href}
               href={link.href}
               className={`text-sm font-medium transition-colors duration-300 ${
-                useDarkText 
-                  ? "text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-white" 
+                useDarkText
+                  ? "text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-white"
                   : "text-white/90 hover:text-white"
               }`}
             >
@@ -101,17 +109,17 @@ const Navbar = () => {
             variant="ghost"
             size="sm"
             className={`border rounded-sm p-3.75 transition-all duration-300 ${
-              useDarkText 
-                ? "border-slate-200 text-slate-900 hover:bg-slate-100 dark:border-blue-500 dark:text-blue-500" 
+              useDarkText
+                ? "border-slate-200 text-slate-900 hover:bg-slate-100 dark:border-blue-500 dark:text-blue-500"
                 : "border-white text-white hover:bg-white/10"
             }`}
             asChild
           >
-            <Link href="/login">{t("login")}</Link>
+           {isAuth ? <Link href={"/dashboard"}>Dashboard</Link> : <Link href="/login">{t("login")}</Link>}
           </Button>
 
-          <ModeToggle/>
-          <LanguageSwitcher/>
+          <ModeToggle />
+          <LanguageSwitcher />
         </div>
 
         {/* Mobile Menu Button */}
@@ -120,7 +128,11 @@ const Navbar = () => {
           className={`md:hidden transition-colors ${useDarkText ? "text-slate-900 dark:text-white" : "text-white"}`}
           aria-label="Toggle menu"
         >
-          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {isMobileMenuOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
         </button>
       </Container>
 
@@ -140,14 +152,17 @@ const Navbar = () => {
                 </Link>
               ))}
 
-              <div className="flex flex-col gap-2 pt-4">   
-                <Button 
-                  variant="default" 
-                  size="sm" 
+              <div className="flex flex-col gap-2 pt-4">
+                <Button
+                  variant="default"
+                  size="sm"
                   className="bg-red-500"
                   asChild
                 >
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
                     {t("login")}
                   </Link>
                 </Button>
@@ -157,7 +172,10 @@ const Navbar = () => {
                   className="w-full justify-start"
                   asChild
                 >
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
                     {t("login")}
                   </Link>
                 </Button>

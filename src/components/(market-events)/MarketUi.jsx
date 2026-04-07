@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { Search, Users } from "lucide-react";
+import { ArrowUpRight, Briefcase, GraduationCap, MapPin, Search, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavbar } from "@/contexts/NavbarContext";
-import { usePathname } from "@/i18n/routing";
+import { Link, usePathname } from "@/i18n/routing";
 import Container from "../container";
 import { useQuery } from "@tanstack/react-query";
 import publicService from "@/lib/services/publicService";
@@ -119,9 +119,8 @@ export default function MarketplaceUi() {
     return [...new Set(allCohorts)].sort();
   }, [allData]);
 
-  console.log(sectors, "sectors");
-  console.log(locations, "locations");
-  console.log(cohorts, "cohorts");
+  console.log(filters, "filters");
+
 
   const apiAlumni = marketplaceData?.data || [];
 
@@ -336,46 +335,145 @@ const FilterSelect = ({ label, value, onValueChange, children }) => (
     </Select>
   </div>
 );
+function getSectorLabel(sector) {
+  if (!sector) return null;
+  if (Array.isArray(sector)) return sector.slice(0, 2).join(" · ");
+  return sector;
+}
+ 
+function getInitials(firstName, lastName) {
+  const f = firstName?.[0] || "";
+  const l = lastName?.[0] || "";
+  return (f + l).toUpperCase() || "??";
+}
 
-const AlumniCard = ({ alumni, t, getSectorDisplay }) => (
-  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border flex flex-col items-center p-6 text-center">
-    <div className="relative w-24 h-24 mb-4">
-      <Image
-        src={alumni.profileImagePath || alumni.image || "/assets/Profile Image.jpg"}
-        alt={alumni.firstName || "Alumni"}
-        fill
-        className="object-cover rounded-full border border-gray-200"
-      />
-    </div>
-    <div className="w-full">
-      <h3 className="text-lg font-bold text-gray-900">
-        {alumni.firstName || "Anonymous"} {alumni.lastName || "Member"}
-      </h3>
-      <p className="text-sm text-gray-600 font-medium">
-        {(alumni.roleKey ? t(alumni.roleKey) : alumni.role) || "Member"} | {getSectorDisplay(alumni.sector) || "General Sector"}
-      </p>
-      <p className="text-xs text-gray-500 mt-2">
-        {alumni.educationKey ? t(alumni.educationKey) : (alumni.education || "STP Alumni")}
-      </p>
-      <div className="text-xs text-gray-500 mt-1 flex flex-col gap-1">
-        <span className="font-medium bg-gray-50 py-1 px-2 rounded-md">
-          📍 {alumni.location || "Location Not Set"}
-        </span>
-        {alumni.cohort && (
-          <span className="font-medium bg-gray-50 py-1 px-2 rounded-md">
-            🎓 {alumni.cohort}
-          </span>
+// ─── AlumniCard ───────────────────────────────────────────────────────────────
+ 
+const AlumniCard = ({ alumni, t }) => {
+  // ── Field mapping from real DTO ──────────────────────────────────────────
+  const userId         = alumni.userId;
+  const firstName      = alumni.firstName || "Alumni";
+  const lastName       = alumni.lastName  || "";
+  const fullName       = `${firstName} ${lastName}`.trim();
+  const title          = alumni.title     || null;
+  const sector         = getSectorLabel(alumni.sector);
+  const location       = alumni.location  || null;
+  const cohort         = alumni.cohort    || null;
+  const imageSrc       = alumni.profileImagePath || alumni.image || "/assets/Profile Image.jpg";
+  const initials       = getInitials(firstName, lastName);
+ 
+  // Business / marketplace fields
+  const companyName    = alumni.companyName    || null;
+  const elevatorPitch  = alumni.elevatorPitch  || null;
+  const offers         = Array.isArray(alumni.offers) ? alumni.offers.slice(0, 2) : null;
+  const needs          = Array.isArray(alumni.needs)  ? alumni.needs.slice(0, 2)  : null;
+  const hasMarketplace = companyName || offers?.length || needs?.length;
+ 
+  return (
+    <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-[#155DFC]/20 transition-all duration-200 flex flex-col overflow-hidden">
+ 
+      {/* ── Top: Identity ──────────────────────────────────────────────────── */}
+      <div className="flex flex-col items-center p-6 pb-4 text-center">
+ 
+        {/* Avatar */}
+        <div className="relative w-20 h-20 mb-3 shrink-0">
+          <Image
+            src={imageSrc}
+            alt={fullName}
+            fill
+            className="object-cover rounded-full border-2 border-white shadow-md"
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
+          />
+          {/* Fallback initials shown via CSS if image fails */}
+          <div className="absolute inset-0 rounded-full bg-[#155DFC] flex items-center justify-center text-white font-bold text-lg -z-10">
+            {initials}
+          </div>
+        </div>
+ 
+        {/* Name */}
+        <h3 className="text-base font-bold text-gray-900 leading-tight">{fullName}</h3>
+ 
+        {/* Title | Sector */}
+        {(title || sector) && (
+          <p className="text-xs text-gray-500 mt-0.5">
+            {[title, sector].filter(Boolean).join(" · ")}
+          </p>
         )}
+ 
+        {/* Location + Cohort badges */}
+        <div className="flex flex-wrap justify-center gap-1.5 mt-3">
+          {location && (
+            <span className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-2.5 py-0.5 rounded-full">
+              <MapPin className="h-3 w-3 shrink-0" />
+              {location}
+            </span>
+          )}
+          {cohort && (
+            <span className="inline-flex items-center gap-1 text-xs text-[#155DFC] bg-[#155DFC]/8 border border-[#155DFC]/15 px-2.5 py-0.5 rounded-full font-medium">
+              <GraduationCap className="h-3 w-3 shrink-0" />
+              {cohort}
+            </span>
+          )}
+        </div>
       </div>
-      <Button
-        variant="outline"
-        className="w-full mt-5 border-[#233389] text-[#233389] rounded-full hover:bg-blue-50"
-      >
-        {t("contact")}
-      </Button>
+ 
+      {/* ── Middle: Marketplace strip (renders only when data exists) ──────── */}
+      {hasMarketplace && (
+        <div className="mx-4 mb-3 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 space-y-2">
+ 
+          {/* Company + pitch */}
+          {companyName && (
+            <div className="flex items-center gap-1.5">
+              <Briefcase className="h-3 w-3 text-gray-400 mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <span className="text-xs font-semibold text-gray-700">{companyName}</span>
+                {elevatorPitch && (
+                  <p className="text-[11px] text-gray-400 leading-snug mt-0.5 line-clamp-2">{elevatorPitch}</p>
+                )}
+              </div>
+            </div>
+          )}
+ 
+          {/* Offers */}
+          {offers?.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {offers.map((o) => (
+                <span key={o} className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-medium">
+                  ↑ {o}
+                </span>
+              ))}
+            </div>
+          )}
+ 
+          {/* Needs */}
+          {needs?.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {needs.map((n) => (
+                <span key={n} className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-medium">
+                  ↓ {n}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+ 
+      {/* ── Bottom: CTA ────────────────────────────────────────────────────── */}
+      <div className="px-4 pb-5 mt-auto">
+        <Link href={`/dashboard/profile/${userId}`} className="block w-full">
+          <Button
+            variant="outline"
+            className="w-full rounded-full border-[#233389] text-[#233389] hover:bg-[#155DFC] hover:text-white hover:border-[#155DFC] transition-colors gap-1.5 text-sm"
+          >
+            {t("contact")}
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </Button>
+        </Link>
+      </div>
+ 
     </div>
-  </div>
-);
+  );
+};
 
 const EmptyState = ({ onClear }) => (
   <div className="flex flex-col items-center justify-center py-16 text-center">
