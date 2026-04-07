@@ -36,7 +36,7 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
   // Auth store data (from login response)
   const user = useAuthStore((state) => state.user);
 
-  
+
   // Fetch full profile from API (gives us profileImagePath, sector, etc.)
   const { data: profileData } = useAuth()
   

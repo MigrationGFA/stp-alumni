@@ -9,45 +9,17 @@ import {
 } from "lucide-react";
 import { useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-// Replace with: const { data } = useQuery({ queryKey: ["profile", params.id], queryFn: () => userService.getProfileById(params.id) })
-
-const DUMMY_PROFILE = {
-  id: "usr_01",
-  name: "Amara Osei-Bonsu",
-  jobTitle: "Co-founder & CEO",
-  email: "amara@veridian.io",
-  profileImagePath: null, // replace with real URL
-  cohort: "2021",
-  location: "Accra, Ghana",
-  sector: ["Fintech", "Climate Tech"],
-  skills: ["Product Strategy", "Fundraising", "Go-to-Market", "Data Analytics"],
-  linkedInProfile: "https://linkedin.com/in/amara-osei-bonsu",
-  goals: "Scaling Veridian across West Africa and building a coalition of climate-focused founders to drive sustainable finance at the grassroots level.",
-
-  // Business
-  companyName: "Veridian Finance",
-  businessModel: "B2B",
-  companyStage: "10–50 employees",
-  elevatorPitch: "We help African SMEs access affordable green trade finance through a mobile-first platform that scores climate impact alongside creditworthiness.",
-  offers: ["Fundraising advice", "Go-to-market", "Mentorship"],
-  needs: ["Investor introductions", "Technical Co-founder", "Market expansion"],
-  contactVisibility: "all_alumni",
-
-  // Stats (mock)
-  connectionsCount: 84,
-  postsCount: 12,
-  cohortRank: "West Africa Node",
-};
+import { useQuery } from "@tanstack/react-query";
+import userService from "@/lib/services/userService";
+import React from "react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getInitials(name) {
-  if (!name) return "??";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0][0]?.toUpperCase() || "?";
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+function getInitials(firstName, lastName) {
+  if (!firstName && !lastName) return "??";
+  if (firstName && lastName) return (firstName[0] + lastName[0]).toUpperCase();
+  if (firstName) return firstName[0]?.toUpperCase() || "?";
+  return lastName?.[0]?.toUpperCase() || "?";
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -92,10 +64,10 @@ function Pill({ label, variant = "blue" }) {
   );
 }
 
-function StatBadge({ icon: Icon, value, label }) {
+function StatBadge({ value, label }) {
   return (
     <div className="flex flex-col items-center gap-0.5 px-5 py-3">
-      <span className="text-xl font-bold text-gray-900">{value}</span>
+      <span className="text-xl font-bold text-gray-900">{value || "—"}</span>
       <span className="text-xs text-gray-500">{label}</span>
     </div>
   );
@@ -104,27 +76,75 @@ function StatBadge({ icon: Icon, value, label }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ViewProfilePage({ params }) {
-  // TODO: replace dummy with:
-  // const { data, isLoading } = useQuery({
-  //   queryKey: ["profile", params.id],
-  //   queryFn: () => userService.getProfileById(params.id),
-  // });
-  // const profile = data?.data || data || {};
-
-  const profile = DUMMY_PROFILE;
+  const { slug } = React.use(params);
+  
+  const { data, isLoading } = useQuery({
+    queryKey: ["profile", slug],
+    queryFn: () => userService.getUserProfileById(slug),
+  });
+  
+  // Extract the actual profile data from the API response
+  const profile = data?.data || {};
+  
   const router = useRouter();
-  const initials = getInitials(profile.name);
+  const initials = getInitials(profile.firstName, profile.lastName);
+  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
+  
+  // Format contact visibility for display
+  const getVisibilityLabel = (visibility) => {
+    switch (visibility) {
+      case "EVERYONE":
+        return "Visible to everyone";
+      case "ALL_ALUMNI":
+        return "Visible to alumni";
+      default:
+        return null;
+    }
+  };
 
-  // TODO: wire to real connect / message actions
-  const handleConnect = () => console.log("TODO: connect to", profile.id);
-  const handleMessage = () => console.log("TODO: message", profile.id);
+  // Handle missing data gracefully
+  const hasBusinessProfile = profile.companyName || profile.elevatorPitch || 
+                            profile.businessModel || profile.companyStage ||
+                            (profile.offers?.length > 0) || (profile.needs?.length > 0);
+
+  const handleConnect = () => console.log("TODO: connect to", profile.userId);
+  const handleMessage = () => console.log("TODO: message", profile.userId);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#155DFC] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if(!profile || Object.keys(profile).length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Users className="h-12 w-12 text-gray-400 mx-auto" />
+          <p className="mt-4 text-gray-600">Profile not found</p>
+          <Button 
+            variant="outline"
+            className="mt-4 border-gray-300 text-gray-700 hover:bg-gray-100"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
 
       {/* ── Hero Banner ───────────────────────────────────────────────────── */}
-      <div className="relative h-40 md:h-52 bg-gradient-to-br from-[#155DFC] via-[#1e4fd8] to-[#233389] overflow-hidden">
-        {/* Subtle geometric texture */}
+      <div className="relative h-40 md:h-52 bg-linear-to-r from-[#4279d6] via-[#2b56a1] to-[#263e75] overflow-hidden">
         <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -136,7 +156,6 @@ export default function ViewProfilePage({ params }) {
         <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-white/5 -translate-y-1/4 translate-x-1/4" />
         <div className="absolute top-4 left-1/2 w-40 h-40 rounded-full bg-white/5 -translate-x-3/4" />
 
-        {/* Back button */}
         <button
           onClick={() => router.back()}
           className="absolute top-4 left-4 md:left-6 flex items-center gap-1.5 text-white/80 hover:text-white text-sm transition-colors"
@@ -149,7 +168,6 @@ export default function ViewProfilePage({ params }) {
       {/* ── Profile Identity ───────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
 
-        {/* Avatar row — overlapping the banner */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 mb-6">
           <div className="flex items-end gap-4">
             <Avatar className="h-24 w-24 md:h-28 md:w-28 border-4 border-white shadow-xl shrink-0">
@@ -159,29 +177,28 @@ export default function ViewProfilePage({ params }) {
               </AvatarFallback>
             </Avatar>
             <div className="pb-1">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">{profile.name}</h1>
-              <p className="text-sm text-gray-500 mt-0.5">{profile.jobTitle}</p>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
+                {fullName || "Anonymous User"}
+              </h1>
+              {profile.title && (
+                <p className="text-sm text-gray-500 mt-0.5">{profile.title}</p>
+              )}
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 {profile.cohort && (
                   <span className="text-xs bg-[#155DFC]/10 text-[#155DFC] px-2.5 py-0.5 rounded-full font-semibold">
-                    Cohort {profile.cohort}
+                    {profile.cohort}
                   </span>
                 )}
-                {profile.cohortRank && (
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full">
-                    {profile.cohortRank}
-                  </span>
-                )}
-                {profile.contactVisibility === "all_alumni" && (
+                {profile.contactVisibility && (
                   <span className="flex items-center gap-1 text-xs text-emerald-600">
-                    <CheckCircle2 className="h-3 w-3" /> Visible to alumni
+                    <CheckCircle2 className="h-3 w-3" /> 
+                    {getVisibilityLabel(profile.contactVisibility)}
                   </span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* CTA buttons */}
           <div className="flex gap-2 sm:pb-1 shrink-0">
             <Button
               variant="outline"
@@ -205,9 +222,9 @@ export default function ViewProfilePage({ params }) {
 
         {/* ── Stats Row ─────────────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 mb-4 flex divide-x divide-gray-100">
-          <StatBadge icon={Users} value={profile.connectionsCount} label="Connections" />
-          <StatBadge icon={TrendingUp} value={profile.postsCount} label="Posts" />
-          <StatBadge icon={GraduationCap} value={`'${profile.cohort}`} label="Cohort" />
+          <StatBadge value="—" label="Connections" />
+          <StatBadge value="—" label="Posts" />
+          <StatBadge value={profile.cohort ? `'${profile.cohort.slice(-2)}` : "—"} label="Cohort" />
         </div>
 
         {/* ── Main Grid ─────────────────────────────────────────────────────── */}
@@ -232,9 +249,9 @@ export default function ViewProfilePage({ params }) {
                     <span>{profile.sector.join(" · ")}</span>
                   </div>
                 )}
-                {profile.linkedInProfile && (
+                {profile.linkedin && (
                   <a
-                    href={profile.linkedInProfile.startsWith("http") ? profile.linkedInProfile : `https://${profile.linkedInProfile}`}
+                    href={profile.linkedin.startsWith("http") ? profile.linkedin : `https://${profile.linkedin}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2.5 text-sm text-[#155DFC] hover:underline"
@@ -256,12 +273,12 @@ export default function ViewProfilePage({ params }) {
               </SectionCard>
             )}
 
-            {/* Goals */}
-            {profile.goals && (
+            {/* Expansion Interests (replaces Goals) */}
+            {profile.expansionInterests && (
               <SectionCard>
-                <CardHeader icon={Target} title="Goals" />
+                <CardHeader icon={Target} title="Expansion Interests" />
                 <div className="p-5">
-                  <p className="text-sm text-gray-600 leading-relaxed">{profile.goals}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{profile.expansionInterests}</p>
                 </div>
               </SectionCard>
             )}
@@ -270,99 +287,76 @@ export default function ViewProfilePage({ params }) {
           {/* Right column */}
           <div className="lg:col-span-2 space-y-4">
 
-            {/* Business Card */}
-            <SectionCard>
-              <CardHeader icon={Building2} title="Business Profile" badge="Marketplace" />
-              <div className="p-6">
-                {/* Company header */}
-                <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">{profile.companyName}</h2>
-                    <p className="text-sm text-gray-500 mt-1 leading-relaxed max-w-md">
-                      {profile.elevatorPitch}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 shrink-0">
-                    {profile.businessModel && (
-                      <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600 border border-gray-200 font-medium">
-                        {profile.businessModel}
-                      </span>
-                    )}
-                    {profile.companyStage && (
-                      <span className="text-xs px-3 py-1 rounded-full bg-[#155DFC]/10 text-[#155DFC] border border-[#155DFC]/20 font-medium">
-                        {profile.companyStage}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-gray-100 pt-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-                    {/* Offers */}
-                    {profile.offers?.length > 0 && (
-                      <div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2.5">
-                          Can offer
+            {/* Business Profile - Only show if any business data exists */}
+            {hasBusinessProfile && (
+              <SectionCard>
+                <CardHeader icon={Building2} title="Business Profile" badge="Marketplace" />
+                <div className="p-6">
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+                    <div>
+                      {profile.companyName && (
+                        <h2 className="text-lg font-bold text-gray-900">{profile.companyName}</h2>
+                      )}
+                      {profile.elevatorPitch && (
+                        <p className="text-sm text-gray-500 mt-1 leading-relaxed max-w-md">
+                          {profile.elevatorPitch}
                         </p>
-                        <div className="flex flex-wrap gap-2">
-                          {profile.offers.map((o) => <Pill key={o} label={o} variant="green" />)}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Needs */}
-                    {profile.needs?.length > 0 && (
-                      <div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2.5">
-                          Looking for
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {profile.needs.map((n) => <Pill key={n} label={n} variant="amber" />)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </SectionCard>
-
-            {/* Activity placeholder */}
-            <SectionCard>
-              <CardHeader icon={TrendingUp} title="Recent Activity" />
-              <div className="p-6 space-y-4">
-                {/* Dummy posts — replace with real PostCard components */}
-                {[
-                  {
-                    text: "Just closed our pre-seed round! Grateful to the STP network for the introductions that made this possible. 🙌",
-                    time: "2 days ago",
-                    likes: 34,
-                  },
-                  {
-                    text: "We're hiring a Head of Engineering. If you know anyone passionate about climate-fintech, send them our way.",
-                    time: "1 week ago",
-                    likes: 18,
-                  },
-                  {
-                    text: "Attended the IFC Africa Summit in Nairobi — incredible conversations around blended finance and climate resilience.",
-                    time: "2 weeks ago",
-                    likes: 27,
-                  },
-                ].map((post, i) => (
-                  <div key={i} className={cn("pb-4", i < 2 && "border-b border-gray-100")}>
-                    <p className="text-sm text-gray-700 leading-relaxed">{post.text}</p>
-                    <div className="flex items-center gap-3 mt-2">
-                      <span className="text-xs text-gray-400">{post.time}</span>
-                      <span className="text-xs text-gray-400">·</span>
-                      <span className="text-xs text-gray-400">{post.likes} likes</span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2 shrink-0">
+                      {profile.businessModel && (
+                        <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600 border border-gray-200 font-medium">
+                          {profile.businessModel}
+                        </span>
+                      )}
+                      {profile.companyStage && (
+                        <span className="text-xs px-3 py-1 rounded-full bg-[#155DFC]/10 text-[#155DFC] border border-[#155DFC]/20 font-medium">
+                          {profile.companyStage}
+                        </span>
+                      )}
                     </div>
                   </div>
-                ))}
 
-                {/* TODO: replace dummy posts with:
-                  myPosts.map(post => <PostCard key={post.id} post={post} ... />)
-                */}
+                  {(profile.offers?.length > 0 || profile.needs?.length > 0) && (
+                    <>
+                      <div className="border-t border-gray-100 pt-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          {profile.offers?.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2.5">
+                                Can offer
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {profile.offers.map((o) => <Pill key={o} label={o} variant="green" />)}
+                              </div>
+                            </div>
+                          )}
+
+                          {profile.needs?.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2.5">
+                                Looking for
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {profile.needs.map((n) => <Pill key={n} label={n} variant="amber" />)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </SectionCard>
+            )}
+
+            {/* Activity placeholder - TODO: Replace with real posts data */}
+            <SectionCard>
+              <CardHeader icon={TrendingUp} title="Recent Activity" />
+              <div className="p-6">
+                <p className="text-sm text-gray-500 text-center py-8">
+                  No recent activity to display
+                </p>
               </div>
             </SectionCard>
 

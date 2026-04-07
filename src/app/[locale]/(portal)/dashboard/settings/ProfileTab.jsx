@@ -417,7 +417,7 @@ function PersonalEditForm({ profile, onDone }) {
     if (res.status) {
       toast.success("Profile image updated!");
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      return res.data?.imageUrl || res.imageUrl; // Return the URL from response
+      return res.data?.avatarUrl || res.avatarUrl; // Return the URL from response
     } else {
       toast.error(res.message || "Failed to upload profile image.");
       throw new Error("Upload failed");

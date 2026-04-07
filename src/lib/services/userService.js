@@ -10,6 +10,10 @@ const userService = {
     const response = await api.get(`/users/${id}`);
     return response.data;
   },
+  getUserProfileById: async (userId) => {
+    const response = await api.get(`/users/${userId}/profile`);
+    return response.data;
+  },
 
   updateProfile: async (data) => {
     const response = await api.put('/users/profile', data);
