@@ -3,7 +3,11 @@ import {
   useConversations,
   useMessages,
   useSendMedia,
+  useSendMessage,
   useDeleteMessage,
+  useDeleteConversation,
+  useLeaveGroup,
+  useMarkAsRead,
   usePendingInvitations,
   useRespondToInvitation,
   useSendInvitation,
@@ -103,7 +107,11 @@ export function useMessaging() {
 
   // ─── API Mutations ───────────────────────────────────────────
   const { mutate: sendMediaMutation } = useSendMedia();
+  const { mutate: sendMessageMutation } = useSendMessage();
   const { mutate: deleteMessageMutation } = useDeleteMessage();
+  const { mutate: deleteConversationMutation } = useDeleteConversation();
+  const { mutate: leaveGroupMutation } = useLeaveGroup();
+  const { mutate: markAsReadMutation } = useMarkAsRead();
   const { mutate: respondToInvitationMutation } = useRespondToInvitation();
   const { mutate: sendInvitationMutation } = useSendInvitation();
 
@@ -213,16 +221,13 @@ export function useMessaging() {
         status: "sending",
       };
 
-      const formData = new FormData();
-      formData.append("content", content.trim());
-
-      sendMediaMutation({
+      sendMessageMutation({
         conversationId: selectedConversationId,
-        formData,
+        content: content.trim(),
         optimisticMessage,
       });
     },
-    [selectedConversationId, currentUserId, currentUser, sendMediaMutation]
+    [selectedConversationId, currentUserId, currentUser, sendMessageMutation]
   );
 
   const sendMediaFile = useCallback(
@@ -271,16 +276,15 @@ export function useMessaging() {
         status: "sending",
       });
 
-      const formData = new FormData();
-      formData.append("content", failedMsg.content);
-
-      sendMediaMutation({
+      // Retrying media won't work well without the original File object attached
+      // We will assume text for now.
+      sendMessageMutation({
         conversationId: selectedConversationId,
-        formData,
+        content: failedMsg.content,
         optimisticMessage: null, // Already in store
       });
     },
-    [selectedConversationId, sendMediaMutation]
+    [selectedConversationId, sendMessageMutation]
   );
 
   const deleteMessage = useCallback(
@@ -317,6 +321,27 @@ export function useMessaging() {
     [sendInvitationMutation]
   );
 
+  const markAsRead = useCallback(
+    (conversationId) => {
+      if (conversationId) markAsReadMutation({ conversationId });
+    },
+    [markAsReadMutation]
+  );
+
+  const leaveGroup = useCallback(
+    (groupId) => {
+      if (groupId) leaveGroupMutation({ groupId });
+    },
+    [leaveGroupMutation]
+  );
+
+  const deleteConversationAction = useCallback(
+    (conversationId) => {
+      if (conversationId) deleteConversationMutation({ conversationId });
+    },
+    [deleteConversationMutation]
+  );
+
   return {
     // State
     conversations: filteredConversations,
@@ -342,5 +367,10 @@ export function useMessaging() {
     acceptInvitation,
     declineInvitation,
     inviteUser,
+
+    // New API endpoints mapping
+    markAsRead,
+    leaveGroup,
+    deleteConversation: deleteConversationAction,
   };
 }

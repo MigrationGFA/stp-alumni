@@ -3,11 +3,14 @@ import {
   useConversations,
   useMessages,
   useSendMedia,
+  useSendMessage,
   useDeleteMessage,
+  useDeleteConversation,
   useCreatePrivateGroup,
   useInviteToGroup,
   useRemoveMember,
   useUpdatePrivateGroupSettings,
+  useMarkAsRead,
 } from "@/lib/hooks/useMessagingQueries";
 import useMessagingStore from "@/lib/store/useMessagingStore";
 import useAuthStore from "@/lib/store/useAuthStore";
@@ -89,7 +92,10 @@ export function useDealRoom() {
   const { mutate: removeMemberMutation } = useRemoveMember();
   const { mutate: updateSettingsMutation } = useUpdatePrivateGroupSettings();
   const { mutate: sendMediaMutation } = useSendMedia();
+  const { mutate: sendMessageMutation } = useSendMessage();
   const { mutate: deleteMessageMutation } = useDeleteMessage();
+  const { mutate: deleteConversationMutation } = useDeleteConversation();
+  const { mutate: markAsReadMutation } = useMarkAsRead();
 
   // ─── Normalize rooms (PRIVATE_GROUP only) ────────────────────
   const allRooms = useMemo(() => {
@@ -191,16 +197,13 @@ export function useDealRoom() {
         status: "sending",
       };
 
-      const formData = new FormData();
-      formData.append("content", content.trim());
-
-      sendMediaMutation({
+      sendMessageMutation({
         conversationId: selectedRoomId,
-        formData,
+        content: content.trim(),
         optimisticMessage,
       });
     },
-    [selectedRoomId, currentUserId, currentUser, sendMediaMutation]
+    [selectedRoomId, currentUserId, currentUser, sendMessageMutation]
   );
 
   const retryMessage = useCallback(
@@ -214,16 +217,13 @@ export function useDealRoom() {
         status: "sending",
       });
 
-      const formData = new FormData();
-      formData.append("content", failedMsg.content);
-
-      sendMediaMutation({
+      sendMessageMutation({
         conversationId: selectedRoomId,
-        formData,
+        content: failedMsg.content,
         optimisticMessage: null,
       });
     },
-    [selectedRoomId, sendMediaMutation]
+    [selectedRoomId, sendMessageMutation]
   );
 
   const deleteMessage = useCallback(
@@ -250,11 +250,18 @@ export function useDealRoom() {
 
   const deleteRoom = useCallback(
     (roomId) => {
-      // No delete endpoint in the API — remove locally for now
-      useMessagingStore.getState().removeConversation(roomId);
+      if (!roomId) return;
+      deleteConversationMutation({ conversationId: roomId });
       if (selectedRoomId === roomId) setSelectedRoomId(null);
     },
-    [selectedRoomId]
+    [selectedRoomId, deleteConversationMutation]
+  );
+
+  const markAsRead = useCallback(
+    (roomId) => {
+      if (roomId) markAsReadMutation({ conversationId: roomId });
+    },
+    [markAsReadMutation]
   );
 
   const addMember = useCallback(
@@ -328,5 +335,6 @@ export function useDealRoom() {
     addMember,
     removeMember,
     createRoom,
+    markAsRead,
   };
 }

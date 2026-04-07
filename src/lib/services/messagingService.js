@@ -26,6 +26,46 @@ const messagingService = {
   },
 
   /**
+   * Get full details of a single conversation.
+   * @param {string} conversationId
+   */
+  getConversationDetails: async (conversationId) => {
+    const response = await api.get(`/messaging/conversations/${conversationId}`);
+    return response.data;
+  },
+
+  /**
+   * Send a plain text message to a conversation.
+   * @param {string} conversationId
+   * @param {string} content
+   */
+  sendMessage: async (conversationId, content) => {
+    const response = await api.post(
+      `/messaging/conversations/${conversationId}/messages`,
+      { content }
+    );
+    return response.data;
+  },
+
+  /**
+   * Mark a conversation as read.
+   * @param {string} conversationId
+   */
+  markAsRead: async (conversationId) => {
+    const response = await api.post(`/messaging/conversations/${conversationId}/read`);
+    return response.data;
+  },
+
+  /**
+   * Delete or exit an entire conversation / deal room.
+   * @param {string} conversationId
+   */
+  deleteConversation: async (conversationId) => {
+    const response = await api.delete(`/messaging/conversations/${conversationId}`);
+    return response.data;
+  },
+
+  /**
    * Upload media (image/document) to a conversation.
    * Can also include a text `content` field alongside the file.
    * @param {string} conversationId
@@ -140,6 +180,15 @@ const messagingService = {
       `/messaging/groups/${groupId}/requests/${requestId}/respond`,
       { action }
     );
+    return response.data;
+  },
+
+  /**
+   * Leave a group.
+   * @param {string} groupId
+   */
+  leaveGroup: async (groupId) => {
+    const response = await api.post(`/messaging/groups/${groupId}/leave`);
     return response.data;
   },
 

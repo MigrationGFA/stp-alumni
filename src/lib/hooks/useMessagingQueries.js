@@ -42,6 +42,18 @@ export function useConversations() {
   });
 }
 
+/**
+ * Fetch full details of a single conversation.
+ */
+export function useConversationDetails(conversationId) {
+  return useQuery({
+    queryKey: ['messaging', 'conversationDetails', conversationId],
+    queryFn: () => messagingService.getConversationDetails(conversationId),
+    enabled: !!conversationId,
+    staleTime: 60 * 1000,
+  });
+}
+
 // ─── Messages ────────────────────────────────────────────────────
 
 /**
@@ -100,6 +112,68 @@ export function useInfiniteMessages(conversationId, limit = 30) {
   });
 }
 
+// ─── Send Media & Messages ───────────────────────────────────────
+
+/**
+ * Send a plain text message.
+ */
+export function useSendMessage() {
+  const queryClient = useQueryClient();
+  const appendMessage = useMessagingStore((s) => s.appendMessage);
+  const updateConversation = useMessagingStore((s) => s.updateConversation);
+
+  return useMutation({
+    mutationFn: ({ conversationId, content }) =>
+      messagingService.sendMessage(conversationId, content),
+
+    onMutate: async ({ conversationId, optimisticMessage }) => {
+      await queryClient.cancelQueries(messagingKeys.messages(conversationId));
+
+      if (optimisticMessage) {
+        appendMessage(conversationId, optimisticMessage);
+        updateConversation(conversationId, {
+          lastMessage: optimisticMessage.content,
+          lastMessageAt: optimisticMessage.createdAt,
+        });
+      }
+      return { conversationId };
+    },
+
+    onSuccess: (_data, { conversationId }) => {
+      queryClient.invalidateQueries(messagingKeys.messages(conversationId));
+      queryClient.invalidateQueries(messagingKeys.conversations);
+    },
+
+    onError: (error, { conversationId, optimisticMessage }) => {
+      if (optimisticMessage) {
+        const updateMessage = useMessagingStore.getState().updateMessage;
+        updateMessage(conversationId, optimisticMessage.id, { status: 'failed' });
+      }
+      toast.error('Failed to send message');
+    },
+  });
+}
+
+/**
+ * Mark a conversation as read.
+ */
+export function useMarkAsRead() {
+  const queryClient = useQueryClient();
+  const updateConversation = useMessagingStore((s) => s.updateConversation);
+
+  return useMutation({
+    mutationFn: ({ conversationId }) => messagingService.markAsRead(conversationId),
+    onMutate: async ({ conversationId }) => {
+      updateConversation(conversationId, { unreadCount: 0, unread: false });
+      return { conversationId };
+    },
+    onSuccess: (_data, { conversationId }) => {
+      queryClient.invalidateQueries(messagingKeys.conversations);
+      queryClient.invalidateQueries(messagingKeys.messages(conversationId));
+    },
+  });
+}
+
 // ─── Send Media (File Upload) ────────────────────────────────────
 
 /**
@@ -147,7 +221,30 @@ export function useSendMedia() {
   });
 }
 
-// ─── Delete Message ──────────────────────────────────────────────
+// ─── Delete Message & Conversation ───────────────────────────────
+
+/**
+ * Delete or exit an entire conversation / deal room.
+ */
+export function useDeleteConversation() {
+  const queryClient = useQueryClient();
+  const removeConversation = useMessagingStore((s) => s.removeConversation);
+
+  return useMutation({
+    mutationFn: ({ conversationId }) => messagingService.deleteConversation(conversationId),
+    onMutate: async ({ conversationId }) => {
+      removeConversation(conversationId);
+      return { conversationId };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(messagingKeys.conversations);
+      toast.success('Conversation removed');
+    },
+    onError: () => {
+      toast.error('Failed to remove conversation');
+    },
+  });
+}
 
 export function useDeleteMessage() {
   const queryClient = useQueryClient();
@@ -369,6 +466,26 @@ export function useUpdateGroupSettings() {
       } else {
         toast.error('Failed to update settings');
       }
+    },
+  });
+}
+
+/**
+ * Leave a group.
+ */
+export function useLeaveGroup() {
+  const queryClient = useQueryClient();
+  const removeConversation = useMessagingStore((s) => s.removeConversation);
+
+  return useMutation({
+    mutationFn: ({ groupId }) => messagingService.leaveGroup(groupId),
+    onSuccess: (_data, { groupId }) => {
+      removeConversation(groupId);
+      queryClient.invalidateQueries(messagingKeys.conversations);
+      toast.success('Left group');
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to leave group');
     },
   });
 }
