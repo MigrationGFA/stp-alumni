@@ -15,6 +15,10 @@ const userService = {
     const response = await api.put('/users/profile', data);
     return response.data;
   },
+  updatePreference: async (data) => {
+    const response = await api.put('/users/preferences', data);
+    return response.data;
+  },
 
   setupProfile: async (formData) => {
     const response = await api.post('/users/profile/setup', formData, {

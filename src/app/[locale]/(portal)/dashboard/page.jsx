@@ -49,7 +49,7 @@ export default function DashboardPage() {
   // Fetch invitations/connections data
   const { data: connectionsData, isLoading: isLoadingConnections } = useQuery({
     queryKey: ["connections"],
-    queryFn: () => networkService.getConnections(),
+    queryFn: () => networkService.getIncomingRequests(),
   });
   // console.log("networkData",networkData)
 
@@ -67,9 +67,7 @@ export default function DashboardPage() {
       ? connectionsData
       : [];
 
-  const invitations = rawConnections
-    .filter((conn) => conn.status?.toLowerCase() === "pending")
-    .slice(0, 5);
+  const invitations = rawConnections.slice(0, 5);
 
   // Handlers
   const handleLike = (postId) => {

@@ -15,14 +15,14 @@ export default function PortalLayout({ children }) {
         <Sidebar isCollapsed={isCollapsed} />
 
         <main 
-          className={`relative flex-1 flex flex-col transition-all duration-300 ${
+          className={`relative flex-1 flex flex-col pb-20 transition-all duration-300 ${
             isCollapsed ? "lg:ml-20" : "lg:ml-60"
           } ml-0`}
         >
           <UserHeader toggleSidebar={() => setIsCollapsed(!isCollapsed)} isCollapsed={isCollapsed} />
           <PasswordChangeBanner />
         
-          <div className="flex-1 sm:p-4 lg:p-6 pb-20 lg:pb-6">
+        <div className="flex-1 sm:p-4 lg:p-6">
             {children}
           </div>
         </main>

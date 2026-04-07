@@ -49,8 +49,9 @@ const NEED_TAGS = [
 ];
 
 const VISIBILITY_OPTIONS = [
-  { value: 'all_alumni', label: 'All Alumni', description: 'Your contact info is visible to the entire STP community.' },
-  { value: 'admin_only', label: 'Admin Only', description: 'Only programme admins can see your contact details.' },
+  { value: 'EVERYONE', label: 'All Alumni', description: 'Your contact info is visible to the entire STP community.' },
+  { value: 'ADMIN_ONLY', label: 'Admin Only', description: 'Only programme admins can see your contact details.' },
+  { value: 'CONNECTION_ONLY', label: 'Connection Only', description: 'Only your connections can see your contact details.' },
 ];
 
 
@@ -158,7 +159,6 @@ export default function ProfileSetupPage() {
   const [location, setLocation] = useState('');
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState('');
-  const [countries, setCountries] = useState([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
   const [linkedInProfile, setLinkedInProfile] = useState('');
   const [goals, setGoals] = useState('');
@@ -176,8 +176,9 @@ export default function ProfileSetupPage() {
   const [elevatorPitch, setElevatorPitch] = useState('');
   const [offers, setOffers] = useState([]);
   const [needs, setNeeds] = useState([]);
-  const [visibility, setVisibility] = useState('all_alumni');
+  const [visibility, setVisibility] = useState('EVERYONE');
 
+  const [countries, setCountries] = useState([]);
   useEffect(() => {
     fetch('https://restcountries.com/v3.1/all?fields=name')
       .then((res) => res.json())
@@ -289,7 +290,7 @@ export default function ProfileSetupPage() {
     if (goals) formData.append('goals', goals);
     if (cohort) formData.append('cohort', cohort);
     if (profileImage) formData.append('profileImage', profileImage);
-    if (jobTitle) formData.append('jobTitle', jobTitle);
+    if (jobTitle) formData.append('title', jobTitle);
 
     // Business info — append to same formData or send separately once endpoint is ready
     // TODO: Replace with dedicated business endpoint when available
@@ -303,7 +304,7 @@ export default function ProfileSetupPage() {
 
     console.log(formData,"lol")
 
-    // setupMutation.mutate(formData);
+    setupMutation.mutate(formData);
   };
 
 

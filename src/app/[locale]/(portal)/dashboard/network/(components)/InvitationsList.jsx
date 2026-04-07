@@ -1,64 +1,119 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-const invitations = [
-  {
-    id: 1,
-    name: "Bayu Salto",
-    message: "Invited you to connect with them",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-  },
-  {
-    id: 2,
-    name: "Bayu Salto",
-    message: "Invited you to connect with them",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
-  },
-  {
-    id: 3,
-    name: "Bayu Salto",
-    message: "Invited you to connect with them",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-  },
-  {
-    id: 4,
-    name: "Bayu Salto",
-    message: "Invited you to connect with them",
-    avatar: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100&h=100&fit=crop&crop=face",
-  },
-  {
-    id: 5,
-    name: "Bayu Salto",
-    message: "Invited you to connect with them",
-    avatar: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=100&h=100&fit=crop&crop=face",
-  },
-];
+import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import networkService from "@/lib/services/networkService";
 
 export function InvitationsList() {
+  const [showAll, setShowAll] = useState(false);
+  
+  const { data, isLoading } = useQuery({
+    queryKey: ["invitations"],
+    queryFn: networkService.getIncomingRequests
+  });
+ 
+  const invitations = data?.data || [];
+  const displayedInvitations = showAll ? invitations : invitations.slice(0, 5);
+  const hasMoreInvitations = invitations.length > 5;
+
+  const handleShowAll = () => {
+    setShowAll(true);
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base font-semibold">
+            Invitations
+          </CardTitle>
+          <Button variant="link" className="text-[#020618BF] p-0 h-auto" disabled>
+            Show all
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-0">
+          {[1, 2, 3, 4, 5].map((_, index) => (
+            <div
+              key={index}
+              className={`flex items-center justify-between py-3 ${
+                index !== 4 ? "border-b border-border" : ""
+              }`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="min-w-0 space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 ml-2">
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-16" />
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (invitations.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base font-semibold">
+            Invitations (0)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-6">
+            No pending invitations
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-base font-semibold">
           Invitations ({invitations.length})
         </CardTitle>
-        <Button variant="link" className="text-[#020618BF] p-0 h-auto">
-          Show all
-        </Button>
+        {hasMoreInvitations && !showAll && (
+          <Button 
+            variant="link" 
+            className="text-[#020618BF] p-0 h-auto"
+            onClick={handleShowAll}
+          >
+            Show all
+          </Button>
+        )}
+        {showAll && (
+          <Button 
+            variant="link" 
+            className="text-[#020618BF] p-0 h-auto"
+            onClick={() => setShowAll(false)}
+          >
+            Show less
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-0">
-        {invitations.map((invitation, index) => (
+        {displayedInvitations.map((invitation, index) => (
           <div
             key={invitation.id}
             className={`flex items-center justify-between py-3 ${
-              index !== invitations.length - 1 ? "border-b border-border" : ""
+              index !== displayedInvitations.length - 1 ? "border-b border-border" : ""
             }`}
           >
             <div className="flex items-center gap-3 min-w-0">
-              <Avatar className="h-10 w-10 flex-shrink-0">
+              <Avatar className="h-10 w-10 shrink-0">
                 <AvatarImage src={invitation.avatar} />
                 <AvatarFallback className="bg-muted">
-                  {invitation.name.charAt(0)}
+                  {invitation.name?.charAt(0) || "?"}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
@@ -68,7 +123,7 @@ export function InvitationsList() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+            <div className="flex items-center gap-2 shrink-0 ml-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -86,6 +141,20 @@ export function InvitationsList() {
             </div>
           </div>
         ))}
+        
+        {/* Optional: Show remaining count if not showing all */}
+        {hasMoreInvitations && !showAll && (
+          <div className="py-3 text-center border-t border-border mt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleShowAll}
+              className="text-muted-foreground text-xs"
+            >
+              +{invitations.length - 5} more invitation{invitations.length - 5 !== 1 ? 's' : ''}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
