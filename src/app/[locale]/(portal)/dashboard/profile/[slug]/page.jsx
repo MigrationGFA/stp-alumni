@@ -144,7 +144,7 @@ export default function ViewProfilePage({ params }) {
     <div className="min-h-screen bg-gray-50">
 
       {/* ── Hero Banner ───────────────────────────────────────────────────── */}
-      <div className="relative h-40 md:h-52 bg-linear-to-r from-[#4279d6] via-[#2b56a1] to-[#263e75] overflow-hidden">
+      <div className="relative h-40  bg-linear-to-r from-[#4279d6] via-[#2b56a1] to-[#263e75] overflow-hidden">
         <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -166,7 +166,7 @@ export default function ViewProfilePage({ params }) {
       </div>
 
       {/* ── Profile Identity ───────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 mb-6">
           <div className="flex items-end gap-4">

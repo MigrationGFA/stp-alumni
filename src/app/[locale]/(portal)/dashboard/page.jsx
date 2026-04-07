@@ -14,6 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useNavbar } from "@/contexts/NavbarContext";
 import { messages } from "@/lib/data";
 import { useQuery } from "@tanstack/react-query";
@@ -332,8 +338,8 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
                               <Image
-                                src={invitation.user?.profileImage || invitation.image || "/assets/Your Newtork Image.jpg"}
-                                alt={invitation.user?.name || invitation.name || "User"}
+                                src={invitation?.profileImagePath || "/assets/Your Newtork Image.jpg"}
+                                alt={invitation?.firstName || "User"}
                                 width={40}
                                 height={40}
                                 className="h-full w-full object-cover"
@@ -341,7 +347,7 @@ export default function DashboardPage() {
                             </div>
                             <div className="min-w-0">
                               <p className="font-medium text-sm text-[#233389] truncate">
-                                {invitation.user?.name || invitation.name || "Pending User"}
+                                {`${invitation?.firstName} ${invitation?.lastName}` || "Pending User"}
                               </p>
                               <p className="text-xs text-gray-600 truncate">
                                 Pending connection request
@@ -349,8 +355,20 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           <button className="p-1 hover:bg-gray-100 rounded shrink-0">
-                            <MoreVertical className="h-4 w-4 text-gray-600" />
+                           
                           </button>
+
+                            <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                                     <MoreVertical className="h-4 w-4 text-gray-600" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem>Ignore</DropdownMenuItem>
+                                      <DropdownMenuItem>Accept</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                         </div>
                       ))
                     ) : (

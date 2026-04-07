@@ -33,7 +33,15 @@ const networkService = {
    * @param {string} connectionId 
    */
   acceptConnection: async (connectionId) => {
-    const response = await api.post(`/connections/${connectionId}/accept`);
+    const response = await api.put(`/connections/${connectionId}/accept`);
+    return response.data;
+  },
+  /**
+   * ignore an incoming connection request
+   * @param {string} connectionId 
+   */
+  ignoreConnection: async (connectionId) => {
+    const response = await api.put(`/connections/${connectionId}/ignore`);
     return response.data;
   },
 

@@ -25,6 +25,7 @@ import { formatDistanceToNow } from "@/lib/helper";
 import { usePostComments, useCommentPost } from "@/lib/hooks/usePosts";
 import useAuthStore from "@/lib/store/useAuthStore";
 import { useAuth } from "@/lib/hooks/useUser";
+import { Link } from "@/i18n/routing";
 
 /**
  * CommentItem — renders a single comment bubble
@@ -301,19 +302,23 @@ export default function PostCard({
           <div className="flex gap-3">
             <div className="h-12 w-12 rounded-full bg-gray-300 overflow-hidden shrink-0">
               <Image
-                src={post.profileImage || "/assets/Profile Image.jpg"}
-                alt={post.author?.name || "User"}
+                src={post.profileImagePath || "/assets/Profile Image.jpg"}
+                alt={post.author?.firstName || "User"}
                 width={48}
                 height={48}
                 className="h-full w-full object-cover"
               />
             </div>
             <div>
+              <Link href={`/dashboard/profile/${post.authorId}`} className="hover:underline" onClick={(e) => {
+                e.stopPropagation();
+              }}>
               <h3 className="font-semibold text-[#233389]">
-                {post.authorFirstName || "Anonymous"} {post.authorLastName}
+                {post.firstName || "Anonymous"} {post.lastName || "User"}
               </h3>
-              {post.author?.title && (
-                <p className="text-sm text-gray-600">{post.author.title}</p>
+               </Link>
+              {post?.title && (
+                <p className="text-sm text-gray-600">{post.title}</p>
               )}
               <p className="text-xs text-gray-500">
                 {post.createdAt
