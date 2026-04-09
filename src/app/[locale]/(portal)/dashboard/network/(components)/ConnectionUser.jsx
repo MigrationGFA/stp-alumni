@@ -11,10 +11,10 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import networkService from "@/lib/services/networkService";
 import { useSendInvitation } from "@/lib/hooks/useMessagingQueries";
-import { useRouter } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
 
-function ConnectionUser({ connection, index,connectionTotal }) {
+function ConnectionUser({ connection, index, connectionTotal }) {
   const router = useRouter();
 
   const queryClient = useQueryClient();
@@ -23,7 +23,7 @@ function ConnectionUser({ connection, index,connectionTotal }) {
     mutationFn: (data) => networkService.connectToUser(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["network"] });
-      toast.success("Connection request sent!")
+      toast.success("Connection request sent!");
     },
   });
 
@@ -64,7 +64,16 @@ function ConnectionUser({ connection, index,connectionTotal }) {
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          <p className="text-sm font-semibold truncate">{fullName}</p>
+
+          <Link
+            href={`/dashboard/profile/${connection.userId}`}
+            className="hover:underline"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <p className="text-sm  text-[#233389] font-semibold truncate">{fullName}</p>
+          </Link>
           <p className="text-xs text-muted-foreground truncate">
             {formattedRole}
           </p>

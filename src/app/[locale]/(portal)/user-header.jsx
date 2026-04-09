@@ -103,9 +103,9 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
           </button>
 
           {/* Notification Button */}
-          <button className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm">
+          {/* <button className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm">
             <Bell className="h-4 w-4 md:h-6 md:w-6 text-[#020618]" />
-          </button>
+          </button> */}
 
           {/* Mobile: ProfileDrawer trigger */}
           <ProfileDrawer data={headerData}>

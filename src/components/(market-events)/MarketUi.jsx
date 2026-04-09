@@ -418,7 +418,7 @@ const AlumniCard = ({ alumni, t }) => {
       </div>
  
       {/* ── Middle: Marketplace strip (renders only when data exists) ──────── */}
-      {hasMarketplace && (
+      {hasMarketplace ? (
         <div className="mx-4 mb-3 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 space-y-2">
  
           {/* Company + pitch */}
@@ -456,7 +456,7 @@ const AlumniCard = ({ alumni, t }) => {
             </div>
           )}
         </div>
-      )}
+      ) : ""}
  
       {/* ── Bottom: CTA ────────────────────────────────────────────────────── */}
       <div className="px-4 pb-5 mt-auto">
