@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tansta
 import messagingService from '../services/messagingService';
 import useMessagingStore from '../store/useMessagingStore';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+
 
 // ─── Constants ───────────────────────────────────────────────────
 const CONVERSATIONS_POLL_INTERVAL = 20 * 1000; // 20s — background poll for new conversations
@@ -304,6 +306,8 @@ export function usePendingInvitations() {
  */
 export function useSendInvitation() {
   const queryClient = useQueryClient();
+  const router = useRouter()
+
 
   return useMutation({
     mutationFn: ({ recipientId, shortMessage }) =>
@@ -313,12 +317,14 @@ export function useSendInvitation() {
       // If the backend returns an existing conversationId (re-invite case),
       // refresh conversations
       if (data?.data?.conversationId) {
+          console.log(data,"data")
         queryClient.invalidateQueries(messagingKeys.conversations);
+        router.push(`/dashboard/messaging?conversationId=${data?.data.conversationId}`);
         toast.success('Conversation already exists');
       } else {
         toast.success('Invitation sent');
+        queryClient.invalidateQueries(messagingKeys.invitations);
       }
-      queryClient.invalidateQueries(messagingKeys.invitations);
     },
 
     onError: (error) => {

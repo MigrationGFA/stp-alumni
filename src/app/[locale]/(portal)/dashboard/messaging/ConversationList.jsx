@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Search, SlidersHorizontal, Users, Mail, Check, X, PenSquare } from "lucide-react";
+import {
+  Search,
+  SlidersHorizontal,
+  Users,
+  Mail,
+  Check,
+  X,
+  PenSquare,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,7 +48,7 @@ function getInitials(name) {
 }
 
 export function ConversationList({
-  conversations,
+  conversations = [],
   selectedId,
   searchQuery,
   sortBy,
@@ -63,6 +71,7 @@ export function ConversationList({
   };
 
   const pendingCount = invitations.length;
+  // console.log(conversations, invitations);
 
   return (
     <div className="flex flex-col h-full w-full bg-card">
@@ -85,24 +94,30 @@ export function ConversationList({
               </Button>
             )}
             <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <SlidersHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup
-                value={sortBy}
-                onValueChange={(v) => onSortChange(v)}
-              >
-                <DropdownMenuRadioItem value="recent">Most Recent</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="unread">Unread First</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="name">Name (A-Z)</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <SlidersHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup
+                  value={sortBy}
+                  onValueChange={(v) => onSortChange(v)}
+                >
+                  <DropdownMenuRadioItem value="recent">
+                    Most Recent
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="unread">
+                    Unread First
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="name">
+                    Name (A-Z)
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -114,7 +129,7 @@ export function ConversationList({
               "flex-1 text-sm font-medium py-1.5 rounded-md transition-colors",
               activeTab === "chats"
                 ? "bg-white text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             Chats
@@ -125,7 +140,7 @@ export function ConversationList({
               "flex-1 text-sm font-medium py-1.5 rounded-md transition-colors relative",
               activeTab === "invitations"
                 ? "bg-white text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             Invitations
@@ -161,10 +176,10 @@ export function ConversationList({
       {/* Content */}
       <ScrollArea className="flex-1">
         {activeTab === "chats" ? (
-          /* ── Conversations List ── */
+          // /* ── Conversations List ── */
           isLoading ? (
             <div className="divide-y divide-border">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <ConversationSkeleton key={i} />
               ))}
             </div>
@@ -184,14 +199,19 @@ export function ConversationList({
                   className={cn(
                     "w-full flex items-start gap-2 p-3 sm:p-4 text-left hover:bg-muted/50 transition-colors",
                     selectedId === conversation.id && "bg-muted",
-                    "px-3 py-3 md:px-4 md:py-4"
+                    "px-3 py-3 md:px-4 md:py-4",
                   )}
                 >
                   {/* Avatar */}
                   <div className="relative shrink-0">
                     <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                      <AvatarImage src={conversation.avatar} alt={conversation.name} />
-                      <AvatarFallback>{getInitials(conversation.name)}</AvatarFallback>
+                      <AvatarImage
+                        src={conversation.avatar}
+                        alt={conversation.name}
+                      />
+                      <AvatarFallback>
+                        {getInitials(conversation.name)}
+                      </AvatarFallback>
                     </Avatar>
                     {conversation.online && (
                       <span className="absolute bottom-0 right-0 h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-green-500 border border-card sm:border-2" />
@@ -210,7 +230,9 @@ export function ConversationList({
                       <span
                         className={cn(
                           "font-medium text-xs sm:text-sm truncate",
-                          conversation.unread ? "text-foreground" : "text-muted-foreground"
+                          conversation.unread
+                            ? "text-foreground"
+                            : "text-muted-foreground",
                         )}
                       >
                         {conversation.name}
@@ -219,81 +241,92 @@ export function ConversationList({
                         {formatRelativeTime(conversation.lastMessageAt)}
                       </span>
                     </div>
+                  
                     <p
                       className={cn(
                         "text-xs sm:text-sm truncate mt-0.5",
                         conversation.unread
                           ? "text-stp-blue-light font-medium"
-                          : "text-muted-foreground"
+                          : "text-muted-foreground",
                       )}
                     >
-                      {conversation.lastMessage || "No messages yet"}
+                      {/* ✅ Fix: Extract content from lastMessage object */}
+                      {conversation.lastMessage
+                        ? typeof conversation.lastMessage === "object"
+                          ? conversation.lastMessage.content ||
+                            conversation.lastMessage.text ||
+                            "No messages yet"
+                          : conversation.lastMessage
+                        : "No messages yet"}
                     </p>
                   </div>
 
                   {/* Unread badge */}
                   {conversation.unread && conversation.unreadCount > 0 && (
                     <span className="px-1.5 min-w-[1.75rem] h-6 rounded-full bg-stp-blue-light text-primary-foreground text-xs font-medium flex items-center justify-center shrink-0">
-                      {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
+                      {conversation.unreadCount > 9
+                        ? "9+"
+                        : conversation.unreadCount}
                     </span>
                   )}
                 </button>
               ))}
             </div>
           )
+        ) : // /* ── Invitations List ── */
+        invitations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+            <Mail className="h-8 w-8 mb-2 opacity-50" />
+            <p className="text-sm">No pending invitations</p>
+          </div>
         ) : (
-          /* ── Invitations List ── */
-          invitations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-              <Mail className="h-8 w-8 mb-2 opacity-50" />
-              <p className="text-sm">No pending invitations</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {invitations.map((inv) => {
-                const name = inv.senderName || inv.sender?.name || "Someone";
-                const avatar = inv.senderAvatar || inv.sender?.profileImagePath || null;
-                const message = inv.shortMessage || "Wants to connect with you";
-                const invId = inv.invitationId || inv.id;
+          <div className="divide-y divide-border">
+            {invitations.map((inv) => {
+              const name = `${inv.firstName} ${inv.lastName}` || "Someone";
+              const avatar =
+                inv.senderAvatar || inv.sender?.profileImagePath || null;
+              const message = inv.shortMessage || "Wants to connect with you";
+              const invId = inv.invitationId || inv.id;
 
-                return (
-                  <div key={invId} className="p-4 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarImage src={avatar} alt={name} />
-                        <AvatarFallback>{getInitials(name)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-foreground">{name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                          {message}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 pl-13">
-                      <Button
-                        size="sm"
-                        className="bg-stp-blue-light hover:bg-stp-blue-light/90 text-white flex-1"
-                        onClick={() => onAcceptInvitation?.(invId)}
-                      >
-                        <Check className="h-3.5 w-3.5 mr-1" />
-                        Accept
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => onDeclineInvitation?.(invId)}
-                      >
-                        <X className="h-3.5 w-3.5 mr-1" />
-                        Decline
-                      </Button>
+              return (
+                <div key={invId} className="p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-10 w-10 shrink-0">
+                      <AvatarImage src={avatar} alt={name} />
+                      <AvatarFallback>{getInitials(name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground">
+                        {name}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                        {message}
+                      </p>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )
+                  <div className="flex gap-2 pl-13">
+                    <Button
+                      size="sm"
+                      className="bg-stp-blue-light hover:bg-stp-blue-light/90 text-white flex-1"
+                      onClick={() => onAcceptInvitation?.(invId)}
+                    >
+                      <Check className="h-3.5 w-3.5 mr-1" />
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => onDeclineInvitation?.(invId)}
+                    >
+                      <X className="h-3.5 w-3.5 mr-1" />
+                      Decline
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </ScrollArea>
 

@@ -77,11 +77,15 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
 
   async function handleProfileImgSubmit(file) {
     if (!file) return null;
+
     try {
       const res = await userService.uploadProfileImage(file);
       if (res.status) {
         toast.success("Profile image updated!");
-        return res.data?.imageUrl || res.imageUrl;
+        
+        const data =  res.data?.data.avatarUrl ;
+        // console.log(data,"data",res.data.data.avatarUrl)
+        return data
       } else {
         toast.error(res.message || "Failed to upload profile image.");
         throw new Error("Upload failed");
@@ -94,11 +98,11 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
   }
 
   const handleSubmit = async () => {
-    const isValid = await businessForm.trigger();
-    if (!isValid) {
-      toast.error(t("fillRequired"));
-      return;
-    }
+    // const isValid = await businessForm.trigger();
+    // if (!isValid) {
+    //   toast.error(t("fillRequired"));
+    //   return;
+    // }
 
     const personalData = personalForm.getValues();
     const businessData = businessForm.getValues();
@@ -121,6 +125,8 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
     if (profileImage) {
       uploadedImageUrl = await handleProfileImgSubmit(profileImage);
     }
+
+    console.log(uploadedImageUrl,"uploadedImageUrl")
 
     // Prepare payload as JSON object
     const payload = {
@@ -158,7 +164,7 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
 
     setupMutation.mutate(payload);
 
-    // console.log(payload, "payload");
+    console.log(payload, "payload");
   };
   return (
     <form className="space-y-4">

@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { EllipsisVertical, MessageCircle, UserMinus } from "lucide-react";
+import { EllipsisVertical, MessageCircle, UserMinus, UserPlus, Clock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,47 +11,161 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import networkService from "@/lib/services/networkService";
 import { useSendInvitation } from "@/lib/hooks/useMessagingQueries";
-import { Link, useRouter } from "@/i18n/routing";
+import { Link } from "@/i18n/routing";
 import { toast } from "sonner";
 
-function ConnectionUser({ connection, index, connectionTotal }) {
-  const router = useRouter();
+// Helper function to get button configuration
+const getButtonConfig = (status, isPending, isConnecting, isInviting) => {
+  const configs = {
+    NOT_CONNECTED: {
+      text: isConnecting ? "Connecting..." : "Connect",
+      icon: <UserPlus className="h-4 w-4 mr-1 sm:hidden block" />,
+      disabled: isConnecting,
+      action: "CONNECT"
+    },
+    PENDING: {
+      text: "Pending",
+      icon: <Clock className="h-4 w-4 mr-1 sm:hidden block" />,
+      disabled: true,
+      action: "PENDING"
+    },
+    CONNECTED: {
+      text: isInviting ? "Sending..." : "Message",
+      icon: <MessageCircle className="h-4 w-4 mr-1 sm:hidden block" />,
+      disabled: isInviting,
+      action: "MESSAGE"
+    }
+  };
 
+  if (status === "ACCEPTED") return configs.CONNECTED;
+  if (status === "PENDING") return configs.PENDING;
+  return configs.NOT_CONNECTED;
+};
+
+function ConnectionUser({ connection, index, connectionTotal }) {
   const queryClient = useQueryClient();
 
+  // Extract and format connection data
+  const {
+    id,
+    fullName,
+    avatar,
+    formattedRole,
+    connectionStatus,
+    isConnected,
+    isPending,
+    isNotConnected
+  } = useMemo(() => {
+    const id = connection.connectionId || connection.userId;
+    const fullName = connection.name ||
+      `${connection.firstName || ""} ${connection.lastName || ""}`.trim();
+    const avatar = connection.profileImageUrl || connection.avatar;
+    const connectionStatus = connection.connectionStatus;
+    
+    // Format role/sector
+    let formattedRole = "Professional";
+    try {
+      const sectors = Array.isArray(connection.sector)
+        ? connection.sector
+        : JSON.parse(connection.sector || "[]");
+      formattedRole = sectors.length > 0 ? sectors.join(", ") : "Professional";
+    } catch (e) {
+      formattedRole = connection.sector || connection.role || "Professional";
+    }
+
+    return {
+      id,
+      fullName,
+      avatar,
+      formattedRole,
+      connectionStatus,
+      isConnected: connectionStatus === "ACCEPTED",
+      isPending: connectionStatus === "PENDING",
+      isNotConnected: connectionStatus === null
+    };
+  }, [connection]);
+
+  // Mutations
   const { mutate: connectToUser, isPending: isConnecting } = useMutation({
     mutationFn: (data) => networkService.connectToUser(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["network"] });
       toast.success("Connection request sent!");
     },
+    onError: (error) => {
+      toast.error(error.message || "Failed to send connection request");
+    }
   });
 
   const { mutate: sendInvitation, isPending: isInviting } = useSendInvitation();
 
-  // const isNetworkExplorerItem = !hasConnections;
-  // Determine identifiers based on if we are mapping an actual connection object or a raw user object
-  const id = connection.connectionId || connection.userId;
-  const fullName =
-    connection.name ||
-    `${connection.firstName || ""} ${connection.lastName || ""}`.trim();
-  const avatar = connection.profileImageUrl || connection.avatar;
-  const isConnected = connection.connectionStatus === "ACCEPTED";
-  const isPending = connection.connectionStatus === "PENDING";
-  const isNotConnected = connection.connectionStatus === null;
+ 
 
-  let formattedRole = "";
-  try {
-    const sectors = Array.isArray(connection.sector)
-      ? connection.sector
-      : JSON.parse(connection.sector || "[]");
-    formattedRole = sectors.length > 0 ? sectors.join(", ") : "Professional";
-  } catch (e) {
-    formattedRole = connection.sector || connection.role || "Professional";
-  }
+  // Action handlers
+  const handleConnect = () => {
+    if (isNotConnected) {
+      connectToUser({ userId: connection.userId });
+    }
+  };
+
+  const handleSendMessage = () => {
+    sendInvitation(
+      {
+        recipientId: connection.userId,
+        shortMessage: "Hi, I'd like to connect with you!",
+      },
+      {
+        onSuccess: (data) => {
+          // toast.success("Message invitation sent!");
+           console.log(data,"data")
+          // Optional: navigate to messages
+          // router.push(`/dashboard/messages/${connection.userId}`);
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to send invitation");
+        }
+      }
+    );
+  };
+
+  const handlePendingClick = () => {
+    toast.info("Your connection request is pending approval.");
+  };
+
+  const handleRemoveConnection = () => {
+    // Implement remove connection logic
+    toast.info("Remove connection functionality to be implemented");
+  };
+
+  const handleViewProfile = () => {
+    // Optional: navigate to profile
+    // router.push(`/dashboard/profile/${connection.userId}`);
+  };
+
+  // Get button configuration based on connection status
+  const buttonConfig = getButtonConfig(
+    connectionStatus,
+    isPending,
+    isConnecting,
+    isInviting
+  );
+
+  // Button click handler mapper
+  const getButtonClickHandler = () => {
+    switch (buttonConfig.action) {
+      case "CONNECT":
+        return handleConnect;
+      case "PENDING":
+        return handlePendingClick;
+      case "MESSAGE":
+        return handleSendMessage;
+      default:
+        return () => {};
+    }
+  };
+
   return (
     <div
-      key={id}
       className={`flex items-center justify-between py-4 ${
         index !== connectionTotal - 1 ? "border-b border-border" : ""
       }`}
@@ -60,19 +174,19 @@ function ConnectionUser({ connection, index, connectionTotal }) {
         <Avatar className="h-12 w-12 shrink-0">
           <AvatarImage src={avatar} alt={fullName} />
           <AvatarFallback className="bg-muted">
-            {fullName.charAt(0)}
+            {fullName.charAt(0) || "U"}
           </AvatarFallback>
         </Avatar>
+        
         <div className="min-w-0">
-
           <Link
             href={`/dashboard/profile/${connection.userId}`}
             className="hover:underline"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-sm  text-[#233389] font-semibold truncate">{fullName}</p>
+            <p className="text-sm text-[#233389] font-semibold truncate">
+              {fullName}
+            </p>
           </Link>
           <p className="text-xs text-muted-foreground truncate">
             {formattedRole}
@@ -83,45 +197,25 @@ function ConnectionUser({ connection, index, connectionTotal }) {
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0 ml-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isConnecting}
-          className="border-0 sm:border-stp-blue-light rounded-2xl text-stp-blue-light hover:bg-accent hover:text-accent-foreground"
-          onClick={() => {
-            if (isNotConnected) {
-              connectToUser({ userId: connection.userId });
-            } else if (isPending) {
-              toast.info("Your connection request is pending approval.");
-              return;
-            } else {
-              // Send a messaging invitation then navigate
 
-              // console.log("lol")
-              sendInvitation(
-                {
-                  recipientId: connection.userId,
-                  shortMessage: "Hi, I'd like to connect with you!",
-                },
-                {
-                  onSuccess: () => router.push("/dashboard/messaging"),
-                },
-              );
-            }
-          }}
+      <div className="flex items-center gap-2 shrink-0 ml-2">
+        {/* Main Action Button */}
+        <Button
+          variant={isConnected ? "outline" : "default"}
+          size="sm"
+          disabled={buttonConfig.disabled}
+          className={
+            isConnected
+              ? "border-0 sm:border-stp-blue-light rounded-2xl text-stp-blue-light hover:bg-accent hover:text-accent-foreground"
+              : "rounded-2xl"
+          }
+          onClick={getButtonClickHandler()}
         >
-          <MessageCircle className="h-4 w-4 mr-1 sm:hidden block" />
-          <span className="hidden sm:inline">
-            {isConnecting
-              ? "Connecting..."
-              : isPending
-                ? "Pending"
-                : isConnected
-                  ? "Message"
-                  : "Connect"}
-          </span>
+          {buttonConfig.icon}
+          <span className="hidden sm:inline">{buttonConfig.text}</span>
         </Button>
+
+        {/* Dropdown Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -129,9 +223,14 @@ function ConnectionUser({ connection, index, connectionTotal }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>View Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleViewProfile}>
+              View Profile
+            </DropdownMenuItem>
             {isConnected && (
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem 
+                className="text-destructive"
+                onClick={handleRemoveConnection}
+              >
                 <UserMinus className="h-4 w-4 mr-2" />
                 Remove Connection
               </DropdownMenuItem>
@@ -143,4 +242,4 @@ function ConnectionUser({ connection, index, connectionTotal }) {
   );
 }
 
-export default ConnectionUser;
+export default React.memo(ConnectionUser);

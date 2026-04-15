@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChatView } from "./ChatView";
 import { ConversationList } from "./ConversationList";
@@ -7,10 +7,18 @@ import { GroupDiscovery } from "./GroupDiscovery";
 import { GroupSettingsDialog } from "./GroupSettings";
 import { NewMessageDialog } from "./NewMessageDialog";
 import { useMessaging } from "./useMessaging";
+import { useSearchParams } from "next/navigation";
+import { useNavbar } from "@/contexts/NavbarContext";
 
 const Messaging = () => {
-  const {
-    conversations,
+
+  const searchParams = useSearchParams()
+    const conversationId = searchParams.get('conversationId')
+
+    
+    const {userSize:{height}} = useNavbar()
+    const {
+      conversations,
     selectedConversation,
     currentMessages,
     searchQuery,
@@ -29,6 +37,12 @@ const Messaging = () => {
     declineInvitation,
   } = useMessaging();
 
+   useEffect(()=>{
+     
+     selectConversation(conversationId)
+    },[conversationId])
+    
+    console.log(currentMessages,"currentMessages")
   const [showGroupDiscovery, setShowGroupDiscovery] = useState(false);
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
@@ -45,7 +59,11 @@ const Messaging = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-2rem)] flex bg-background">
+    <div className=" flex bg-background" style={{
+        // top: `${height + 10}px`,
+        height: `calc(100dvh - ${height+50}px)`,
+      }}>
+    {/* <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-2rem)] flex bg-background"> */}
       {/* Conversation List - hidden on mobile when chat is open */}
       <div
         className={cn(

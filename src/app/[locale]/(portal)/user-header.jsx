@@ -36,7 +36,6 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
   // Auth store data (from login response)
   const user = useAuthStore((state) => state.user);
 
-
   // Fetch full profile from API (gives us profileImagePath, sector, etc.)
   const { data: profileData } = useAuth()
   
@@ -76,7 +75,7 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
       ref={elementRef}
     >
       {/* Mobile logo */}
-      <Link href="/" className="flex lg:hidden items-center justify-center gap-3">
+      <Link href="/dashboard" className="flex lg:hidden items-center justify-center gap-3">
         <Image
           src="/assets/logo-removebg-preview.png"
           alt="STP Alumni"
