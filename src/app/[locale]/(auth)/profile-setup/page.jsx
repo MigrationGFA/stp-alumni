@@ -132,7 +132,7 @@ export default function ProfileSetupPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const updateUser = useAuthStore((state) => state.updateUser);
 
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
@@ -215,7 +215,7 @@ export default function ProfileSetupPage() {
                   Your Business
                 </h1>
                 <p className="text-gray-500 text-sm">
-                  Tell the community about your company — this powers your
+                  Tell the community about your company, this powers your
                   Marketplace card.
                 </p>
               </>

@@ -1,5 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, MoreHorizontal, Smile, Paperclip, Image as ImageIcon, Send, Settings } from "lucide-react";
+import {
+  ArrowLeft,
+  MoreHorizontal,
+  Smile,
+  Paperclip,
+  Image as ImageIcon,
+  Send,
+  Settings,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,8 +23,16 @@ import { cn } from "@/lib/utils";
 import { MessageBubble } from "./MessageBubble";
 import { formatMessageDate, groupMessagesByDate } from "@/lib/helper";
 import { toast } from "sonner";
+import { ModernScrollArea } from "@/components/shared/ScrollArea";
+import { useRouter } from "@/i18n/routing";
 
-const IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+const IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
 const DOC_TYPES = [
   "application/pdf",
   "application/msword",
@@ -44,6 +60,8 @@ export function ChatView({
   const imageInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  const router = useRouter()
+  
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
@@ -98,9 +116,13 @@ export function ChatView({
       toast.error("Unsupported file type");
       return;
     }
-    const maxSize = IMAGE_TYPES.includes(file.type) ? MAX_IMAGE_SIZE : MAX_DOC_SIZE;
+    const maxSize = IMAGE_TYPES.includes(file.type)
+      ? MAX_IMAGE_SIZE
+      : MAX_DOC_SIZE;
     if (file.size > maxSize) {
-      toast.error(`File must be under ${maxSize === MAX_IMAGE_SIZE ? "5MB" : "20MB"}`);
+      toast.error(
+        `File must be under ${maxSize === MAX_IMAGE_SIZE ? "5MB" : "20MB"}`,
+      );
       return;
     }
     onSendMediaFile?.(file);
@@ -109,18 +131,29 @@ export function ChatView({
 
   const getInitials = (name) => {
     if (!name) return "?";
-    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
   };
-
+  
   // Group messages by date
   const messageGroups = groupMessagesByDate(messages);
+  console.log(conversation,"conversation")
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col justify-between bg-background overflow-hidden h-full">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-card">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={onBack}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={onBack}
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
 
@@ -130,17 +163,19 @@ export function ChatView({
           </Avatar>
 
           <div>
-            <h2 className="font-semibold text-foreground">{conversation.name}</h2>
+            <h2 className="font-semibold text-foreground">
+              {conversation.name}
+            </h2>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               {conversation.online ? (
                 <>
                   <span className="h-2 w-2 rounded-full bg-green-500" />
                   Available
                 </>
+              ) : conversation.type === "PUBLIC_GROUP" ? (
+                `${conversation.participants?.length || 0} members`
               ) : (
-                conversation.type === "PUBLIC_GROUP"
-                  ? `${conversation.participants?.length || 0} members`
-                  : "Offline"
+                "Offline"
               )}
             </p>
           </div>
@@ -153,9 +188,9 @@ export function ChatView({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>View profile</DropdownMenuItem>
-            <DropdownMenuItem>Search in conversation</DropdownMenuItem>
-            <DropdownMenuItem>Mute notifications</DropdownMenuItem>
+            <DropdownMenuItem onClick={()=>router.push(`/dashboard/profile/${conversation.userId}`)}>View profile</DropdownMenuItem>
+            {/* <DropdownMenuItem>Search in conversation</DropdownMenuItem> */}
+            {/* <DropdownMenuItem>Mute notifications</DropdownMenuItem> */}
             {conversation.type === "PUBLIC_GROUP" && onOpenGroupSettings && (
               <>
                 <DropdownMenuSeparator />
@@ -166,43 +201,50 @@ export function ChatView({
               </>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Delete chat</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive">
+              Delete chat
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1" ref={scrollRef}>
-        <div className="p-4 space-y-6 max-w-3xl mx-auto">
+      <ModernScrollArea className="flex-1 w-full">
+        <div className="p-4 space-y-6 max-w-3xl">
           {isLoading && (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-stp-blue-light" />
             </div>
           )}
 
-          {!isLoading && Array.from(messageGroups.entries()).map(([dateKey, dateMessages]) => (
-            <div key={dateKey}>
-              <div className="flex items-center justify-center mb-4">
-                <div className="bg-muted px-3 py-1 rounded-full">
-                  <span className="text-xs text-muted-foreground">
-                    {formatMessageDate(new Date(dateKey))}
-                  </span>
+          {!isLoading &&
+            Array.from(messageGroups.entries()).map(
+              ([dateKey, dateMessages]) => (
+                <div key={dateKey}>
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="bg-muted px-3 py-1 rounded-full">
+                      <span className="text-xs text-muted-foreground">
+                        {formatMessageDate(new Date(dateKey))}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    {dateMessages.map((message) => (
+                      <MessageBubble
+                        key={message.id}
+                        message={message}
+                        senderAvatar={
+                          message.senderAvatar || conversation.avatar
+                        }
+                        senderName={message.senderName || conversation.name}
+                        onRetry={() => onRetryMessage(message.id)}
+                        onDelete={() => onDeleteMessage(message.id)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-4">
-                {dateMessages.map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    senderAvatar={message.senderAvatar || conversation.avatar}
-                    senderName={message.senderName || conversation.name}
-                    onRetry={() => onRetryMessage(message.id)}
-                    onDelete={() => onDeleteMessage(message.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
+              ),
+            )}
 
           {!isLoading && messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
@@ -211,7 +253,7 @@ export function ChatView({
             </div>
           )}
         </div>
-      </ScrollArea>
+      </ModernScrollArea>
 
       {/* Hidden file inputs */}
       <input
@@ -243,7 +285,11 @@ export function ChatView({
               rows={1}
             />
             <div className="flex items-center gap-1 flex-shrink-0 pb-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              >
                 <Smile className="h-5 w-5" />
               </Button>
               <Button
@@ -268,7 +314,7 @@ export function ChatView({
                   "h-8 w-8 rounded-full transition-all",
                   newMessage.trim()
                     ? "bg-stp-blue-light hover:bg-stp-blue-light/90"
-                    : "bg-stp-blue-light/50 cursor-not-allowed"
+                    : "bg-stp-blue-light/50 cursor-not-allowed",
                 )}
                 onClick={handleSend}
                 disabled={!newMessage.trim()}

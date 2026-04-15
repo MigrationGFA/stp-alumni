@@ -29,7 +29,7 @@ export default function SupportSection() {
 
 
   return (
-    <section className="relative w-full min-h-screen bg-white px-6 pt-5 pb-20 overflow-hidden flex items-center justify-center"style={{ marginTop: `${height}px` }}>
+    <section className="relative w-full min-h-screen bg-white px-6 pt-5 pb-20 overflow-hidden flex items-center justify-center" style={{ marginTop: `${height}px` }}>
       {/* Decorative Background Circles */}
     {/* Figma SVG Eclipses - Positioned at corners */}
       <div className="absolute bottom-20 left-0  opacity-60 w-4xl">

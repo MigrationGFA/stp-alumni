@@ -28,13 +28,28 @@ import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const businessInfoSchema = z.object({
+  companyName: z.string().optional(),
+  businessModel: z.string().optional(),
+  companyStage: z.string().optional(),
+  elevatorPitch: z.string().optional(),
+  offers: z.array(z.string()).max(3).optional(),
+  needs: z.array(z.string()).max(3).optional(),
+  visibility: z.string().default('EVERYONE'),
+  companyWebsite: z.string().url('Enter a valid website URL').optional().nullable(),
+});
 
 function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
   const [businessModelOpen, setBusinessModelOpen] = useState(false);
   const [companyStageOpen, setCompanyStageOpen] = useState(false);
+  const [hasWebsite, setHasWebsite] = useState(false);
 
   // Business form
   const businessForm = useForm({
+    resolver: zodResolver(businessInfoSchema),
     defaultValues: {
       companyName: "",
       businessModel: "",
@@ -43,6 +58,7 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
       offers: [],
       needs: [],
       visibility: "EVERYONE",
+      companyWebsite: '',
     },
   });
 
@@ -61,11 +77,15 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
 
   async function handleProfileImgSubmit(file) {
     if (!file) return null;
+
     try {
       const res = await userService.uploadProfileImage(file);
       if (res.status) {
         toast.success("Profile image updated!");
-        return res.data?.imageUrl || res.imageUrl;
+        
+        const data =  res.data?.data.avatarUrl ;
+        // console.log(data,"data",res.data.data.avatarUrl)
+        return data
       } else {
         toast.error(res.message || "Failed to upload profile image.");
         throw new Error("Upload failed");
@@ -78,14 +98,19 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
   }
 
   const handleSubmit = async () => {
-    const isValid = await businessForm.trigger();
-    if (!isValid) {
-      toast.error(t("fillRequired"));
-      return;
-    }
+    // const isValid = await businessForm.trigger();
+    // if (!isValid) {
+    //   toast.error(t("fillRequired"));
+    //   return;
+    // }
 
     const personalData = personalForm.getValues();
     const businessData = businessForm.getValues();
+
+    if(hasWebsite && !businessData.companyWebsite) {
+      toast.error("Please enter your company website URL or toggle off the website option.");
+      return;
+    }
 
     if (
       personalData.sectors.length === 0 ||
@@ -100,6 +125,8 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
     if (profileImage) {
       uploadedImageUrl = await handleProfileImgSubmit(profileImage);
     }
+
+    console.log(uploadedImageUrl,"uploadedImageUrl")
 
     // Prepare payload as JSON object
     const payload = {
@@ -121,6 +148,7 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
       offers: businessData.offers,
       needs: businessData.needs,
       contactVisibility: businessData.visibility,
+      companyWebsite: businessData.companyWebsite,
     };
 
     // Remove undefined/null values
@@ -347,6 +375,53 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
           />
         )}
       />
+
+      {/* Company Website Toggle */}
+<div className="pt-2">
+  <div className="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-white">
+    <div>
+      <p className="text-sm font-medium text-gray-800">Company Website</p>
+      <p className="text-xs text-gray-500">Add a link to your company website</p>
+    </div>
+    <button
+      type="button"
+      onClick={() => setHasWebsite(!hasWebsite)}
+      className={cn(
+        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+        hasWebsite ? "bg-[#155DFC]" : "bg-gray-300"
+      )}
+    >
+      <span
+        className={cn(
+          "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+          hasWebsite ? "translate-x-6" : "translate-x-1"
+        )}
+      />
+    </button>
+  </div>
+</div>
+
+ {hasWebsite && (
+  <Controller
+    name="companyWebsite"
+    control={businessForm.control}
+    render={({ field }) => (
+      <div>
+        <Label htmlFor="companyWebsite" className="text-gray-700 mb-2 block">
+          Website URL <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="companyWebsite"
+          type="url"
+          placeholder="https://yourcompany.com"
+          {...field}
+          disabled={setupMutation.isPending}
+        />
+        <p className="text-xs text-gray-400 mt-1">Include https:// or http://</p>
+      </div>
+    )}
+  />
+)}
 
       {/* Visibility */}
       <div className="pt-2 border-t border-gray-100">

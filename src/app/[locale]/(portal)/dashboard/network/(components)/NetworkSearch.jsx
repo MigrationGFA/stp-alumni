@@ -34,7 +34,7 @@ const locations = [
   "Remote",
 ];
 
-export function NetworkSearch() {
+export function NetworkSearch({search,setSearch}) {
   const [isOpen, setIsOpen] = useState(false);
   const [filters, setFilters] = useState({
     industry: "",
@@ -70,19 +70,21 @@ export function NetworkSearch() {
       <div className="relative flex-1">
         <Input
           type="search"
+          value={search}
+          onChange={(e)=>setSearch(e.target.value)}
           placeholder="Search and connect with your network..."
           className="pr-10 bg-transparent border-[#233389]/50"
         />
-        <Button
+        {/* <Button
           variant="ghost"
           size="icon"
           className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
         >
           <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-        </Button>
+        </Button> */}
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
@@ -93,7 +95,7 @@ export function NetworkSearch() {
                   {activeFiltersCount}
                 </span>
               )}
-            </Button>
+            </Button> */}
           </PopoverTrigger>
           <PopoverContent className="w-80" align="end">
             <div className="space-y-4">
@@ -193,10 +195,10 @@ export function NetworkSearch() {
           </PopoverContent>
         </Popover>
       </div>
-      <Button className="bg-stp-blue-light hover:bg-primary/90 px-6">
+      {/* <Button className="bg-stp-blue-light hover:bg-primary/90 px-6">
         <Search className="h-4 w-4 mr-2" />
         Search
-      </Button>
+      </Button> */}
     </div>
   );
 }

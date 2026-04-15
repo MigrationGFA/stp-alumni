@@ -14,19 +14,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import ConnectionUser from "./ConnectionUser";
 
-export function ConnectionsContent() {
-  const { myConnections, networkUsers, options } = useNetworkStore();
+export function ConnectionsContent({
+  displayList = [],
+  uniqueSectors,
+  activeSector,
+  setActiveSector,
+}) {
+  const { options } = useNetworkStore();
   const { isLoading, error } = options;
 
   // Decide which list to render. If the user has connections, show them.
   // Otherwise, fallback to showing the general network (All available active users).
-  const hasConnections = myConnections && myConnections.length > 0;
-  const displayList = hasConnections ? myConnections : networkUsers || [];
+  // const hasConnections = myConnections && myConnections.length > 0;
+  // const displayList = hasConnections ? myConnections : networkUsers || [];
 
-  // console.log(networkUsers, "displayList", myConnections);
-  const titleString = hasConnections
-    ? `My Connections (${myConnections.length})`
-    : `Explore Network (${displayList.length})`;
+  console.log(displayList, "displayList");
+  const titleString = `Explore Network (${displayList.length})`;
 
   if (isLoading) {
     return (
@@ -70,14 +73,19 @@ export function ConnectionsContent() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-base font-semibold">{titleString}</CardTitle>
-        <Select>
-          <SelectTrigger className="w-60 text-[#020618]/50 text-sm">
-            <SelectValue placeholder="Sorted by: Recently Added" />
+        <Select value={activeSector} onValueChange={(value)=>setActiveSector(value)}>
+          <SelectTrigger className="w-40 text-[#020618]/50 text-sm">
+            <SelectValue placeholder="Filter by Sector" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectLabel>Sort</SelectLabel>
-              <SelectItem value="val">Apple</SelectItem>
+              <SelectLabel>Filter</SelectLabel>
+      <SelectItem value="all">All</SelectItem>
+              {uniqueSectors.map((ele) => (
+                <SelectItem value={ele} key={ele}>
+                  {ele}
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>

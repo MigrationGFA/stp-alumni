@@ -43,7 +43,7 @@ const GroupCardWrapper = ({ title, children, sortPlaceholder, selectWidth = "w-4
   <Card>
     <CardHeader className="flex flex-row items-center justify-between pb-3">
       <CardTitle className="text-[#020618] font-semibold">{title}</CardTitle>
-      <div className="flex items-center bg-transparent">
+      {/* <div className="flex items-center bg-transparent">
         <p className="text-sm text-[#020618]/50 font-light">Sort by:</p>
         <Select>
           <SelectTrigger className={`${selectWidth} text-[#020618]/50 text-sm`}>
@@ -56,7 +56,7 @@ const GroupCardWrapper = ({ title, children, sortPlaceholder, selectWidth = "w-4
             </SelectGroup>
           </SelectContent>
         </Select>
-      </div>
+      </div> */}
     </CardHeader>
     <CardContent>
       <div className="flex flex-col gap-4">{children}</div>
@@ -188,7 +188,7 @@ export function GroupsContent() {
         )}
       </GroupCardWrapper>
 
-      <Pagination>
+    { totalPages>1 && <Pagination>
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
@@ -232,7 +232,7 @@ export function GroupsContent() {
             />
           </PaginationItem>
         </PaginationContent>
-      </Pagination>
+      </Pagination>}
     </div>
   );
 }

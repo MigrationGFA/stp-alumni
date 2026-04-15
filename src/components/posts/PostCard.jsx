@@ -31,7 +31,6 @@ import { Link } from "@/i18n/routing";
  * CommentItem — renders a single comment bubble
  */
 function CommentItem({ comment }) {
-
   // console.log(comment,"comment")
   return (
     <div className="flex gap-3">
@@ -83,9 +82,7 @@ function CommentModal({ open, onClose, post }) {
     error: commentsError,
   } = usePostComments(post?.id);
 
-  
-  
-  const comments = data?.data || []
+  const comments = data?.data || [];
   // console.log(comments,"comments")
 
   // POST a new comment
@@ -118,7 +115,7 @@ function CommentModal({ open, onClose, post }) {
           setCommentText("");
           textareaRef.current?.focus();
         },
-      }
+      },
     );
   };
 
@@ -129,7 +126,7 @@ function CommentModal({ open, onClose, post }) {
       handleSubmit();
     }
   };
- const { data:currentUser } = useAuth()
+  const { data: currentUser } = useAuth();
 
   // console.log(currentUser,"sdnfknke")
 
@@ -207,7 +204,8 @@ function CommentModal({ open, onClose, post }) {
             <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
               <Image
                 src={
-                  currentUser?.data?.profileImagePath || "/assets/Profile Image.jpg"
+                  currentUser?.data?.profileImagePath ||
+                  "/assets/Profile Image.jpg"
                 }
                 alt="You"
                 width={36}
@@ -310,13 +308,17 @@ export default function PostCard({
               />
             </div>
             <div>
-              <Link href={`/dashboard/profile/${post.authorId}`} className="hover:underline" onClick={(e) => {
-                e.stopPropagation();
-              }}>
-              <h3 className="font-semibold text-[#233389]">
-                {post.firstName || "Anonymous"} {post.lastName || "User"}
-              </h3>
-               </Link>
+              <Link
+                href={`/dashboard/profile/${post.authorId}`}
+                className="hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                <h3 className="font-semibold text-[#233389]">
+                  {post.firstName || "Anonymous"} {post.lastName || "User"}
+                </h3>
+              </Link>
               {post?.title && (
                 <p className="text-sm text-gray-600">{post.title}</p>
               )}
@@ -383,9 +385,7 @@ export default function PostCard({
         {Array.isArray(post.images) && post.images.length > 0 && (
           <div
             className={`mb-4 gap-2 ${
-              post.images.length === 1
-                ? "grid grid-cols-1"
-                : "grid grid-cols-2"
+              post.images.length === 1 ? "grid grid-cols-1" : "grid grid-cols-2"
             }`}
             style={
               post.images.length === 3
@@ -435,8 +435,7 @@ export default function PostCard({
                   </div>
                 </div>
                 <span className="text-sm text-gray-600">
-                  {post.likes.count}{" "}
-                  {post.likes.count === 1 ? "like" : "likes"}
+                  {post.likes.count} {post.likes.count === 1 ? "like" : "likes"}
                 </span>
               </div>
             )}
@@ -468,18 +467,19 @@ export default function PostCard({
               }`}
               strokeWidth={2}
             />
-            <span className="text-sm font-medium cursor-pointer">{t("like")}</span>
+            <span className="text-sm font-medium cursor-pointer">
+              {t("like")}
+            </span>
           </button>
 
           <button
             onClick={handleComment}
             className="flex-1 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
-            <MessageSquare
-              className="h-5 w-5 text-[#2B7FFF]"
-              strokeWidth={2}
-            />
-            <span className="text-sm font-medium cursor-pointer">{t("comment")}</span>
+            <MessageSquare className="h-5 w-5 text-[#2B7FFF]" strokeWidth={2} />
+            <span className="text-sm font-medium cursor-pointer">
+              {t("comment")}
+            </span>
           </button>
         </div>
       </div>

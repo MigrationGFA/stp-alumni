@@ -5,9 +5,14 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import UserHeader from "../user-header";
 import OnboardingGuard from "@/components/shared/OnboardingGuard";
 import PasswordChangeBanner from "@/components/shared/PasswordChangeBanner";
+import { usePathname } from "@/i18n/routing";
 
 export default function PortalLayout({ children }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const pathname = usePathname()
+  const isMessaging = pathname.includes("messaging")
+  // console.log(isMessaging,"pathname")
 
   return (
     <OnboardingGuard>
@@ -15,7 +20,7 @@ export default function PortalLayout({ children }) {
         <Sidebar isCollapsed={isCollapsed} />
 
         <main 
-          className={`relative flex-1 flex flex-col pb-20 transition-all duration-300 ${
+          className={`relative flex-1 flex flex-col ${isMessaging ? "pb-20 md:pb-0":"pb-20"} transition-all duration-300 ${
             isCollapsed ? "lg:ml-20" : "lg:ml-60"
           } ml-0`}
         >

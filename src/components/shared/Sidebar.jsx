@@ -72,7 +72,7 @@ const Sidebar = ({ isCollapsed }) => {
     >
       {/* Logo - click goes to landing page */}
       <Link
-        href="/"
+        href="/dashboard"
         className={`flex items-center ${!isExpanded ? "ml-0 px-3" : "ml-6 px-6"}  gap-3  pt-6 pb-3`}
       >
         <Image

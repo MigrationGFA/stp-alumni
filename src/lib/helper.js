@@ -1,3 +1,4 @@
+import { parseISO } from "date-fns";
 
 /**
  * Generate a unique ID for optimistic updates
@@ -63,13 +64,18 @@ export function formatMessageDate(date) {
 /**
  * Group messages by date
  */
-export function groupMessagesByDate(
-  messages
-){
+export function groupMessagesByDate(messages) {
   const groups = new Map();
 
   messages.forEach((message) => {
-    const dateKey = message.createdAt.toDateString();
+    // Convert createdAt to Date object if it's a string
+    const date = typeof message.createdAt === 'string' 
+      ? parseISO(message.createdAt.replace(' ', 'T')) // Convert "2026-04-14 12:28:58" to ISO format
+      : message.createdAt;
+    
+    // Now date is definitely a Date object
+    const dateKey = date.toDateString();
+    
     if (!groups.has(dateKey)) {
       groups.set(dateKey, []);
     }

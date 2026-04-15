@@ -8,6 +8,13 @@ const postService = {
     const response = await api.get('/posts');
     return response.data;
   },
+  /**
+   * Fetch all newsfeed
+   */
+  getNewsfeed: async () => {
+    const response = await api.get('/newsfeed');
+    return response.data;
+  },
 
   /**
    * Fetch current user's posts
@@ -68,7 +75,7 @@ const postService = {
    * @param {string} postId 
    */
   getPostComments: async (postId) => {
-    const response = await api.get(`/posts/comments/${postId}`);
+    const response = await api.get(`/posts/${postId}/comments`);
     return response.data;
   },
 };

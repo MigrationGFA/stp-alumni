@@ -6,15 +6,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import networkService from "@/lib/services/networkService";
 
-export function InvitationsList() {
+export function InvitationsList({ invitations, isLoading }) {
   const [showAll, setShowAll] = useState(false);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["invitations"],
-    queryFn: networkService.getIncomingRequests,
-  });
-
-  const invitations = data?.data || [];
+  // const invitations = data?.data || [];
   const displayedInvitations = showAll ? invitations : invitations.slice(0, 5);
   const hasMoreInvitations = invitations.length > 5;
 
@@ -134,7 +129,7 @@ export function InvitationsList() {
   );
 }
 
-export function InvitationItem({ invitation,index,len }) {
+export function InvitationItem({ invitation, index, len }) {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
@@ -143,16 +138,16 @@ export function InvitationItem({ invitation,index,len }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
       queryClient.invalidateQueries({ queryKey: ["network"] });
-      toast.success("Connection request accepted")
+      toast.success("Connection request accepted");
     },
   });
 
-  const { mutate:ignore, isPending:isIgnoring } = useMutation({
+  const { mutate: ignore, isPending: isIgnoring } = useMutation({
     mutationFn: (data) =>
       networkService.ignoreConnection(invitation.connectionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
-      toast.info("Connection request ignored!")
+      toast.info("Connection request ignored!");
     },
   });
 
@@ -160,9 +155,7 @@ export function InvitationItem({ invitation,index,len }) {
     <div
       key={invitation.id}
       className={`flex items-center justify-between py-3 ${
-        index !== len- 1
-          ? "border-b border-border"
-          : ""
+        index !== len - 1 ? "border-b border-border" : ""
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">

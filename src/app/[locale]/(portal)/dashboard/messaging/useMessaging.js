@@ -61,6 +61,7 @@ function normalizeConversation(conv, currentUserId) {
     participants: conv.participants || [],
     isOpen: conv.isOpen,
     description: conv.description,
+    userId: conv.otherUser && conv.otherUser.userId
   };
 }
 
@@ -105,6 +106,8 @@ export function useMessaging() {
   const { data: rawMessagesData, isLoading: msgsLoading } = useMessages(selectedConversationId);
   const { data: invitations, isLoading: invLoading } = usePendingInvitations();
 
+  // console.log(rawConversations,"rawConversations")
+
   // ─── API Mutations ───────────────────────────────────────────
   const { mutate: sendMediaMutation } = useSendMedia();
   const { mutate: sendMessageMutation } = useSendMessage();
@@ -139,7 +142,7 @@ export function useMessaging() {
       result = result.filter(
         (conv) =>
           conv.name.toLowerCase().includes(query) ||
-          (conv.lastMessage && conv.lastMessage.toLowerCase().includes(query))
+          (conv.lastMessage && conv.lastMessage.content.toLowerCase().includes(query))
       );
     }
 
@@ -184,15 +187,30 @@ export function useMessaging() {
     ? allStoreMessages[selectedConversationId] || EMPTY_ARRAY
     : EMPTY_ARRAY;
 
-  const mergedMessages = useMemo(() => {
-    // Combine API messages with optimistic store messages (temp IDs)
-    const apiIds = new Set(currentMessages.map((m) => m.id));
-    const optimistic = storeMessages.filter((m) => !apiIds.has(m.id));
-    return [...currentMessages, ...optimistic].sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+const mergedMessages = useMemo(() => {
+  // Create a map of API messages by ID
+  const apiMessagesMap = new Map(currentMessages.map(m => [m.id, m]));
+  
+  // Also create a map to match optimistic messages that might have been persisted
+  // (if your optimistic messages have a temp ID pattern like 'temp-123')
+  const processedMessages = [...currentMessages];
+  
+  storeMessages.forEach(optimisticMsg => {
+    // Check if this optimistic message is already in API (by content or temp ID mapping)
+    const isInApi = Array.from(apiMessagesMap.values()).some(apiMsg => 
+      apiMsg.content === optimisticMsg.content && 
+      Math.abs(new Date(apiMsg.createdAt) - new Date(optimisticMsg.createdAt)) < 1000 // Within 1 second
     );
-  }, [currentMessages, storeMessages]);
-
+    
+    if (!isInApi) {
+      processedMessages.push(optimisticMsg);
+    }
+  });
+  
+  return processedMessages.sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+}, [currentMessages, storeMessages]);
   // ─── Actions ─────────────────────────────────────────────────
 
   const selectConversation = useCallback((conversationId) => {

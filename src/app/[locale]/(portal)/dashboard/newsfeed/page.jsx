@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useQuery } from "@tanstack/react-query";
+import postService from "@/lib/services/postService";
 
 const posts = [
   {
@@ -35,63 +37,7 @@ const posts = [
     comments: 12,
     category: "popular",
   },
-  {
-    id: 2,
-    title: "Unlocking the Mysteries of Space: Humanity's Final Frontier",
-    excerpt:
-      "Space exploration continues to push the boundaries of human knowledge and technological innovation.",
-    content:
-      "From the depths of black holes to the search for extraterrestrial life, scientists are making groundbreaking discoveries that reshape our understanding of the cosmos.",
-    author: {
-      name: "Space Monger",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
-    },
-    timestamp: "30 minutes ago",
-    image:
-      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=400&fit=crop",
-    likes: 128,
-    comments: 34,
-    category: "technology",
-  },
-  {
-    id: 3,
-    title: "The Rise of AI in Healthcare: Transforming Patient Care",
-    excerpt:
-      "Artificial intelligence is revolutionizing how we diagnose and treat diseases.",
-    content:
-      "Machine learning algorithms can now detect cancer earlier than ever before, while AI-powered robots assist in complex surgeries with unprecedented precision.",
-    author: {
-      name: "Health Tech Daily",
-      avatar:
-        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop",
-    },
-    timestamp: "2 hours ago",
-    image:
-      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&h=400&fit=crop",
-    likes: 89,
-    comments: 23,
-    category: "technology",
-  },
-  {
-    id: 4,
-    title: "Sustainable Investing: The Future of Finance",
-    excerpt:
-      "ESG investing is no longer a niche strategy but a mainstream approach.",
-    content:
-      "Investors are increasingly recognizing that companies with strong environmental, social, and governance practices often outperform their peers over the long term.",
-    author: {
-      name: "Green Finance Hub",
-      avatar:
-        "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&h=100&fit=crop",
-    },
-    timestamp: "4 hours ago",
-    image:
-      "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=800&h=400&fit=crop",
-    likes: 56,
-    comments: 18,
-    category: "sector",
-  },
+
 ];
 
 const hotTopics = [
@@ -129,11 +75,36 @@ const filterTabs = [
   { key: "interest", label: "Interest" },
 ];
 
+
+// "postId": "post_88b0124a86167c14",
+//             "title": "Test",
+//             "body": "Testing",
+//             "category": "Industry Update",
+//             "imageUrls": [],
+//             "createdAt": "2026-04-09 20:41:37",
+//             "updatedAt": "2026-04-09 20:41:37",
+//             "authorId": "a689f63c-4948-4521-916d-23408d8b3c25",
+//             "firstName": "STP",
+//             "lastName": "Admin",
+//             "profileImagePath": null,
+//             "authorTitle": null,
+//             "companyName": null,
+//             "likeCount": 0,
+//             "commentCount": 0,
+//             "hasUserLiked": false,
+//             "isSaved": false
 export default function NewsFeed() {
   const [activeTab, setActiveTab] = useState("popular");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredPosts = posts.filter((post) => {
+  const {data:posts,isLoading}= useQuery({
+    queryKey: ["newsfeed"],
+    queryFn: postService.getNewsfeed
+  })
+
+  console.log(posts,"posts")
+
+  const filteredPosts = posts?.data.filter((post) => {
     const matchesTab = activeTab === "popular" || post.category === activeTab;
     const matchesSearch =
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -188,7 +159,7 @@ return (
 
           {/* Posts Grid - Responsive layout */}
           <div className="space-y-4 sm:space-y-6">
-            {filteredPosts.map((post) => (
+            {filteredPosts?.map((post) => (
               <article
                 key={post.id}
                 className="bg-[#1B2F5B]/5 rounded-xl border border-border overflow-hidden"
@@ -275,7 +246,7 @@ return (
         </div>
 
         {/* Sidebar - Hidden on mobile, shown on tablet and desktop */}
-        <div className="hidden md:block md:w-64 lg:w-80 space-y-4 md:space-y-6">
+        <div className="hidden xl:block md:w-64 lg:w-80 space-y-4 md:space-y-6">
           {/* Hot Topics */}
           <div className="bg-card rounded-xl border border-border p-4 md:p-5 space-y-3 md:space-y-4 sticky top-4">
             <h3 className="font-semibold text-sm md:text-base">Hot topics right now</h3>
