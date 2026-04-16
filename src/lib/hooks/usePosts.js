@@ -142,7 +142,7 @@ export const useCreatePost = () => {
 /**
  * Hook to like/unlike a post
  */
-export const useLikePost = () => {
+export const useLikePost = (userId) => {
   const queryClient = useQueryClient();
   const toggleLike = usePostStore((state) => state.toggleLike);
 
@@ -157,7 +157,7 @@ export const useLikePost = () => {
 
       // Optimistically update
       // Note: We need userId from auth store
-      toggleLike(postId, 'current-user-id'); // TODO: Get actual user ID
+      toggleLike(postId, userId); // TODO: Get actual user ID
 
       return { previousPosts };
     },

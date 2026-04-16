@@ -419,9 +419,9 @@ export default function PostCard({
         )}
 
         {/* ── Engagement Metrics ── */}
-        {(post.likes?.count > 0 || post.comments?.count > 0) && (
+        {(post.likeCount > 0 || post.commentCount > 0) && (
           <div className="flex items-center justify-between pt-4 mb-4">
-            {post.likes?.count > 0 && (
+            {post.likeCount > 0 && (
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
                   <div className="h-6 w-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-xs">
@@ -435,17 +435,17 @@ export default function PostCard({
                   </div>
                 </div>
                 <span className="text-sm text-gray-600">
-                  {post.likes.count} {post.likes.count === 1 ? "like" : "likes"}
+                  {post.likeCount} {post.likeCount === 1 ? "like" : "likes"}
                 </span>
               </div>
             )}
-            {post.comments?.count > 0 && (
+            {post.commentCount > 0 && (
               <button
                 onClick={handleComment}
                 className="text-sm text-gray-600 hover:underline "
               >
-                {post.comments.count}{" "}
-                {post.comments.count === 1 ? "comment" : "comments"}
+                {post.commentCount}{" "}
+                {post.commentCountt === 1 ? "comment" : "comments"}
               </button>
             )}
           </div>
@@ -456,14 +456,14 @@ export default function PostCard({
           <button
             onClick={handleLike}
             className={`flex-1 flex items-center justify-center gap-2 transition-colors ${
-              post.likes?.isLiked
+              post.hasUserLiked
                 ? "text-[#ED202D]"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
             <Heart
               className={`h-5 w-5 ${
-                post.likes?.isLiked ? "fill-[#ED202D]" : ""
+                post.hasUserLiked ? "fill-[#ED202D]" : ""
               }`}
               strokeWidth={2}
             />

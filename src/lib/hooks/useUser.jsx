@@ -24,10 +24,13 @@ export const AuthProvider = ({ children }) => {
   const { data: profileData, isLoading: isProfileLoading } = useQuery({
     queryKey: ["userProfile"],
     queryFn: userService.getProfile,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    retry: 3,
+    // refetchOnWindowFocus:true,
     onSuccess: (res) => {
       const profile = res?.data || res;
+
+      console.log(profile,"proile")
       if (profile) {
         updateUser({
           ...user,
@@ -39,6 +42,10 @@ export const AuthProvider = ({ children }) => {
         });
       }
     },
+    onError: (err)=>{
+console.error(err)
+    }
+    
   });
 
 

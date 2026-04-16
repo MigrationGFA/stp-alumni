@@ -18,6 +18,9 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import networkService from "@/lib/services/networkService";
 import { toast } from "sonner";
+import { useMessaging } from "./messaging/useMessaging";
+import { format } from "date-fns";
+import { Link } from "@/i18n/routing";
 
 function SidebarWidgets({ t, height }) {
   // Fetch your network data
@@ -31,7 +34,10 @@ function SidebarWidgets({ t, height }) {
     queryKey: ["connections"],
     queryFn: () => networkService.getIncomingRequests(),
   });
-  // console.log("networkData",networkData)
+
+  const { conversations } = useMessaging();
+
+  // console.log("conversations",conversations)
 
   // Parse mapped network payload safely
   const networkContacts = networkData?.data || networkData || {};
@@ -45,11 +51,14 @@ function SidebarWidgets({ t, height }) {
       : [];
 
   const invitations = rawConnections.slice(0, 5);
+  const messages = conversations
+    .filter((ele) => ele.type !== "PUBLIC_GROUP")
+    .slice(0, 5);
 
-  console.log(networkData, "networkData");
+  console.log(networkContacts, "networkContacts");
   return (
     <aside
-      className="sticky left-0  w-full overflow-y-auto"
+      className="hidden lg:block sticky left-0  w-full overflow-y-auto"
       style={{
         top: `${height + 10}px`,
         height: `calc(100dvh - ${height}px)`,
@@ -78,7 +87,7 @@ function SidebarWidgets({ t, height }) {
                   .filter((ele) => ele.connectionStatus === "ACCEPTED")
                   .map((contact, index) => (
                     <div
-                      key={contact.id || index}
+                      key={contact.userId || index}
                       className="bg-white rounded-lg p-4 flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -95,10 +104,18 @@ function SidebarWidgets({ t, height }) {
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-xs text-[#233389] truncate">
-                            {contact.firstName || "Anonymous"}{" "}
-                            {contact.lastName}
-                          </p>
+                          <Link
+                            href={`/dashboard/profile/${contact.userId}`}
+                            className="hover:underline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
+                            <p className="font-medium text-xs text-[#233389] truncate">
+                              {contact.firstName || "Anonymous"}{" "}
+                              {contact.lastName}
+                            </p>
+                          </Link>
                           <p className="text-xs text-gray-600 truncate">
                             {contact.role || contact.email || "Member"}
                           </p>
@@ -106,9 +123,12 @@ function SidebarWidgets({ t, height }) {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {contact.connectionStatus === "ACCEPTED" && (
-                          <button className="p-1 hover:bg-gray-100 rounded">
+                          <Link
+                            href={`/dashboard/messaging`}
+                            className="p-1 hover:bg-gray-100 rounded"
+                          >
                             <MessageCircle className="h-4 w-4 text-[#233389]" />
-                          </button>
+                          </Link>
                         )}
                         {contact.connectionStatus === null && (
                           <button className="p-1 hover:bg-gray-100 rounded">
@@ -161,14 +181,14 @@ function SidebarWidgets({ t, height }) {
           {/* Messages */}
           <div className="bg-white rounded-lg p-4 lg:p-6">
             <h3 className="font-semibold text-[#233389] mb-4">
-              {t("messages")} (5)
+              {t("messages")} ({messages.length})
             </h3>
             <div className="space-y-3">
-              {messages.map((message, index) => (
+              {messages?.map((message, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
                     <Image
-                      src={message.image}
+                      src={message.avatar || "/assets/Your Newtork Image.jpg"}
                       alt={message.name}
                       width={40}
                       height={40}
@@ -181,11 +201,11 @@ function SidebarWidgets({ t, height }) {
                         {message.name}
                       </p>
                       <span className="text-xs text-gray-500">
-                        {message.date}
+                        {format(message.lastMessageAt, "MMMM d")}
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 truncate">
-                      {t(message.messageKey)}
+                      {message?.lastMessage.content || ""}
                     </p>
                   </div>
                 </div>

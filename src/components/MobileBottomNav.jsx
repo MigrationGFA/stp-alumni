@@ -1,12 +1,12 @@
 "use client"
-import { Home, Users, MessageSquare, Newspaper, Calendar } from "lucide-react";
+import { Home, Users, ShoppingBag, Newspaper, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, usePathname } from "@/i18n/routing";
 
 const navItems = [
   { icon: Home, label: "Home", href: "/dashboard" },
   { icon: Users, label: "Network", href: "/dashboard/network" },
-  { icon: MessageSquare, label: "Messages", href: "/dashboard/messaging" },
+  { icon: ShoppingBag, label: "Market Place", href: "/dashboard/marketplace" },
   { icon: Newspaper, label: "Feed", href: "/dashboard/newsfeed" },
   { icon: Calendar, label: "Events", href: "/dashboard/events" },
 ];

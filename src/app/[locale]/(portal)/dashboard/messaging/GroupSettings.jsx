@@ -181,7 +181,7 @@ function JoinRequestsList({ groupId }) {
         <div className="space-y-2">
           {requests.map((req) => {
             const reqId = req.requestId || req.id;
-            const name = req.userName || req.user?.name || "User";
+            const name = `${req.firstName} ${req.lastName}` || "User";
             const avatar = req.userAvatar || req.user?.profileImagePath || null;
 
             return (
@@ -205,7 +205,7 @@ function JoinRequestsList({ groupId }) {
                   </Button>
                   <Button
                     size="icon"
-                    variant="outline"
+                    variant="destructive"
                     className="h-8 w-8"
                     onClick={() => handleRespond(reqId, "reject")}
                     disabled={isPending}

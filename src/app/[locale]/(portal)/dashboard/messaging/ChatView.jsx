@@ -60,8 +60,8 @@ export function ChatView({
   const imageInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const router = useRouter()
-  
+  const router = useRouter();
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
@@ -132,16 +132,16 @@ export function ChatView({
   const getInitials = (name) => {
     if (!name) return "?";
     return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
-  
+
   // Group messages by date
   const messageGroups = groupMessagesByDate(messages);
-  console.log(conversation,"conversation")
+  // console.log(messageGroups,"messageGroups")
 
   return (
     <div className="flex flex-col justify-between bg-background overflow-hidden h-full">
@@ -173,7 +173,7 @@ export function ChatView({
                   Available
                 </>
               ) : conversation.type === "PUBLIC_GROUP" ? (
-                `${conversation.participants?.length || 0} members`
+                `${conversation.participants || 0} members`
               ) : (
                 "Offline"
               )}
@@ -188,12 +188,22 @@ export function ChatView({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={()=>router.push(`/dashboard/profile/${conversation.userId}`)}>View profile</DropdownMenuItem>
+            {conversation.type !== "PUBLIC_GROUP" && (
+              <>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/dashboard/profile/${conversation.userId}`)
+                }
+                >
+                View profile
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+                </>
+            )}
             {/* <DropdownMenuItem>Search in conversation</DropdownMenuItem> */}
             {/* <DropdownMenuItem>Mute notifications</DropdownMenuItem> */}
             {conversation.type === "PUBLIC_GROUP" && onOpenGroupSettings && (
               <>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onOpenGroupSettings}>
                   <Settings className="h-4 w-4 mr-2" />
                   Group Settings

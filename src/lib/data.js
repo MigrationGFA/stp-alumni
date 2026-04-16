@@ -95,7 +95,7 @@ export const VISIBILITY_OPTIONS = [
     description: "Only programme admins can see your contact details.",
   },
   {
-    value: "CONNECTION_ONLY",
+    value: "CONNECTIONS_ONLY",
     label: "Connection Only",
     description: "Only your connections can see your contact details.",
   },

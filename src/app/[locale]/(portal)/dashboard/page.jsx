@@ -13,6 +13,7 @@ import PostCard from "@/components/posts/PostCard";
 import PostSkeleton from "@/components/posts/PostSkeleton";
 import { toast } from "sonner";
 import SidebarWidgets from "./SidebarWidgets";
+import { useAuth } from "@/lib/hooks/useUser";
 
 /**
  * Dashboard page - main landing page after login
@@ -25,9 +26,11 @@ export default function DashboardPage() {
     userSize: { height },
   } = useNavbar();
 
+  const {data} = useAuth()
+
   // Fetch posts using React Query
   const { data: posts, isLoading, error, refetch } = usePostsFeed();
-  const { mutate: likePost } = useLikePost();
+  const { mutate: likePost } = useLikePost(data?.userId || "");
 
   // Handlers
   const handleLike = (postId) => {
@@ -55,7 +58,7 @@ export default function DashboardPage() {
     toast.success("Link copied to clipboard!");
   };
 
-  console.log(posts, "jgoegnorg");
+  // console.log(posts, "posts");
 
   return (
     <div className="p-3 sm:p-0">

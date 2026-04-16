@@ -29,8 +29,6 @@ export default function EventUi() {
     queryFn: eventService.getEvents,
   });
 
-  
-  
   // Safely extract the events array from various possible backend structures
   let allEvents = [];
   if (Array.isArray(eventsResponse)) {
@@ -186,7 +184,7 @@ function EventListContent({
         ) : recommendedData.list.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {recommendedData.list.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard key={event.eventId} event={event} />
             ))}
           </div>
         ) : (
