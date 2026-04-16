@@ -168,11 +168,11 @@ function PersonalForm({
         control={personalForm.control}
         render={({ field }) => (
           <div>
-            <Label htmlFor="jobTitle" className="text-gray-700 mb-2 block">
+            <Label htmlFor="title" className="text-gray-700 mb-2 block">
               Job Title
             </Label>
             <Input
-              id="jobTitle"
+              id="title"
               type="text"
               placeholder="e.g. Co-founder & CEO"
               {...field}

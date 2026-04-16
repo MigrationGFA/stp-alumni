@@ -504,18 +504,19 @@ export default function ResourcesPage() {
                 {/* Author, Date, and Download Button */}
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
+                    
                     <Avatar className="h-8 w-8">
                       <AvatarImage
-                        src="/assets/Profile Image.jpg"
+                        src=""
                         alt={resource.author || "User"}
                       />
                       <AvatarFallback>
-                        {(resource.author || "U").charAt(0)}
+                        {(`${resource.authorFirstName} ${resource.authorLastName}`|| "U").charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="text-xs font-medium text-gray-900">
-                        {resource.author || "User"}
+                        {`${resource.authorFirstName} ${resource.authorLastName}` || "User"}
                       </p>
                       <p className="text-xs text-gray-500">
                         {resource.createdAt

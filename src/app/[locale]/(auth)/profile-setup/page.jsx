@@ -139,14 +139,23 @@ export default function ProfileSetupPage() {
    // Personal form
         const personalForm = useForm({
           defaultValues: {
-            jobTitle: '',
-            cohort: '',
-            location: '',
-            sectors: [],
-            skills: [],
-            linkedInProfile: '',
-            goals: '',
+            title: 'CEO',
+            cohort: 'STP2026',
+            location: 'Ghana',
+            sectors: ["test"],
+            skills: ["test"],
+            linkedInProfile: 'https://downloadwella.com/bjbhoukaz72a/The.Originals.S01E19.(NKIRI.COM).mkv.html',
+            goals: 'hala madrid',
           },
+          // defaultValues: {
+          //   jobTitle: '',
+          //   cohort: '',
+          //   location: '',
+          //   sectors: [],
+          //   skills: [],
+          //   linkedInProfile: '',
+          //   goals: '',
+          // },
         });
   
 

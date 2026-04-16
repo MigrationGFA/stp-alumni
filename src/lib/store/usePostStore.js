@@ -37,16 +37,11 @@ const usePostStore = create((set) => ({
     set((state) => ({
       posts: state.posts.map((post) => {
         if (post.id === postId) {
-          const isLiked = post.likes?.users?.some((user) => user.id === userId);
+          const isLiked =post.hasUserLiked;
           return {
             ...post,
-            likes: {
-              count: isLiked ? post.likes.count - 1 : post.likes.count + 1,
-              isLiked: !isLiked,
-              users: isLiked
-                ? post.likes.users.filter((user) => user.id !== userId)
-                : [...(post.likes.users || []), { id: userId }],
-            },
+            hasUserLiked:!isLiked,
+            likeCount:isLiked ? post.likeCount +1 : post.likeCount-1
           };
         }
         return post;

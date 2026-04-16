@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useRouter } from "@/i18n/routing";
 
 const businessInfoSchema = z.object({
   companyName: z.string().optional(),
@@ -43,6 +44,8 @@ const businessInfoSchema = z.object({
 });
 
 function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
+
+  const router = useRouter()
   const [businessModelOpen, setBusinessModelOpen] = useState(false);
   const [companyStageOpen, setCompanyStageOpen] = useState(false);
   const [hasWebsite, setHasWebsite] = useState(false);
@@ -51,15 +54,25 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
   const businessForm = useForm({
     resolver: zodResolver(businessInfoSchema),
     defaultValues: {
-      companyName: "",
-      businessModel: "",
-      companyStage: "",
-      elevatorPitch: "",
-      offers: [],
-      needs: [],
+      companyName: "GFA",
+      businessModel: "TEST",
+      companyStage: "TEST",
+      elevatorPitch: "TEST",
+      offers: ["TEST"],
+      needs: ["TEST"],
       visibility: "EVERYONE",
       companyWebsite: '',
     },
+    // defaultValues: {
+    //   companyName: "",
+    //   businessModel: "",
+    //   companyStage: "",
+    //   elevatorPitch: "",
+    //   offers: [],
+    //   needs: [],
+    //   visibility: "EVERYONE",
+    //   companyWebsite: '',
+    // },
   });
 
   const setupMutation = useMutation({
@@ -137,8 +150,8 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
       linkedInProfile: personalData.linkedInProfile,
       goals: personalData.goals,
       cohort: personalData.cohort,
-      profileImage: uploadedImageUrl,
-      title: personalData.jobTitle,
+      profile_image_path: uploadedImageUrl,
+      title: personalData.title,
 
       // Business info
       companyName: businessData.companyName,

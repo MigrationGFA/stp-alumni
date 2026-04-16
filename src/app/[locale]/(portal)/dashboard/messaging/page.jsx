@@ -42,7 +42,7 @@ const Messaging = () => {
      selectConversation(conversationId)
     },[conversationId])
     
-    console.log(currentMessages,"currentMessages")
+    // console.log(currentMessages,"currentMessages")
   const [showGroupDiscovery, setShowGroupDiscovery] = useState(false);
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
   const [newMessageOpen, setNewMessageOpen] = useState(false);

@@ -58,7 +58,7 @@ function normalizeConversation(conv, currentUserId) {
     unread: !!conv.unreadCount || conv.unread || false,
     unreadCount: parseInt(conv.unreadCount, 10) || 0,
     online: conv.online || false,
-    participants: conv.participants || [],
+    participants: conv.memberCount,
     isOpen: conv.isOpen,
     description: conv.description,
     userId: conv.otherUser && conv.otherUser.userId

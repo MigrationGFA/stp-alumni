@@ -97,9 +97,9 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
       <div className="flex items-center justify-end">
         <div className="flex items-center gap-4">
           {/* Message Button */}
-          <button className="hidden md:block p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm">
-            <MessageSquareMore className="h-6 w-6 text-[#020618]" />
-          </button>
+          <Link href={"/dashboard/messaging"} className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm" >
+            <MessageSquareMore className="h-4 w-4 text-[#020618]" />
+          </Link>
 
           {/* Notification Button */}
           {/* <button className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm">
