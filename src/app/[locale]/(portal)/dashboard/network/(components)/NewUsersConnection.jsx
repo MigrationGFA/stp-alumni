@@ -1,7 +1,13 @@
 import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { EllipsisVertical, MessageCircle, UserMinus, UserPlus, Clock } from "lucide-react";
+import {
+  EllipsisVertical,
+  MessageCircle,
+  UserMinus,
+  UserPlus,
+  Clock,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,28 +27,21 @@ const getButtonConfig = (status, isPending, isConnecting, isInviting) => {
       text: isConnecting ? "Connecting..." : "Connect",
       icon: <UserPlus className="h-4 w-4 mr-1 sm:hidden block" />,
       disabled: isConnecting,
-      action: "CONNECT"
+      action: "CONNECT",
     },
     PENDING: {
       text: "Pending",
       icon: <Clock className="h-4 w-4 mr-1 sm:hidden block" />,
       disabled: true,
-      action: "PENDING"
+      action: "PENDING",
     },
-    CONNECTED: {
-      text: isInviting ? "Sending..." : "Message",
-      icon: <MessageCircle className="h-4 w-4 mr-1 sm:hidden block" />,
-      disabled: isInviting,
-      action: "MESSAGE"
-    }
   };
 
-  if (status === "ACCEPTED") return configs.CONNECTED;
   if (status === "PENDING") return configs.PENDING;
   return configs.NOT_CONNECTED;
 };
 
-function ConnectionUser({ connection, index, connectionTotal }) {
+function NewUsersConnection({ connection, index, connectionTotal }) {
   const queryClient = useQueryClient();
 
   // Extract and format connection data
@@ -54,14 +53,15 @@ function ConnectionUser({ connection, index, connectionTotal }) {
     connectionStatus,
     isConnected,
     isPending,
-    isNotConnected
+    isNotConnected,
   } = useMemo(() => {
     const id = connection.connectionId || connection.userId;
-    const fullName = connection.name ||
+    const fullName =
+      connection.name ||
       `${connection.firstName || ""} ${connection.lastName || ""}`.trim();
     const avatar = connection.profileImageUrl || connection.avatar;
     const connectionStatus = connection.connectionStatus;
-    
+
     // Format role/sector
     let formattedRole = "Professional";
     try {
@@ -79,9 +79,8 @@ function ConnectionUser({ connection, index, connectionTotal }) {
       avatar,
       formattedRole,
       connectionStatus,
-      isConnected: connectionStatus === "ACCEPTED",
       isPending: connectionStatus === "PENDING",
-      isNotConnected: connectionStatus === null
+      isNotConnected: connectionStatus === null,
     };
   }, [connection]);
 
@@ -94,12 +93,8 @@ function ConnectionUser({ connection, index, connectionTotal }) {
     },
     onError: (error) => {
       toast.error(error.message || "Failed to send connection request");
-    }
+    },
   });
-
-  const { mutate: sendInvitation, isPending: isInviting } = useSendInvitation();
-
- 
 
   // Action handlers
   const handleConnect = () => {
@@ -107,27 +102,6 @@ function ConnectionUser({ connection, index, connectionTotal }) {
       connectToUser({ userId: connection.userId });
     }
   };
-
-  const handleSendMessage = () => {
-    sendInvitation(
-      {
-        recipientId: connection.userId,
-        shortMessage: "Hi, I'd like to connect with you!",
-      },
-      {
-        onSuccess: (data) => {
-          // toast.success("Message invitation sent!");
-           console.log(data,"data")
-          // Optional: navigate to messages
-          // router.push(`/dashboard/messages/${connection.userId}`);
-        },
-        onError: (error) => {
-          toast.error(error.message || "Failed to send invitation");
-        }
-      }
-    );
-  };
-
   const handlePendingClick = () => {
     toast.info("Your connection request is pending approval.");
   };
@@ -147,7 +121,6 @@ function ConnectionUser({ connection, index, connectionTotal }) {
     connectionStatus,
     isPending,
     isConnecting,
-    isInviting
   );
 
   // Button click handler mapper
@@ -157,8 +130,6 @@ function ConnectionUser({ connection, index, connectionTotal }) {
         return handleConnect;
       case "PENDING":
         return handlePendingClick;
-      case "MESSAGE":
-        return handleSendMessage;
       default:
         return () => {};
     }
@@ -177,7 +148,7 @@ function ConnectionUser({ connection, index, connectionTotal }) {
             {fullName.charAt(0) || "U"}
           </AvatarFallback>
         </Avatar>
-        
+
         <div className="min-w-0">
           <Link
             href={`/dashboard/profile/${connection.userId}`}
@@ -201,14 +172,10 @@ function ConnectionUser({ connection, index, connectionTotal }) {
       <div className="flex items-center gap-2 shrink-0 ml-2">
         {/* Main Action Button */}
         <Button
-          variant={isConnected ? "outline" : "default"}
+          variant={"default"}
           size="sm"
           disabled={buttonConfig.disabled}
-          className={
-            isConnected
-              ? "border-0 sm:border-stp-blue-light rounded-2xl text-stp-blue-light hover:bg-accent hover:text-accent-foreground"
-              : "rounded-2xl"
-          }
+          className={"rounded-2xl"}
           onClick={getButtonClickHandler()}
         >
           {buttonConfig.icon}
@@ -216,7 +183,7 @@ function ConnectionUser({ connection, index, connectionTotal }) {
         </Button>
 
         {/* Dropdown Menu */}
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <EllipsisVertical className="h-4 w-4" />
@@ -227,7 +194,7 @@ function ConnectionUser({ connection, index, connectionTotal }) {
               View Profile
             </DropdownMenuItem>
             {isConnected && (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="text-destructive"
                 onClick={handleRemoveConnection}
               >
@@ -236,10 +203,10 @@ function ConnectionUser({ connection, index, connectionTotal }) {
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
       </div>
     </div>
   );
 }
 
-export default React.memo(ConnectionUser);
+export default React.memo(NewUsersConnection);

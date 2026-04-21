@@ -134,50 +134,50 @@ export default function ProfileSetupPage() {
 
   // Personal form
   const personalForm = useForm({
-    defaultValues: {
-      title: "CEO",
-      cohort: "STP2026",
-      location: "Ghana",
-      sectors: ["test"],
-      skills: ["test"],
-      linkedInProfile:
-        "https://downloadwella.com/bjbhoukaz72a/The.Originals.S01E19.(NKIRI.COM).mkv.html",
-      goals: "hala madrid",
-    },
     // defaultValues: {
-    //   jobTitle: '',
-    //   cohort: '',
-    //   location: '',
-    //   sectors: [],
-    //   skills: [],
-    //   linkedInProfile: '',
-    //   goals: '',
+    //   title: "CEO",
+    //   cohort: "STP2026",
+    //   location: "Ghana",
+    //   sectors: ["test"],
+    //   skills: ["test"],
+    //   linkedInProfile:
+    //     "https://downloadwella.com/bjbhoukaz72a/The.Originals.S01E19.(NKIRI.COM).mkv.html",
+    //   goals: "hala madrid",
     // },
+    defaultValues: {
+      jobTitle: '',
+      cohort: '',
+      location: '',
+      sectors: [],
+      skills: [],
+      linkedInProfile: '',
+      goals: '',
+    },
   });
 
     // Business form
     const businessForm = useForm({
       resolver: zodResolver(businessInfoSchema),
-      defaultValues: {
-        companyName: "GFA",
-        businessModel: "TEST",
-        companyStage: "TEST",
-        elevatorPitch: "TEST",
-        offers: ["TEST"],
-        needs: ["TEST"],
-        visibility: "EVERYONE",
-        companyWebsite: "",
-      },
       // defaultValues: {
-      //   companyName: "",
-      //   businessModel: "",
-      //   companyStage: "",
-      //   elevatorPitch: "",
-      //   offers: [],
-      //   needs: [],
+      //   companyName: "GFA",
+      //   businessModel: "TEST",
+      //   companyStage: "TEST",
+      //   elevatorPitch: "TEST",
+      //   offers: ["TEST"],
+      //   needs: ["TEST"],
       //   visibility: "EVERYONE",
-      //   companyWebsite: '',
+      //   companyWebsite: "",
       // },
+      defaultValues: {
+        companyName: "",
+        businessModel: "",
+        companyStage: "",
+        elevatorPitch: "",
+        offers: [],
+        needs: [],
+        visibility: "EVERYONE",
+        companyWebsite: '',
+      },
     });
 
   useEffect(() => {

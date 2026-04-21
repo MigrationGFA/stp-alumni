@@ -28,9 +28,9 @@ export function PeopleConnection() {
     );
   }
 
-  if (!sameSectorUsers || sameSectorUsers.length === 0) {
-    return null; // Don't show the block at all if empty
-  }
+  // if (!sameSectorUsers || sameSectorUsers.length === 0) {
+  //   return null; // Don't show the block at all if empty
+  // }
 
   return (
     <Card>

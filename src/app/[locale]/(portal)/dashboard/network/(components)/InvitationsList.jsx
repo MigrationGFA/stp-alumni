@@ -6,11 +6,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import networkService from "@/lib/services/networkService";
 
-export function InvitationsList({ invitations, isLoading }) {
+export function InvitationsList({ invitations=[], isLoading }) {
   const [showAll, setShowAll] = useState(false);
 
   // const invitations = data?.data || [];
-  const displayedInvitations = showAll ? invitations : invitations.slice(0, 5);
+  const displayedInvitations = showAll ? invitations : invitations?.slice(0, 5);
   const hasMoreInvitations = invitations.length > 5;
 
   console.log("Invitations data:", invitations);
