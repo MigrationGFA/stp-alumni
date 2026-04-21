@@ -55,7 +55,7 @@ function SidebarWidgets({ t, height }) {
     .filter((ele) => ele.type !== "PUBLIC_GROUP")
     .slice(0, 5);
 
-  console.log(networkContacts, "networkContacts");
+  console.log(messages, "messages");
   return (
     <aside
       className="hidden lg:block sticky left-0  w-full overflow-y-auto"
@@ -212,7 +212,9 @@ function SidebarWidgets({ t, height }) {
               ))}
             </div>
             <button className="w-full mt-4 text-center text-sm py-2 border border-[#233389] text-[#233389] hover:bg-[#233389] hover:text-white rounded-2xl">
+              <Link  href="/dashboard/messaging" >
               {t("seeMore")}
+              </Link>
             </button>
           </div>
         </div>

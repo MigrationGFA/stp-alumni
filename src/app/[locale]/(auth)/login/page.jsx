@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useRouter } from '@/i18n/routing';
-import { useMutation } from '@tanstack/react-query';
-import authService from '@/lib/services/authService';
-import useAuthStore from '@/lib/store/useAuthStore';
-import { setRegisteredCookie } from '@/lib/auth-cookie';
-import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useRouter } from "@/i18n/routing";
+import { useMutation } from "@tanstack/react-query";
+import authService from "@/lib/services/authService";
+import useAuthStore from "@/lib/store/useAuthStore";
+import { setRegisteredCookie } from "@/lib/auth-cookie";
+import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
-  const t = useTranslations('Login');
+  const t = useTranslations("Login");
   const router = useRouter();
 
-  const [emailAddress, setEmailAddress] = useState('');
-  const [password, setPassword] = useState('');
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const setLoginSession = useAuthStore((state) => state.login);
 
@@ -41,27 +41,25 @@ export default function LoginPage() {
 
       setLoginSession(user, token);
       setRegisteredCookie();
-      toast.success(t('loginSuccess'));
+      toast.success(t("loginSuccess"));
 
       // Route based on onboarding state
       if (!user.isOnboarded) {
-        router.push('/profile-setup');
+        router.push("/profile-setup");
       } else {
-        router.push('/dashboard');
+        router.push("/dashboard");
       }
     },
     onError: (error) => {
-      console.error('Login error:', error);
-      toast.error(
-        error.response?.data?.message || t('loginError')
-      );
+      console.error("Login error:", error);
+      toast.error(error.response?.data?.message || t("loginError"));
     },
   });
 
   const handleLogin = (e) => {
     e.preventDefault();
     if (!emailAddress || !password) {
-      toast.error(t('fillAllFields'));
+      toast.error(t("fillAllFields"));
       return;
     }
     loginMutation.mutate({ emailAddress, password });
@@ -86,51 +84,53 @@ export default function LoginPage() {
       {/* Right side - Login form */}
       <div className="flex-1 flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-6">
         <div className="w-full max-w-md">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
-          <p className="text-gray-600 mb-8">{t('subtitle')}</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {t("title")}
+          </h1>
+          <p className="text-gray-600 mb-8">{t("subtitle")}</p>
 
           {/* Email Input */}
           <div className="mb-4">
             <Label htmlFor="email" className="text-gray-700 mb-2 block">
-              {t('email')}
+              {t("email")}
             </Label>
             <Input
               id="email"
               type="email"
               value={emailAddress}
               onChange={(e) => setEmailAddress(e.target.value)}
-              placeholder={t('emailPlaceholder')}
+              placeholder={t("emailPlaceholder")}
               className="w-full"
             />
           </div>
 
           {/* Password Input */}
-<div className="mb-6">
-  <Label htmlFor="password" className="text-gray-700 mb-2 block">
-    {t('password')}
-  </Label>
-  <div className="relative">
-    <Input
-      id="password"
-      type={showPassword ? "text" : "password"}
-      value={password}
-      onChange={(e) => setPassword(e.target.value)}
-      placeholder={t('passwordPlaceholder')}
-      className="w-full pr-10"
-    />
-    <button
-      type="button"
-      onClick={() => setShowPassword(!showPassword)}
-      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-    >
-      {showPassword ? (
-        <EyeOff className="h-5 w-5" />
-      ) : (
-        <Eye className="h-5 w-5" />
-      )}
-    </button>
-  </div>
-</div>
+          <div className="mb-6">
+            <Label htmlFor="password" className="text-gray-700 mb-2 block">
+              {t("password")}
+            </Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("passwordPlaceholder")}
+                className="w-full pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
 
           {/* Login Button */}
           <Button
@@ -138,12 +138,10 @@ export default function LoginPage() {
             onClick={handleLogin}
             disabled={loginMutation.isPending}
           >
-            {loginMutation.isPending ? t('loggingIn') : t('loginButton')}
+            {loginMutation.isPending ? t("loggingIn") : t("loginButton")}
           </Button>
 
-          <p className="text-center text-sm text-gray-500">
-            {t('inviteOnly')}
-          </p>
+          <p className="text-center text-sm text-gray-500">{t("inviteOnly")}</p>
         </div>
       </div>
     </div>

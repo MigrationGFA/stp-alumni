@@ -4,20 +4,16 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Label } from "@/components/ui/label";
 
-import {
-  Check,
-  User,
-  Building2,
-
-} from "lucide-react";
+import { Check, User, Building2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "@/i18n/routing";
 import useAuthStore from "@/lib/store/useAuthStore";
 import { cn } from "@/lib/utils";
 import PersonalForm from "./PersonalForm";
 import { sidePanelContent } from "@/lib/data";
-import BusinessForm from "./BusinessForm";
+import BusinessForm, { businessInfoSchema } from "./BusinessForm";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 function StepIndicator({ currentStep }) {
   const steps = [
@@ -136,34 +132,59 @@ export default function ProfileSetupPage() {
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-   // Personal form
-        const personalForm = useForm({
-          defaultValues: {
-            title: 'CEO',
-            cohort: 'STP2026',
-            location: 'Ghana',
-            sectors: ["test"],
-            skills: ["test"],
-            linkedInProfile: 'https://downloadwella.com/bjbhoukaz72a/The.Originals.S01E19.(NKIRI.COM).mkv.html',
-            goals: 'hala madrid',
-          },
-          // defaultValues: {
-          //   jobTitle: '',
-          //   cohort: '',
-          //   location: '',
-          //   sectors: [],
-          //   skills: [],
-          //   linkedInProfile: '',
-          //   goals: '',
-          // },
-        });
-  
+  // Personal form
+  const personalForm = useForm({
+    defaultValues: {
+      title: "CEO",
+      cohort: "STP2026",
+      location: "Ghana",
+      sectors: ["test"],
+      skills: ["test"],
+      linkedInProfile:
+        "https://downloadwella.com/bjbhoukaz72a/The.Originals.S01E19.(NKIRI.COM).mkv.html",
+      goals: "hala madrid",
+    },
+    // defaultValues: {
+    //   jobTitle: '',
+    //   cohort: '',
+    //   location: '',
+    //   sectors: [],
+    //   skills: [],
+    //   linkedInProfile: '',
+    //   goals: '',
+    // },
+  });
+
+    // Business form
+    const businessForm = useForm({
+      resolver: zodResolver(businessInfoSchema),
+      defaultValues: {
+        companyName: "GFA",
+        businessModel: "TEST",
+        companyStage: "TEST",
+        elevatorPitch: "TEST",
+        offers: ["TEST"],
+        needs: ["TEST"],
+        visibility: "EVERYONE",
+        companyWebsite: "",
+      },
+      // defaultValues: {
+      //   companyName: "",
+      //   businessModel: "",
+      //   companyStage: "",
+      //   elevatorPitch: "",
+      //   offers: [],
+      //   needs: [],
+      //   visibility: "EVERYONE",
+      //   companyWebsite: '',
+      // },
+    });
 
   useEffect(() => {
     if (isAuthenticated && isOnboarded) {
       console.log("Already onboarded");
 
-      router.push("/dashboard")
+      router.push("/dashboard");
     }
   }, [isAuthenticated, isOnboarded, router]);
 
@@ -244,11 +265,12 @@ export default function ProfileSetupPage() {
 
           {step === 2 && (
             <BusinessForm
-            t={t}
-            updateUser={updateUser}
-            imagePreview={imagePreview}
-            setStep={setStep}
-            personalForm={personalForm}
+              t={t}
+              updateUser={updateUser}
+              imagePreview={imagePreview}
+              setStep={setStep}
+              personalForm={personalForm}
+            businessForm={businessForm}
               profileImage={profileImage}
             />
           )}

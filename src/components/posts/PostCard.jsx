@@ -258,6 +258,20 @@ export default function PostCard({
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  const [isExpanded, setIsExpanded] = useState(false);
+const [showReadMore, setShowReadMore] = useState(false);
+const contentRef = useRef(null);
+
+useEffect(() => {
+  // Check if content exceeds limit (e.g., 200 characters or 30 words)
+  const content = post.body || post.content || "";
+  const wordCount = content.split(/\s+/).length;
+  const charCount = content.length;
+  
+  // Adjust threshold as needed (example: 200 chars OR 30 words)
+  setShowReadMore(charCount > 200 || wordCount > 30);
+}, [post.body, post.content]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -377,9 +391,24 @@ export default function PostCard({
         </div>
 
         {/* ── Post Body ── */}
-        <p className="text-gray-700 mb-4 whitespace-pre-wrap">
-          {post.body || post.content}
-        </p>
+        {/* ── Post Body with Read More ── */}
+        {(post.body || post.content) && (
+          <div className="mb-4">
+            <p className="text-gray-700 whitespace-pre-wrap">
+              {showReadMore && !isExpanded
+                ? (post.body || post.content).slice(0, 200) + "..."
+                : post.body || post.content}
+            </p>
+            {showReadMore && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-[#233389] hover:underline text-sm font-medium mt-1"
+              >
+                {isExpanded ? t("readLess") : t("readMore")}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* ── Post Images ── */}
         {Array.isArray(post.images) && post.images.length > 0 && (
@@ -462,9 +491,7 @@ export default function PostCard({
             }`}
           >
             <Heart
-              className={`h-5 w-5 ${
-                post.hasUserLiked ? "fill-[#ED202D]" : ""
-              }`}
+              className={`h-5 w-5 ${post.hasUserLiked ? "fill-[#ED202D]" : ""}`}
               strokeWidth={2}
             />
             <span className="text-sm font-medium cursor-pointer">

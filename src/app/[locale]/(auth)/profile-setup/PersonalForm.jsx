@@ -38,9 +38,13 @@ function PersonalForm({
 }) {
   const [countries, setCountries] = useState([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
+
   const [sectorOpen, setSectorOpen] = useState(false);
-  const [skillInput, setSkillInput] = useState("");
+  const [sectorInput, setSectorInput] = useState("");
+
   const [skillOpen, setSkillOpen] = useState(false);
+  const [skillInput, setSkillInput] = useState("");
+
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
   const filteredCountries = locationSearch
@@ -84,6 +88,11 @@ function PersonalForm({
   const filteredSkills = SKILL_SUGGESTIONS.filter(
     (s) =>
       !personalForm.watch("skills").includes(s) &&
+      s.toLowerCase().includes(skillInput.toLowerCase()),
+  );
+  const filteredSectors = SECTORS.filter(
+    (s) =>
+      !personalForm.watch("sectors").includes(s) &&
       s.toLowerCase().includes(skillInput.toLowerCase()),
   );
 
@@ -285,72 +294,81 @@ function PersonalForm({
             </Label>
             <Popover open={sectorOpen} onOpenChange={setSectorOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  className="w-full justify-between h-auto min-h-10 font-normal text-left"
-                >
-                  <span
-                    className={cn(
-                      "truncate",
-                      field.value.length === 0 && "text-muted-foreground",
-                    )}
-                  >
-                    {field.value.length > 0
-                      ? `${field.value.length} sector${field.value.length > 1 ? "s" : ""} selected`
-                      : t("sectorPlaceholder")}
-                  </span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
+                <div className="relative">
+                  <Input
+                    placeholder={t("sectorPlaceholder")}
+                    value={sectorInput}
+                    onChange={(e) => {
+                      setSectorInput(e.target.value);
+                      if (e.target.value) setSectorOpen(true);
+                    }}
+                    onFocus={() => {
+                      if (sectorInput) setSectorOpen(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && sectorInput.trim()) {
+                        e.preventDefault();
+                        const trimmed = sectorInput.trim();
+                        if (trimmed && !field.value.includes(trimmed)) {
+                          field.onChange([...field.value, trimmed]);
+                          setSectorInput("");
+                          setSectorOpen(false);
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </PopoverTrigger>
-              <PopoverContent
-                className="w-[--radix-popover-trigger-width] p-0"
-                align="start"
-              >
-                <Command>
-                  <CommandInput placeholder={t("sectorSearch")} />
-                  <CommandList>
-                    <CommandEmpty>{t("noResults")}</CommandEmpty>
-                    <CommandGroup>
-                      {SECTORS.map((sector) => (
-                        <CommandItem
-                          key={sector}
-                          value={sector}
-                          onSelect={() => {
-                            const newSectors = field.value.includes(sector)
-                              ? field.value.filter((s) => s !== sector)
-                              : [...field.value, sector];
-                            field.onChange(newSectors);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              field.value.includes(sector)
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
-                          {sector}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
+              {filteredSectors.length > 0 && (
+                <PopoverContent
+                  className="w-[--radix-popover-trigger-width] p-0"
+                  align="start"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                >
+                  <Command>
+                    <CommandList>
+                      <CommandGroup>
+                        {filteredSectors.slice(0, 8).map((sector) => (
+                          <CommandItem
+                            key={sector}
+                            value={sector}
+                            onSelect={() => {
+                              if (!field.value.includes(sector)) {
+                                field.onChange([...field.value, sector]);
+                              }
+                              setSectorInput("");
+                              setSectorOpen(false);
+                            }}
+                          >
+                            {/* <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          field.value.includes(sector) ? "opacity-100" : "opacity-0"
+                        )}
+                      /> */}
+                            {sector}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              )}
             </Popover>
             {field.value.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
-                {field.value.map((sector) => (
+                {field.value.map((sector, index) => (
                   <span
-                    key={sector}
+                    key={index}
                     className="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-[#155DFC] text-[#155DFC] text-sm bg-transparent"
                   >
                     {sector}
                     <button
                       type="button"
                       onClick={() =>
-                        field.onChange(field.value.filter((s) => s !== sector))
+                        field.onChange(
+                          field.value.filter((_, i) => i !== index),
+                        )
                       }
                       className="ml-1 hover:text-gray-600"
                     >
@@ -363,7 +381,6 @@ function PersonalForm({
           </div>
         )}
       />
-
       {/* Skills */}
       <Controller
         name="skills"
