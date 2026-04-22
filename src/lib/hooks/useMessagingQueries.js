@@ -320,7 +320,7 @@ export function useSendInvitation() {
           console.log(data,"data")
         queryClient.invalidateQueries(messagingKeys.conversations);
         router.push(`/dashboard/messaging?conversationId=${data?.data.conversationId}`);
-        toast.success('Conversation already exists');
+        // toast.success('Conversation already exists');
       } else {
         toast.success('Invitation sent');
         queryClient.invalidateQueries(messagingKeys.invitations);

@@ -35,7 +35,7 @@ function normalizeConversation(conv, currentUserId) {
 
   // For direct chats, derive name/avatar from the other participant
   let name = conv.name || conv.title || "Unnamed";
-  let avatar = conv.avatar || conv.thumbnail || null;
+  let avatar = conv.avatarPath || conv.thumbnail || null;
 
   if (type === "DIRECT" && Array.isArray(conv.participants)) {
     const other = conv.participants.find((p) => p.userId !== currentUserId);

@@ -149,7 +149,7 @@ export default function ViewProfilePage({ params }) {
     profile.offers?.length > 0 ||
     profile.needs?.length > 0;
 
-  const handleConnect = () =>  connectToUser({ userId: profile.userId });
+  const handleConnect = () => connectToUser({ userId: profile.userId });
   const handleMessage = () => console.log("TODO: message", profile.userId);
 
   if (isLoading) {
@@ -307,6 +307,12 @@ export default function ViewProfilePage({ params }) {
             <SectionCard>
               <CardHeader icon={Globe} title="About" />
               <div className="p-5 space-y-3">
+                {profile.goals && (
+                  <div className="flex items-start gap-2.5 text-sm text-gray-700">
+                    <MessageCircle className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
+                    <p className="leading-relaxed">{profile.goals}</p>
+                  </div>
+                )}
                 {profile.location && (
                   <div className="flex items-center gap-2.5 text-sm text-gray-700">
                     <MapPin className="h-4 w-4 text-gray-400 shrink-0" />

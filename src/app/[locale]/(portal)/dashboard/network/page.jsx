@@ -12,6 +12,7 @@
 "use client";
 // remeber to lazy load renderContent componets
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import networkService from "@/lib/services/networkService";
@@ -19,6 +20,8 @@ import useNetworkStore from "@/lib/store/useNetworkStore";
 import { InvitationsList } from "./(components)/InvitationsList";
 import { ConnectionsContent } from "./(components)/ConnectionsContent";
 import { NetworkSearch } from "./(components)/NetworkSearch";
+import { PeopleConnection } from "./(components)/PeopleConnection";
+import ConnectedUser from "./(components)/ConnectedUser";
 // import { PeopleSuggestions } from "./(components)/PeopleSuggestions";
 // import { PeopleConnection } from "./(components)/PeopleConnection";
 
@@ -27,7 +30,7 @@ const Page = () => {
 
   const [search, setSearch] = useState("");
   const [activeSector, setActiveSector] = useState("all");
-  const [activeTab, setActiveTab] = useState("network");
+  const [activeTab, setActiveTab] = useState("mine");
 
   // Fetch all custom lists (networkUsers, sameSkillUsers, sameSectorUsers, connections)
   const {
@@ -65,6 +68,17 @@ const Page = () => {
   const network = networkPayload?.data;
   const invitations = invitationsData?.data;
 
+  const connections = useMemo(() => {
+    network?.filter((user) => user.connectionStatus === "ACCEPTED") ;
+  }, [network]) || []
+
+  const suggestions = useMemo(() => {
+    network?.filter(
+      (user) =>
+        user.connectionStatus === null || user.connectionStatus === "PENDING",
+    ) 
+  }, [network]) || []
+
   const fillteredData = useMemo(() => {
     const data = activeTab === "network" ? network : invitations;
 
@@ -73,19 +87,18 @@ const Page = () => {
         user.firstName.toLowerCase().includes(search.toLowerCase()) ||
         user.lastName.toLowerCase().includes(search.toLowerCase());
 
-        const matchesSector =
-          activeSector === "all" ||
-          user.sector.includes(activeSector)
+      const matchesSector =
+        activeSector === "all" || user.sector.includes(activeSector);
 
       return matchesSearch && matchesSector;
     });
-  }, [network, invitations, search, activeTab,activeSector]);
+  }, [network, invitations, search, activeTab, activeSector]);
 
   const uniqueSectors = [
     ...new Set(network?.flatMap((item) => item.sector || [])),
   ];
 
-  console.log("Network payload:", activeSector);
+  console.log("Network payload:", network);
 
   return (
     <>
@@ -93,8 +106,11 @@ const Page = () => {
 
       <Tabs defaultValue={activeTab} className="w-full">
         <TabsList variant="line" className="">
-          <TabsTrigger value="network" onClick={() => setActiveTab("network")}>
-            Network
+          <TabsTrigger value="mine" onClick={() => setActiveTab("mine")}>
+            My Networks
+          </TabsTrigger>
+          <TabsTrigger value="explore" onClick={() => setActiveTab("explore")}>
+            Explore
           </TabsTrigger>
           <TabsTrigger
             value="invitation"
@@ -104,17 +120,44 @@ const Page = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="network">
-          <ConnectionsContent
-            displayList={fillteredData}
-            activeSector={activeSector}
-            uniqueSectors={uniqueSectors}
-            setActiveSector={setActiveSector}
-          />
+        <TabsContent value="explore">
+          <>
+            <ConnectionsContent
+              displayList={suggestions}
+              activeSector={activeSector}
+              uniqueSectors={uniqueSectors}
+              setActiveSector={setActiveSector}
+            />
+          </>
         </TabsContent>
 
+        <TabsContent value="mine">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base font-semibold">
+                My Nework ({connections?.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-0">
+              {connections?.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  No accepted connection
+                </p>
+              ) : (
+                connections?.map((connection, index) => (
+                  <ConnectedUser
+                    key={connection.userId}
+                    connection={connection}
+                    index={index}
+                    connectionTotal={connections.length}
+                  />
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
         <TabsContent value="invitation">
-          <InvitationsList invitations={invitations} isLoading={isLoading}/>
+          <InvitationsList invitations={invitations} isLoading={isLoading} />
         </TabsContent>
       </Tabs>
       {/* <PeopleSuggestions />

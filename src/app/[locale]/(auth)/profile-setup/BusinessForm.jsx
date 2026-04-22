@@ -28,52 +28,48 @@ import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useRouter } from "@/i18n/routing";
 
-const businessInfoSchema = z.object({
+export const businessInfoSchema = z.object({
   companyName: z.string().optional(),
   businessModel: z.string().optional(),
   companyStage: z.string().optional(),
   elevatorPitch: z.string().optional(),
   offers: z.array(z.string()).max(3).optional(),
   needs: z.array(z.string()).max(3).optional(),
-  visibility: z.string().default('EVERYONE'),
-  companyWebsite: z.string().url('Enter a valid website URL').optional().nullable(),
+  visibility: z.string().default("EVERYONE"),
+  companyWebsite: z
+    .string()
+    .url("Enter a valid website URL")
+    .optional()
+    .nullable(),
 });
 
-function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
-
-  const router = useRouter()
+function BusinessForm({ updateUser, setStep, profileImage, personalForm, t,businessForm }) {
+  const router = useRouter();
   const [businessModelOpen, setBusinessModelOpen] = useState(false);
   const [companyStageOpen, setCompanyStageOpen] = useState(false);
   const [hasWebsite, setHasWebsite] = useState(false);
 
-  // Business form
-  const businessForm = useForm({
-    resolver: zodResolver(businessInfoSchema),
-    defaultValues: {
-      companyName: "GFA",
-      businessModel: "TEST",
-      companyStage: "TEST",
-      elevatorPitch: "TEST",
-      offers: ["TEST"],
-      needs: ["TEST"],
-      visibility: "EVERYONE",
-      companyWebsite: '',
-    },
-    // defaultValues: {
-    //   companyName: "",
-    //   businessModel: "",
-    //   companyStage: "",
-    //   elevatorPitch: "",
-    //   offers: [],
-    //   needs: [],
-    //   visibility: "EVERYONE",
-    //   companyWebsite: '',
-    // },
-  });
+  const [offerInput, setOfferInput] = useState("");
+  const [needInput, setNeedInput] = useState("");
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [needOpen, setNeedOpen] = useState(false);
+
+
+
+  const filteredNeeds = NEED_TAGS.filter(
+    (s) =>
+      !businessForm.watch("needs").includes(s) &&
+      s.toLowerCase().includes(needInput.toLowerCase()),
+  );
+  const filteredOffers = OFFER_TAGS.filter(
+    (s) =>
+      !businessForm.watch("offers").includes(s) &&
+      s.toLowerCase().includes(offerInput.toLowerCase()),
+  );
 
   const setupMutation = useMutation({
     mutationFn: userService.setupProfile,
@@ -95,10 +91,10 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
       const res = await userService.uploadProfileImage(file);
       if (res.status) {
         toast.success("Profile image updated!");
-        
-        const data =  res.data?.data.avatarUrl ;
+
+        const data = res.data?.data.avatarUrl;
         // console.log(data,"data",res.data.data.avatarUrl)
-        return data
+        return data;
       } else {
         toast.error(res.message || "Failed to upload profile image.");
         throw new Error("Upload failed");
@@ -120,8 +116,10 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
     const personalData = personalForm.getValues();
     const businessData = businessForm.getValues();
 
-    if(hasWebsite && !businessData.companyWebsite) {
-      toast.error("Please enter your company website URL or toggle off the website option.");
+    if (hasWebsite && !businessData.companyWebsite) {
+      toast.error(
+        "Please enter your company website URL or toggle off the website option.",
+      );
       return;
     }
 
@@ -139,7 +137,7 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
       uploadedImageUrl = await handleProfileImgSubmit(profileImage);
     }
 
-    console.log(uploadedImageUrl,"uploadedImageUrl")
+    console.log(uploadedImageUrl, "uploadedImageUrl");
 
     // Prepare payload as JSON object
     const payload = {
@@ -350,20 +348,111 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
         name="offers"
         control={businessForm.control}
         render={({ field }) => (
-          <TagSelector
-            tags={OFFER_TAGS}
-            selected={field.value || []}
-            onToggle={(tag) => {
-              const current = field.value || [];
-              const updated = current.includes(tag)
-                ? current.filter((t) => t !== tag)
-                : [...current, tag];
-              field.onChange(updated);
-            }}
-            max={3}
-            label="What can you offer?"
-            description="Skills and experience you can share with fellow alumni."
-          />
+          <div>
+            <Label className="text-gray-700 mb-2 block">
+              What can you offer?{" "}
+              <span className="text-xs text-gray-400">(Max 3)</span>
+            </Label>
+            <Popover open={offerOpen} onOpenChange={setOfferOpen}>
+              <PopoverTrigger asChild>
+                <div className="relative">
+                  <Input
+                    placeholder="Type an offer or select from suggestions..."
+                    value={offerInput}
+                    onChange={(e) => {
+                      setOfferInput(e.target.value);
+                      if (e.target.value) setOfferOpen(true);
+                    }}
+                    onFocus={() => {
+                      if (offerInput) setOfferOpen(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && offerInput.trim()) {
+                        e.preventDefault();
+                        const trimmed = offerInput.trim();
+                        if (
+                          trimmed &&
+                          !field.value?.includes(trimmed) &&
+                          (field.value?.length || 0) < 3
+                        ) {
+                          field.onChange([...(field.value || []), trimmed]);
+                          setOfferInput("");
+                          setOfferOpen(false);
+                        } else if ((field.value?.length || 0) >= 3) {
+                          toast.error("Maximum 3 offers allowed");
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </PopoverTrigger>
+              {filteredOffers.length > 0 && (
+                <PopoverContent
+                  className="w-[--radix-popover-trigger-width] p-0"
+                  align="start"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                >
+                  <Command>
+                    <CommandList>
+                      <CommandGroup>
+                        {filteredOffers.slice(0, 8).map((offer) => (
+                          <CommandItem
+                            key={offer}
+                            value={offer}
+                            onSelect={() => {
+                              if (
+                                !field.value?.includes(offer) &&
+                                (field.value?.length || 0) < 3
+                              ) {
+                                field.onChange([...(field.value || []), offer]);
+                              } else if ((field.value?.length || 0) >= 3) {
+                                toast.error("Maximum 3 offers allowed");
+                              }
+                              setOfferInput("");
+                              setOfferOpen(false);
+                            }}
+                          >
+                            {/* <Check
+                              className={cn(
+                                "mr-2 h-4 w-4"
+                              )}
+                            /> */}
+                            {offer}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              )}
+            </Popover>
+            {field.value?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {field.value.map((offer, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-[#155DFC] text-[#155DFC] text-sm bg-transparent"
+                  >
+                    {offer}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        field.onChange(
+                          field.value.filter((_, i) => i !== index),
+                        )
+                      }
+                      className="ml-1 hover:text-gray-600"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Skills and experience you can share with fellow alumni.
+            </p>
+          </div>
         )}
       />
 
@@ -372,69 +461,170 @@ function BusinessForm({ updateUser, setStep, profileImage, personalForm, t }) {
         name="needs"
         control={businessForm.control}
         render={({ field }) => (
-          <TagSelector
-            tags={NEED_TAGS}
-            selected={field.value || []}
-            onToggle={(tag) => {
-              const current = field.value || [];
-              const updated = current.includes(tag)
-                ? current.filter((t) => t !== tag)
-                : [...current, tag];
-              field.onChange(updated);
-            }}
-            max={3}
-            label="What are you looking for?"
-            description="Areas where you'd welcome support from the network."
-          />
+          <div>
+            <Label className="text-gray-700 mb-2 block">
+              What are you looking for?{" "}
+              <span className="text-xs text-gray-400">(Max 3)</span>
+            </Label>
+            <Popover open={needOpen} onOpenChange={setNeedOpen}>
+              <PopoverTrigger asChild>
+                <div className="relative">
+                  <Input
+                    placeholder="Type a need or select from suggestions..."
+                    value={needInput}
+                    onChange={(e) => {
+                      setNeedInput(e.target.value);
+                      if (e.target.value) setNeedOpen(true);
+                    }}
+                    onFocus={() => {
+                      if (needInput) setNeedOpen(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && needInput.trim()) {
+                        e.preventDefault();
+                        const trimmed = needInput.trim();
+                        if (
+                          trimmed &&
+                          !field.value?.includes(trimmed) &&
+                          (field.value?.length || 0) < 3
+                        ) {
+                          field.onChange([...(field.value || []), trimmed]);
+                          setNeedInput("");
+                          setNeedOpen(false);
+                        } else if ((field.value?.length || 0) >= 3) {
+                          toast.error("Maximum 3 needs allowed");
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </PopoverTrigger>
+              {filteredNeeds.length > 0 && (
+                <PopoverContent
+                  className="w-[--radix-popover-trigger-width] p-0"
+                  align="start"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                >
+                  <Command>
+                    <CommandList>
+                      <CommandGroup>
+                        {filteredNeeds.slice(0, 8).map((need) => (
+                          <CommandItem
+                            key={need}
+                            value={need}
+                            onSelect={() => {
+                              if (
+                                !field.value?.includes(need) &&
+                                (field.value?.length || 0) < 3
+                              ) {
+                                field.onChange([...(field.value || []), need]);
+                              } else if ((field.value?.length || 0) >= 3) {
+                                toast.error("Maximum 3 needs allowed");
+                              }
+                              setNeedInput("");
+                              setNeedOpen(false);
+                            }}
+                          >
+                            {/* <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                field.value?.includes(need)
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            /> */}
+                            {need}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              )}
+            </Popover>
+            {field.value?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {field.value.map((need, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-[#155DFC] text-[#155DFC] text-sm bg-transparent"
+                  >
+                    {need}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        field.onChange(
+                          field.value.filter((_, i) => i !== index),
+                        )
+                      }
+                      className="ml-1 hover:text-gray-600"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Areas where you'd welcome support from the network.
+            </p>
+          </div>
         )}
       />
 
       {/* Company Website Toggle */}
-<div className="pt-2">
-  <div className="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-white">
-    <div>
-      <p className="text-sm font-medium text-gray-800">Company Website</p>
-      <p className="text-xs text-gray-500">Add a link to your company website</p>
-    </div>
-    <button
-      type="button"
-      onClick={() => setHasWebsite(!hasWebsite)}
-      className={cn(
-        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-        hasWebsite ? "bg-[#155DFC]" : "bg-gray-300"
-      )}
-    >
-      <span
-        className={cn(
-          "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-          hasWebsite ? "translate-x-6" : "translate-x-1"
-        )}
-      />
-    </button>
-  </div>
-</div>
-
- {hasWebsite && (
-  <Controller
-    name="companyWebsite"
-    control={businessForm.control}
-    render={({ field }) => (
-      <div>
-        <Label htmlFor="companyWebsite" className="text-gray-700 mb-2 block">
-          Website URL <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="companyWebsite"
-          type="url"
-          placeholder="https://yourcompany.com"
-          {...field}
-          disabled={setupMutation.isPending}
-        />
-        <p className="text-xs text-gray-400 mt-1">Include https:// or http://</p>
+      <div className="pt-2">
+        <div className="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-white">
+          <div>
+            <p className="text-sm font-medium text-gray-800">Company Website</p>
+            <p className="text-xs text-gray-500">
+              Add a link to your company website
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setHasWebsite(!hasWebsite)}
+            className={cn(
+              "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+              hasWebsite ? "bg-[#155DFC]" : "bg-gray-300",
+            )}
+          >
+            <span
+              className={cn(
+                "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                hasWebsite ? "translate-x-6" : "translate-x-1",
+              )}
+            />
+          </button>
+        </div>
       </div>
-    )}
-  />
-)}
+
+      {hasWebsite && (
+        <Controller
+          name="companyWebsite"
+          control={businessForm.control}
+          render={({ field }) => (
+            <div>
+              <Label
+                htmlFor="companyWebsite"
+                className="text-gray-700 mb-2 block"
+              >
+                Website URL <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="companyWebsite"
+                type="url"
+                placeholder="https://yourcompany.com"
+                {...field}
+                disabled={setupMutation.isPending}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Include https:// or http://
+              </p>
+            </div>
+          )}
+        />
+      )}
 
       {/* Visibility */}
       <div className="pt-2 border-t border-gray-100">

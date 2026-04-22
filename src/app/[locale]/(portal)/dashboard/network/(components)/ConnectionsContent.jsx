@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/select";
 import useNetworkStore from "@/lib/store/useNetworkStore";
 import { Skeleton } from "@/components/ui/skeleton";
+import NewUsersConnection from "./NewUsersConnection";
 
-import ConnectionUser from "./ConnectionUser";
 
 export function ConnectionsContent({
   displayList = [],
@@ -28,8 +28,8 @@ export function ConnectionsContent({
   // const hasConnections = myConnections && myConnections.length > 0;
   // const displayList = hasConnections ? myConnections : networkUsers || [];
 
-  console.log(displayList, "displayList");
-  const titleString = `Explore Network (${displayList.length})`;
+  // console.log(displayList, "displayList");
+  const titleString = `Explore Network (${displayList?.length})`;
 
   if (isLoading) {
     return (
@@ -93,7 +93,7 @@ export function ConnectionsContent({
       <CardContent className="space-y-0">
         {displayList.map((connection, index) => {
           return (
-            <ConnectionUser
+            <NewUsersConnection
               connection={connection}
               key={connection.userId}
               index={index}
