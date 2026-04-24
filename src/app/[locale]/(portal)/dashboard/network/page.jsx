@@ -69,15 +69,16 @@ const Page = () => {
   const invitations = invitationsData?.data;
 
   const connections = useMemo(() => {
-    network?.filter((user) => user.connectionStatus === "ACCEPTED") ;
-  }, [network]) || []
+    return network?.filter((user) => user.connectionStatus === "ACCEPTED");
+  }, [network]);
 
-  const suggestions = useMemo(() => {
-    network?.filter(
-      (user) =>
-        user.connectionStatus === null || user.connectionStatus === "PENDING",
-    ) 
-  }, [network]) || []
+  const suggestions =
+    useMemo(() => {
+     return  network?.filter(
+        (user) =>
+          user.connectionStatus === null || user.connectionStatus === "PENDING",
+      );
+    }, [network]) || [];
 
   const fillteredData = useMemo(() => {
     const data = activeTab === "network" ? network : invitations;
@@ -98,7 +99,8 @@ const Page = () => {
     ...new Set(network?.flatMap((item) => item.sector || [])),
   ];
 
-  console.log("Network payload:", network);
+  console.log("network payload:", network);
+  console.log("connections:", connections);
 
   return (
     <>

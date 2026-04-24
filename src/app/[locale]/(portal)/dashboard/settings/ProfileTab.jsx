@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +49,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import userService from "@/lib/services/userService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDebounce } from "react-haiku";
+import { debounce } from "lodash";
 
 function ProfileTab({
   t,
@@ -285,7 +287,7 @@ function PersonalEditForm({ profile, onDone }) {
       sectors: profile.sector || [],
       skills: profile.skills || [],
       location: profile.location || "",
-      linkedInProfile: profile.linkedin || profile.linkedInProfile || "",
+      linkedInProfile: profile.linkedin || "",
       goals: profile.goals || "",
       title: profile.title || "",
     },
@@ -332,6 +334,29 @@ function PersonalEditForm({ profile, onDone }) {
   const linkedInProfile = watch("linkedInProfile");
   const goals = watch("goals");
   const title = watch("title");
+
+
+
+   const formatLinkedInUrl = useCallback(
+    debounce((value) => {
+      if (!value) return;
+      
+      let formatted = value.trim();
+      const linkedInPattern = /linkedin\.com\/in\/|linkedin\.com\/company\/|lnkd\.in/;
+      
+      if (linkedInPattern.test(formatted)) {
+        if (!formatted.startsWith('http://') && !formatted.startsWith('https://')) {
+          formatted = `https://${formatted.replace(/^www\./, '')}`;
+          setValue('linkedInProfile', formatted);
+        }
+      } else if (!formatted.startsWith('http://') && !formatted.startsWith('https://')) {
+        // For general URLs like torn.com
+        formatted = `https://${formatted}`;
+        setValue('linkedInProfile', formatted);
+      }
+    }, 500),
+    [setValue]
+  );
 
   const [countries, setCountries] = useState([]);
   useEffect(() => {
@@ -711,7 +736,9 @@ const onSubmit = async (data) => {
         </Label>
         <Input
           type="url"
-          {...register("linkedInProfile")}
+          {...register("linkedInProfile" ,{onChange: (e) => {
+            formatLinkedInUrl(e.target.value);
+          }})}
           placeholder="https://linkedin.com/in/yourname"
           disabled={isPending}
         />
