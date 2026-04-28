@@ -24,6 +24,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatRelativeTime } from "@/lib/helper";
+import useAuthStore from "@/lib/store/useAuthStore";
+import { ModernScrollArea } from "@/components/shared/ScrollArea";
 
 function ConversationSkeleton() {
   return (
@@ -63,6 +65,7 @@ export function ConversationList({
   onNewMessage,
 }) {
   const [activeTab, setActiveTab] = useState("chats"); // "chats" | "invitations"
+   const { token } = useAuthStore();
 
   const sortLabels = {
     recent: "Most Recent",
@@ -71,7 +74,7 @@ export function ConversationList({
   };
 
   const pendingCount = invitations.length;
-  // console.log(conversations, invitations);
+  console.log(conversations, "conversations");
 
   return (
     <div className="flex flex-col h-full w-full bg-card">
@@ -174,10 +177,10 @@ export function ConversationList({
       </div>
 
       {/* Content */}
-      <ScrollArea className="flex-1">
+      <ModernScrollArea className="flex-1 w-full">
         {activeTab === "chats" ? (
           // /* ── Conversations List ── */
-          isLoading ? (
+          (isLoading || !token) ? (
             <div className="divide-y divide-border">
               {Array.from({ length: 3 }).map((_, i) => (
                 <ConversationSkeleton key={i} />
@@ -194,11 +197,11 @@ export function ConversationList({
             <div className="divide-y divide-border">
               {conversations.map((conversation) => (
                 <button
-                  key={conversation.id}
+                  key={conversation.conversationId}
                   onClick={() => onSelect(conversation)}
                   className={cn(
                     "w-full flex items-start gap-2 p-3 sm:p-4 text-left hover:bg-muted/50 transition-colors",
-                    selectedId === conversation.id && "bg-muted",
+                    selectedId === conversation.conversationId && "bg-muted",
                     "px-3 py-3 md:px-4 md:py-4",
                   )}
                 >
@@ -237,11 +240,18 @@ export function ConversationList({
                       >
                         {conversation.name}
                       </span>
+
                       <span className="text-xs text-muted-foreground shrink-0 ml-2">
-                        {formatRelativeTime(conversation.lastMessageAt)}
+                        {
+                          conversation?.lastMessage
+                            ? formatRelativeTime(
+                                conversation.lastMessageAt,
+                              )
+                            : formatRelativeTime(conversation.createdAt) // Fallback to chat creation time
+                        }
                       </span>
                     </div>
-                  
+
                     <p
                       className={cn(
                         "text-xs sm:text-sm truncate mt-0.5",
@@ -328,7 +338,7 @@ export function ConversationList({
             })}
           </div>
         )}
-      </ScrollArea>
+      </ModernScrollArea>
 
       {/* Browse Groups Button */}
       {onBrowseGroups && (

@@ -53,21 +53,55 @@ export function ChatView({
   onDeleteMessage,
   onOpenGroupSettings,
   isLoading,
+  onTyping, // New prop
+  typingUsers, // New prop
 }) {
   const [newMessage, setNewMessage] = useState("");
-  const scrollRef = useRef(null);
   const textareaRef = useRef(null);
   const imageInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
   const router = useRouter();
+  //  console.log("Selecting conversation:", conversation);
 
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  // FIX: Change this in ChatView.jsx (around line 78)
+const typingTimeoutRef = useRef(null);
+
+const handleTyping = (e) => {
+  const value = e.target.value;
+  setNewMessage(value);
+  
+  // Clear previous timeout
+  if (typingTimeoutRef.current) {
+    clearTimeout(typingTimeoutRef.current);
+  }
+  
+  // Send typing indicator after 500ms of no typing
+  typingTimeoutRef.current = setTimeout(() => {
+    if (value) {
+      onTyping?.();
     }
-  }, [messages]);
+  }, 500);
+};
+
+  // Render typing indicator in message area
+  const hasTyping = Object.values(typingUsers || {}).length > 0;
+
+
+const messagesEndRef = useRef(null);
+
+// Replace your existing scroll useEffect with this
+useEffect(() => {
+  if (!isLoading && messagesEndRef.current) {
+    messagesEndRef.current.scrollIntoView({ behavior: "instant" }); // instant on open
+  }
+}, [conversation?.conversationId, isLoading]); // fires when conversation changes
+
+useEffect(() => {
+  if (messagesEndRef.current) {
+    messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); // smooth on new msg
+  }
+}, [messages.length]); // fires when a message is added
 
   // Auto-resize textarea
   useEffect(() => {
@@ -78,6 +112,7 @@ export function ChatView({
   }, [newMessage]);
 
   const handleSend = () => {
+    console.log("Sending message:", newMessage);
     if (newMessage.trim()) {
       onSendMessage(newMessage);
       setNewMessage("");
@@ -173,7 +208,7 @@ export function ChatView({
                   Available
                 </>
               ) : conversation.type === "PUBLIC_GROUP" ? (
-                `${conversation.participants || 0} members`
+                `${conversation.memberCount || 0} members`
               ) : (
                 "Offline"
               )}
@@ -190,15 +225,15 @@ export function ChatView({
           <DropdownMenuContent align="end">
             {conversation.type !== "PUBLIC_GROUP" && (
               <>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/dashboard/profile/${conversation.userId}`)
-                }
+                <DropdownMenuItem
+                  onClick={() =>
+                    router.push(`/dashboard/profile/${conversation.userId}`)
+                  }
                 >
-                View profile
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-                </>
+                  View profile
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
             )}
             {/* <DropdownMenuItem>Search in conversation</DropdownMenuItem> */}
             {/* <DropdownMenuItem>Mute notifications</DropdownMenuItem> */}
@@ -262,6 +297,7 @@ export function ChatView({
               <p className="text-xs mt-1">Start the conversation!</p>
             </div>
           )}
+       <div ref={messagesEndRef} />
         </div>
       </ModernScrollArea>
 
@@ -283,14 +319,30 @@ export function ChatView({
 
       {/* Message Input */}
       <div className="p-4 border-t border-border bg-card">
+        {hasTyping && (
+          <div className="flex items-center gap-2 px-4 py-2 text-xs text-muted-foreground">
+            <div className="flex gap-1">
+              <span className="animate-bounce">.</span>
+              <span className="animate-bounce delay-100">.</span>
+              <span className="animate-bounce delay-200">.</span>
+            </div>
+            <span>
+              {Object.values(typingUsers)
+                .map((t) => t.name)
+                .join(", ")}{" "}
+              typing...
+            </span>
+          </div>
+        )}
         <div className="max-w-3xl mx-auto">
           <div className="flex items-end gap-2 bg-muted/50 rounded-2xl px-4 py-2">
             <Textarea
               ref={textareaRef}
               placeholder="Type your message..."
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              // onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={handleKeyDown}
+              onChange={handleTyping}
               className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-1 min-h-[24px] max-h-[120px] resize-none"
               rows={1}
             />
