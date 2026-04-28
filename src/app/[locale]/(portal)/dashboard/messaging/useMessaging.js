@@ -1,116 +1,73 @@
-import { useState, useCallback, useMemo } from "react";
-import {
-  useConversations,
-  useMessages,
-  useSendMedia,
-  useSendMessage,
-  useDeleteMessage,
-  useDeleteConversation,
-  useLeaveGroup,
-  useMarkAsRead,
-  usePendingInvitations,
-  useRespondToInvitation,
-  useSendInvitation,
-} from "@/lib/hooks/useMessagingQueries";
-import useMessagingStore from "@/lib/store/useMessagingStore";
+// lib/hooks/useMessaging.js
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import messagingService from "@/lib/services/messagingService";
+import { toast } from "sonner";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import useAuthStore from "@/lib/store/useAuthStore";
+import { useDeleteConversation, useDeleteMessage, useLeaveGroup, useMarkAsRead, useRespondToInvitation, useSendInvitation, useSendMedia } from "@/lib/hooks/useMessagingQueries";
 
-/** Stable empty array to avoid infinite re-render loops in Zustand selectors */
-const EMPTY_ARRAY = [];
 
-/**
- * Generate a temporary ID for optimistic updates.
- */
-export function generateId() {
-  return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-/**
- * Normalize a conversation from the API shape to the shape our UI components expect.
- * Handles both DIRECT and PUBLIC_GROUP types for the messaging page.
- */
-function normalizeConversation(conv, currentUserId) {
-  const id = conv.conversationId || conv.id;
-  const type = conv.type || "DIRECT";
-
-  // For direct chats, derive name/avatar from the other participant
-  let name = conv.name || conv.title || "Unnamed";
-  let avatar = conv.avatarPath || conv.thumbnail || null;
-
-  if (type === "DIRECT" && Array.isArray(conv.participants)) {
-    const other = conv.participants.find((p) => p.userId !== currentUserId);
-    if (other) {
-      name = other.name || other.firstName || name;
-      avatar = other.profileImagePath || other.avatar || avatar;
-    }
-  }
-
-  return {
-    id,
-    conversationId: id,
-    type,
-    name,
-    avatar,
-    lastMessage: conv.lastMessage || conv.lastMessageContent || "",
-    lastMessageAt: conv.lastMessageAt || conv.updatedAt
-      ? new Date(conv.lastMessageAt || conv.updatedAt)
-      : new Date(),
-    unread: !!conv.unreadCount || conv.unread || false,
-    unreadCount: parseInt(conv.unreadCount, 10) || 0,
-    online: conv.online || false,
-    participants: conv.memberCount,
-    isOpen: conv.isOpen,
-    description: conv.description,
-    userId: conv.otherUser && conv.otherUser.userId
-  };
-}
-
-/**
- * Normalize a message from the API shape to the shape our UI components expect.
- */
-function normalizeMessage(msg, currentUserId) {
-  const senderId = msg.senderId || msg.userId;
-  const isOwn = senderId === currentUserId;
-
-  return {
-    id: msg.messageId || msg.id,
-    messageId: msg.messageId || msg.id,
-    conversationId: msg.conversationId,
-    senderId,
-    senderName: msg.senderName || msg.name || (isOwn ? "You" : "User"),
-    senderAvatar: msg.senderAvatar || msg.profileImagePath || null,
-    content: msg.content || msg.message || "",
-    mediaUrl: msg.mediaUrl || null,
-    mediaType: msg.mediaType || null,
-    createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
-    isOwn,
-    status: msg.status || (isOwn ? "sent" : "read"),
-  };
-}
-
-/**
- * Main messaging hook — replaces the old mock-based hook.
- * Fetches real data from the API via React Query and exposes the same
- * interface that page.jsx and the UI components expect.
- */
 export function useMessaging() {
-  const [selectedConversationId, setSelectedConversationId] = useState(null);
+  const queryClient = useQueryClient();
+  const { token, user } = useAuthStore();
+  const currentUserId = user?.userId || user?.id;
+  const unreadDebounceRef = useRef(null);
+  const lastUnreadInvalidationRef = useRef(0);
+  // Helper to get temp ID for retry
+  const getTempId = () => `temp-${Date.now()}-${Math.random()}`;
+  const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, createdAt } }
+  const presenceMapRef = useRef({});
+
+  // State
+  const [selectedConversation, setSelectedConversation] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recent");
+  const [typingUsers, setTypingUsers] = useState({});
+const selectedConversationId = selectedConversation?.conversationId ?? null;
 
-  const currentUser = useAuthStore((s) => s.user);
-  const currentUserId = currentUser?.id || currentUser?.userId;
+  // Map conversation from backend format
+  const mapConversation = (conv) => ({
+    id: conv.conversationId,
+    conversationId: conv.conversationId,
+    type: conv.type,
+    name: conv.type === "DIRECT"
+      ? `${conv.otherUser?.firstName || ""} ${conv.otherUser?.lastName || ""}`.trim() || conv.name
+      : conv.name,
+    avatar: conv.avatarPath,
+    description: conv.description,
+    lastMessage: conv.lastMessage?.content || null,
+    lastMessageAt: conv.lastMessage?.createdAt || conv.updatedAt,
+    unreadCount: conv.unreadCount,
+    memberCount: conv.memberCount,
+    userId: conv.otherUser?.userId,
+    online: presenceMapRef.current[conv.otherUser?.userId] === "online",
+  });
 
-  // ─── API Queries ─────────────────────────────────────────────
-  const { data: rawConversations, isLoading: convsLoading } = useConversations();
-  const { data: rawMessagesData, isLoading: msgsLoading } = useMessages(selectedConversationId);
-  const { data: invitations, isLoading: invLoading } = usePendingInvitations();
+  // Queries
+  const { data: conversationsData, isLoading: isLoadingConversations } = useQuery({
+    queryKey: ["conversations", searchQuery, sortBy],
+    queryFn: () => messagingService.getConversations({ search: searchQuery, sort: sortBy }),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!token,
+  });
 
-  // console.log(rawConversations,"rawConversations")
+  const { data: messagesData, isLoading: isLoadingMessages } = useQuery({
+    queryKey: ["messages", selectedConversation?.conversationId],
+    queryFn: () => messagingService.getMessages(selectedConversation?.conversationId),
+    enabled: !!selectedConversation?.conversationId && !!token,
+  });
+
+  const { data: invitationsData, isLoading: isLoadingInvitations } = useQuery({
+    queryKey: ["invitations"],
+    queryFn: () => messagingService.getPendingInvitations(),
+    enabled: !!token,
+  });
 
   // ─── API Mutations ───────────────────────────────────────────
   const { mutate: sendMediaMutation } = useSendMedia();
-  const { mutate: sendMessageMutation } = useSendMessage();
   const { mutate: deleteMessageMutation } = useDeleteMessage();
   const { mutate: deleteConversationMutation } = useDeleteConversation();
   const { mutate: leaveGroupMutation } = useLeaveGroup();
@@ -118,205 +75,356 @@ export function useMessaging() {
   const { mutate: respondToInvitationMutation } = useRespondToInvitation();
   const { mutate: sendInvitationMutation } = useSendInvitation();
 
-  // ─── Normalize conversations ─────────────────────────────────
-  const allConversations = useMemo(() => {
-    if (!rawConversations) return [];
-    const list = Array.isArray(rawConversations) ? rawConversations : [];
-    return list.map((c) => normalizeConversation(c, currentUserId));
-  }, [rawConversations, currentUserId]);
+  // Send message mutation with optimistic update
+  // const sendMessageMutation = useMutation({
+  //   mutationFn: ({ conversationId, content }) => 
+  //     messagingService.sendMessage(conversationId, content),
 
-  // Filter to DIRECT and PUBLIC_GROUP for the messaging page
-  // (PRIVATE_GROUP is handled by the Deal Room page)
-  const messagingConversations = useMemo(() => {
-    return allConversations.filter(
-      (c) => c.type === "DIRECT" || c.type === "PUBLIC_GROUP"
-    );
-  }, [allConversations]);
+  //   onMutate: async ({ conversationId, content }) => {
+  //     // Cancel ongoing refetches
+  //     await queryClient.cancelQueries({ queryKey: ["messages", conversationId] });
 
-  // ─── Sort & filter ───────────────────────────────────────────
-  const filteredConversations = useMemo(() => {
-    let result = [...messagingConversations];
+  //     // Snapshot previous messages
+  //     const previousMessages = queryClient.getQueryData(["messages", conversationId]);
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (conv) =>
-          conv.name.toLowerCase().includes(query) ||
-          (conv.lastMessage && conv.lastMessage.content.toLowerCase().includes(query))
-      );
-    }
+  //     // Create optimistic message
+  //     const tempId = `temp-${Date.now()}-${Math.random()}`;
+  //     const optimisticMessage = {
+  //       id: tempId,
+  //       messageId: tempId,
+  //       content,
+  //       type: "text",
+  //       createdAt: new Date().toISOString(),
+  //       senderId: currentUserId,
+  //       senderName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "You",
+  //       senderAvatar: user?.profileImagePath,
+  //       conversationId: conversationId,
+  //       isOwn: true,
+  //       status: "sending"
+  //     };
 
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case "unread":
-          if (a.unread !== b.unread) return a.unread ? -1 : 1;
-          return b.lastMessageAt.getTime() - a.lastMessageAt.getTime();
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "recent":
-        default:
-          return b.lastMessageAt.getTime() - a.lastMessageAt.getTime();
+  //     // Update cache with optimistic message - wrap in { data: [...] }
+  //     queryClient.setQueryData(["messages", conversationId], (old) => {
+  //       const existing = old?.data ?? [];
+  //       return { ...old, data: [...existing, optimisticMessage] };
+  //     });
+
+  //     // Update conversation list (move to top, update last message)
+  //     queryClient.setQueryData(["conversations", searchQuery, sortBy], (old) => {
+  //       if (!old?.data || !Array.isArray(old.data)) return old;
+  //       return {
+  //         ...old,
+  //         data: [
+  //           {
+  //             ...old.data.find(c => c.conversationId === conversationId),
+  //             lastMessage: content,
+  //             lastMessageAt: new Date().toISOString(),
+  //           },
+  //           ...old.data.filter(c => c.conversationId !== conversationId)
+  //         ].filter(Boolean)
+  //       };
+  //     });
+
+  //     return { tempId, conversationId, previousMessages };
+  //   },
+
+  //   onSuccess: (response, variables, context) => {
+  //     // Replace optimistic message with real one from REST
+  //     const realMessage = response?.data;
+  //     if (realMessage && context?.conversationId) {
+  //       queryClient.setQueryData(["messages", context.conversationId], (old) => {
+  //         return {
+  //           ...old,
+  //           data: (old?.data ?? []).map(msg =>
+  //             msg.id === context.tempId
+  //               ? { ...realMessage, id: realMessage.messageId, isOwn: true, status: "delivered" }
+  //               : msg
+  //           )
+  //         };
+  //       });
+  //     }
+
+  //     // Invalidate conversations to update last message
+  //     queryClient.invalidateQueries({ queryKey: ["conversations"] });
+  //   },
+
+  //   onError: (error, variables, context) => {
+  //     // Mark message as failed
+  //     if (context?.conversationId) {
+  //       queryClient.setQueryData(["messages", context.conversationId], (old) => {
+  //         return {
+  //           ...old,
+  //           data: (old?.data ?? []).map(msg =>
+  //             msg.id === context.tempId ? { ...msg, status: "failed" } : msg
+  //           )
+  //         };
+  //       });
+  //     }
+  //     toast.error("Failed to send message");
+  //   },
+  // });
+
+const sendMediaFile = useCallback((file, caption = "") => {
+  if (!selectedConversationId || !file) return;
+
+  const tempId = `temp-${Date.now()}-${Math.random()}`;
+  const now = new Date().toISOString();
+
+  const optimisticMessage = {
+    id: tempId,
+    messageId: tempId,
+    conversationId: selectedConversationId,
+    senderId: currentUserId,
+    senderName: user?.firstName
+      ? `${user.firstName} ${user.lastName || ""}`.trim()
+      : "You",
+    senderAvatar: user?.profileImagePath,
+    content: caption || file.name,
+    mediaUrl: URL.createObjectURL(file),
+    mediaType: file.type.startsWith("image/") ? "image" : "document",
+    createdAt: now,
+    isOwn: true,
+    status: "sending",
+  };
+//  console.log(file, "useMessaging", optimisticMessage)
+  const formData = new FormData();
+  formData.append("mediaFile", file);
+  if (caption) formData.append("content", caption);
+
+  sendMediaMutation({
+    conversationId: selectedConversationId,
+    formData,
+    optimisticMessage,
+  });
+}, [selectedConversationId, currentUserId, user, sendMediaMutation]);
+  // WebSocket handlers
+
+  const handleNewMessage = useCallback((wsMessage) => {
+    const conversationId = wsMessage.conversationId;
+
+    const newMessage = {
+      id: wsMessage.messageId,
+      messageId: wsMessage.messageId,
+      content: wsMessage.content,
+      type: wsMessage.messageType || "text",
+      createdAt: wsMessage.createdAt,
+      senderId: wsMessage.senderId,
+      senderName: wsMessage.senderName,
+      senderAvatar: wsMessage.senderAvatar,
+      conversationId,
+      isOwn: wsMessage.senderId === currentUserId,
+      status: "delivered"
+    };
+
+    queryClient.setQueryData(["messages", conversationId], (old) => {
+      const existing = old?.data;
+      if (!existing || !Array.isArray(existing)) return { data: [newMessage] };
+
+      // Check for duplicate by real messageId
+      if (existing.some(m => m.messageId === wsMessage.messageId)) return old;
+
+      // Find matching optimistic message from sender
+      if (wsMessage.senderId === currentUserId) {
+        const tempId = Object.keys(pendingMessagesRef.current).find(id => {
+          const p = pendingMessagesRef.current[id];
+          return p.content === wsMessage.content && p.conversationId === conversationId;
+        });
+
+        if (tempId) {
+          delete pendingMessagesRef.current[tempId]; // clean up
+          return {
+            ...old,
+            data: existing.map(m => m.id === tempId ? newMessage : m)
+          };
+        }
       }
+
+      // New message from someone else
+      return { ...old, data: [...existing, newMessage] };
     });
 
-    return result;
-  }, [messagingConversations, searchQuery, sortBy]);
+    // Update conversation list
+    queryClient.setQueryData(["conversations", searchQuery, sortBy], (old) => {
+      if (!old?.data || !Array.isArray(old.data)) return old;
+      return {
+        ...old,
+        data: old.data.map(conv =>
+          conv.conversationId === conversationId
+            ? { ...conv, lastMessage: wsMessage.content, lastMessageAt: wsMessage.createdAt }
+            : conv
+        ).sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+      };
+    });
 
-  // ─── Selected conversation ───────────────────────────────────
-  const selectedConversation = useMemo(
-    () => messagingConversations.find((c) => c.id === selectedConversationId) || null,
-    [messagingConversations, selectedConversationId]
-  );
-
-  // ─── Normalize messages ──────────────────────────────────────
-  const currentMessages = useMemo(() => {
-    if (!selectedConversationId || !rawMessagesData) return [];
-    const raw = Array.isArray(rawMessagesData?.data)
-      ? rawMessagesData.data
-      : Array.isArray(rawMessagesData)
-        ? rawMessagesData
-        : [];
-    return raw
-      .map((m) => normalizeMessage(m, currentUserId))
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-  }, [rawMessagesData, selectedConversationId, currentUserId]);
-
-  // Also include any optimistic messages from the store
-  const allStoreMessages = useMessagingStore((s) => s.messages);
-  const storeMessages = selectedConversationId
-    ? allStoreMessages[selectedConversationId] || EMPTY_ARRAY
-    : EMPTY_ARRAY;
-
-const mergedMessages = useMemo(() => {
-  // Create a map of API messages by ID
-  const apiMessagesMap = new Map(currentMessages.map(m => [m.id, m]));
-  
-  // Also create a map to match optimistic messages that might have been persisted
-  // (if your optimistic messages have a temp ID pattern like 'temp-123')
-  const processedMessages = [...currentMessages];
-  
-  storeMessages.forEach(optimisticMsg => {
-    // Check if this optimistic message is already in API (by content or temp ID mapping)
-    const isInApi = Array.from(apiMessagesMap.values()).some(apiMsg => 
-      apiMsg.content === optimisticMsg.content && 
-      Math.abs(new Date(apiMsg.createdAt) - new Date(optimisticMsg.createdAt)) < 1000 // Within 1 second
-    );
-    
-    if (!isInApi) {
-      processedMessages.push(optimisticMsg);
+    // Debounced unread invalidation
+    const now = Date.now();
+    if (now - lastUnreadInvalidationRef.current > 5000) {
+      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
+      lastUnreadInvalidationRef.current = now;
+    } else {
+      if (unreadDebounceRef.current) clearTimeout(unreadDebounceRef.current);
+      unreadDebounceRef.current = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
+      }, 2000);
     }
+  }, [currentUserId, queryClient, searchQuery, sortBy]);
+
+  const handleTyping = useCallback((data) => {
+    if (data.conversationId === selectedConversation?.conversationId && data.userId !== currentUserId) {
+      if (typingUsers[data.userId]?.timeout) {
+        clearTimeout(typingUsers[data.userId].timeout);
+      }
+
+      const timeout = setTimeout(() => {
+        setTypingUsers(prev => {
+          const newState = { ...prev };
+          delete newState[data.userId];
+          return newState;
+        });
+      }, 3000);
+
+      setTypingUsers(prev => ({
+        ...prev,
+        [data.userId]: { name: data.name, timeout }
+      }));
+    }
+  }, [selectedConversation?.conversationId, currentUserId, typingUsers]);
+
+  const handleReadReceipt = useCallback((data) => {
+    if (data.conversationId === selectedConversation?.conversationId) {
+      queryClient.setQueryData(["messages", data.conversationId], (old) => {
+        return {
+          ...old,
+          data: (old?.data ?? []).map(msg =>
+            msg.senderId === data.userId && msg.status !== "read"
+              ? { ...msg, status: "read" }
+              : msg
+          )
+        };
+      });
+    }
+  }, [selectedConversation?.conversationId, queryClient]);
+
+// Update handlePresence to write to the ref instead
+const handlePresence = useCallback((data) => {
+  presenceMapRef.current[data.userId] = data.status;
+
+  // Still update cache so ConversationList re-renders
+  queryClient.setQueryData(["conversations", searchQuery, sortBy], (old) => {
+    if (!old?.data) return old;
+    return {
+      ...old,
+      data: old.data.map(conv =>
+        conv.userId === data.userId
+          ? { ...conv, online: data.status === "online" }
+          : conv
+      )
+    };
   });
-  
-  return processedMessages.sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  );
-}, [currentMessages, storeMessages]);
-  // ─── Actions ─────────────────────────────────────────────────
+}, [queryClient, searchQuery, sortBy]);
 
+  // Initialize WebSocket
+  const { isConnected, sendMessage: wsSendMessage, sendTyping, sendReadReceipt } = useWebSocket({
+    onNewMessage: handleNewMessage,
+    onTyping: handleTyping,
+    onReadReceipt: handleReadReceipt,
+    onPresence: handlePresence
+  });
+
+  // Data transformations
+  // const conversations = (conversationsData?.data || []).map(mapConversation);
+  const conversations = (conversationsData?.data || []).map((conv) => {
+    const cached = queryClient.getQueryData(["conversations", searchQuery, sortBy]);
+    const cachedConv = cached?.data?.find(c => c.conversationId === conv.conversationId);
+
+    return {
+      ...mapConversation(conv),
+      online: cachedConv?.online ?? false, // preserve presence from cache
+    };
+  });
+  const invitations = invitationsData?.data || [];
+
+  // Fix: Extract data array from messagesData
+  const currentMessages = (messagesData?.data || []).map(msg => ({
+    id: msg.messageId,
+    messageId: msg.messageId,
+    content: msg.content,
+    type: msg.type,
+    createdAt: msg.createdAt,
+    senderId: msg.senderId,
+    senderName: msg.senderName,
+    senderAvatar: msg.senderAvatar,
+    isOwn: msg.senderId === currentUserId,
+    status: "delivered",
+    mediaUrl: msg.mediaPath,
+  }));
+
+  // Actions
   const selectConversation = useCallback((conversationId) => {
-    setSelectedConversationId(conversationId);
+    const conversation = conversations.find(c => c.conversationId === conversationId);
+    setSelectedConversation(conversation || null);
     if (conversationId) {
-      useMessagingStore.getState().setActiveConversation(conversationId);
+      sendReadReceipt(conversationId);
     }
-  }, []);
+  }, [conversations, sendReadReceipt]);
 
-  const sendMessage = useCallback(
-    (content) => {
-      if (!selectedConversationId || !content.trim()) return;
+  // const sendMessage = useCallback((content) => {
+  //   if (!selectedConversation?.conversationId) {
+  //     toast.error("No conversation selected");
+  //     return;
+  //   }
 
-      const tempId = generateId();
-      const now = new Date();
+  //   if (!content.trim()) return;
 
-      const optimisticMessage = {
-        id: tempId,
-        messageId: tempId,
-        conversationId: selectedConversationId,
-        senderId: currentUserId,
-        senderName: currentUser?.name || "You",
-        content: content.trim(),
-        createdAt: now,
-        isOwn: true,
-        status: "sending",
-      };
+  //   // Send via REST (with optimistic update)
+  //   sendMessageMutation.mutate({ 
+  //     conversationId: selectedConversation.conversationId, 
+  //     content 
+  //   });
 
-      sendMessageMutation({
-        conversationId: selectedConversationId,
-        content: content.trim(),
-        optimisticMessage,
-      });
-    },
-    [selectedConversationId, currentUserId, currentUser, sendMessageMutation]
-  );
+  //   // Also send via WebSocket for real-time to others
+  //   // wsSendMessage(selectedConversation.conversationId, content);
+  // }, [selectedConversation, sendMessageMutation, wsSendMessage]);
 
-  const sendMediaFile = useCallback(
-    (file, caption = "") => {
-      if (!selectedConversationId || !file) return;
+  const sendMessage = useCallback((content) => {
+    if (!selectedConversation?.conversationId) {
+      toast.error("No conversation selected");
+      return;
+    }
+    if (!content.trim()) return;
 
-      const tempId = generateId();
-      const now = new Date();
+    const conversationId = selectedConversation.conversationId;
+    const tempId = `temp-${Date.now()}-${Math.random()}`;
+    const createdAt = new Date().toISOString();
 
-      const optimisticMessage = {
-        id: tempId,
-        messageId: tempId,
-        conversationId: selectedConversationId,
-        senderId: currentUserId,
-        senderName: currentUser?.name || "You",
-        content: caption || file.name,
-        mediaUrl: URL.createObjectURL(file),
-        mediaType: file.type.startsWith("image/") ? "image" : "document",
-        createdAt: now,
-        isOwn: true,
-        status: "sending",
-      };
+    const optimisticMessage = {
+      id: tempId,
+      messageId: tempId,
+      content,
+      type: "text",
+      createdAt,
+      senderId: currentUserId,
+      senderName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "You",
+      senderAvatar: user?.profileImagePath,
+      conversationId,
+      isOwn: true,
+      status: "sending"
+    };
 
-      const formData = new FormData();
-      formData.append("mediaFile", file);
-      if (caption) formData.append("content", caption);
+    // Track this pending message for dedup in handleNewMessage
+    pendingMessagesRef.current[tempId] = { content, conversationId, createdAt };
 
-      sendMediaMutation({
-        conversationId: selectedConversationId,
-        formData,
-        optimisticMessage,
-      });
-    },
-    [selectedConversationId, currentUserId, currentUser, sendMediaMutation]
-  );
+    // Add to UI immediately
+    queryClient.setQueryData(["messages", conversationId], (old) => {
+      const existing = old?.data ?? [];
+      return { ...old, data: [...existing, optimisticMessage] };
+    });
 
-  const retryMessage = useCallback(
-    (messageId) => {
-      if (!selectedConversationId) return;
-      // Find the failed message in the store and resend
-      const msgs = useMessagingStore.getState().messages[selectedConversationId] || [];
-      const failedMsg = msgs.find((m) => m.id === messageId);
-      if (!failedMsg) return;
+    // WS only — backend saves + broadcasts
+    wsSendMessage(conversationId, content);
+  }, [selectedConversation, currentUserId, user, queryClient, wsSendMessage]);
 
-      useMessagingStore.getState().updateMessage(selectedConversationId, messageId, {
-        status: "sending",
-      });
 
-      // Retrying media won't work well without the original File object attached
-      // We will assume text for now.
-      sendMessageMutation({
-        conversationId: selectedConversationId,
-        content: failedMsg.content,
-        optimisticMessage: null, // Already in store
-      });
-    },
-    [selectedConversationId, sendMessageMutation]
-  );
-
-  const deleteMessage = useCallback(
-    (messageId) => {
-      if (!selectedConversationId) return;
-      deleteMessageMutation({
-        conversationId: selectedConversationId,
-        messageId,
-      });
-    },
-    [selectedConversationId, deleteMessageMutation]
-  );
-
-  // ─── Invitation actions ──────────────────────────────────────
 
   const acceptInvitation = useCallback(
     (invitationId) => {
@@ -337,6 +445,16 @@ const mergedMessages = useMemo(() => {
       sendInvitationMutation({ recipientId, shortMessage });
     },
     [sendInvitationMutation]
+  );
+  const deleteMessage = useCallback(
+    (messageId) => {
+      if (!selectedConversationId) return;
+      deleteMessageMutation({
+        conversationId: selectedConversationId,
+        messageId,
+      });
+    },
+    [selectedConversationId, deleteMessageMutation]
   );
 
   const markAsRead = useCallback(
@@ -360,35 +478,42 @@ const mergedMessages = useMemo(() => {
     [deleteConversationMutation]
   );
 
+  const handleTypingIndicator = useCallback(() => {
+    if (selectedConversation?.conversationId) {
+      sendTyping(selectedConversation.conversationId);
+    }
+  }, [selectedConversation, sendTyping]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (unreadDebounceRef.current) clearTimeout(unreadDebounceRef.current);
+      Object.values(typingUsers).forEach(({ timeout }) => {
+        if (timeout) clearTimeout(timeout);
+      });
+    };
+  }, [typingUsers]);
+
   return {
-    // State
-    conversations: filteredConversations,
+    conversations,
     selectedConversation,
-    currentMessages: mergedMessages,
+    currentMessages,
     searchQuery,
     sortBy,
-    isLoading: convsLoading,
-    isMessagesLoading: msgsLoading,
-    invitations: invitations || [],
-    isInvitationsLoading: invLoading,
-
-    // Actions
+    isLoading: isLoadingConversations,
+    isMessagesLoading: isLoadingMessages,
+    invitations,
+    typingUsers,
+    isConnected,
     setSearchQuery,
     setSortBy,
     selectConversation,
     sendMessage,
     sendMediaFile,
-    retryMessage,
+    // retryMessage,
     deleteMessage,
-
-    // Invitation actions
     acceptInvitation,
     declineInvitation,
-    inviteUser,
-
-    // New API endpoints mapping
-    markAsRead,
-    leaveGroup,
-    deleteConversation: deleteConversationAction,
+    sendTyping: handleTypingIndicator,
   };
 }

@@ -259,7 +259,7 @@ export default function NewsFeed() {
           </div>
 
           {/* Sidebar - Hidden on mobile, shown on tablet and desktop */}
-          <div className="hidden xl:block md:w-64 lg:w-80 space-y-4 md:space-y-6">
+          <div className="lg:col-span-3 lg:sticky lg:top-25 lg:right-0 self-start max-h-[calc(100vh-2rem)] overflow-y-auto">
             {/* Hot Topics */}
             <div className="bg-card rounded-xl border border-border p-4 md:p-5 space-y-3 md:space-y-4 sticky top-4">
               <h3 className="font-semibold text-sm md:text-base">

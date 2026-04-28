@@ -148,7 +148,7 @@ const Sidebar = ({ isCollapsed }) => {
         <button
           onClick={() => {
             logout();
-            router.push('/login');
+            router.replace('/login');
           }}
           className="flex items-center justify-center w-full py-3 rounded-lg text-[#ED202D] hover:bg-white/5 transition-all"
         >

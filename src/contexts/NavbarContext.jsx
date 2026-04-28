@@ -11,8 +11,12 @@ export function NavbarProvider({ children }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [userSize, setUserSize] = useState({ width: 0, height: 0 });
   
+  //mobile nav
+  const [mobileSize, setMobileSize] = useState({ width: 0, height: 0 });
+
+  
   return (
-    <NavbarContext.Provider value={{ size,userSize, setSize,setUserSize }}>
+    <NavbarContext.Provider value={{ size,userSize, setSize,setUserSize, mobileSize, setMobileSize }}>
       {children}
     </NavbarContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { parseISO } from "date-fns";
+import { parseISO ,formatDistanceToNowStrict, format, isAfter, subDays} from "date-fns";
 
 /**
  * Generate a unique ID for optimistic updates
@@ -10,23 +10,31 @@ export function generateId() {
 /**
  * Format a date to relative time string
  */
-export function formatRelativeTime(date) {
+
+export function formatRelativeTime(dateString) {
+  if (!dateString) return "";
+  
+  const date = new Date(dateString);
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  // If the date is older than 7 days, show the short date (e.g., Oct 24)
+  if (isAfter(subDays(now, 7), date)) {
+    return format(date, "MMM d");
+  }
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  // Otherwise, show relative time
+  const distance = formatDistanceToNowStrict(date, { addSuffix: true });
 
-  // Format as date for older messages
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  // Optional: Convert "minutes" to "m", "hours" to "h" for a compact UI
+  return distance
+    .replace(" minutes", "m")
+    .replace(" minute", "m")
+    .replace(" hours", "h")
+    .replace(" hour", "h")
+    .replace(" days", "d")
+    .replace(" day", "d")
+    .replace("seconds", "just now")
+    .replace(" ago", " ago");
 }
 
 /**

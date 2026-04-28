@@ -11,14 +11,15 @@ import { useSearchParams } from "next/navigation";
 import { useNavbar } from "@/contexts/NavbarContext";
 
 const Messaging = () => {
+  const searchParams = useSearchParams();
+  const conversationId = searchParams.get("conversationId");
 
-  const searchParams = useSearchParams()
-    const conversationId = searchParams.get('conversationId')
-
-    
-    const {userSize:{height}} = useNavbar()
-    const {
-      conversations,
+  const {
+    userSize: { height },
+    mobileSize:{height:mobileHeight}
+  } = useNavbar();
+  const {
+    conversations,
     selectedConversation,
     currentMessages,
     searchQuery,
@@ -35,14 +36,14 @@ const Messaging = () => {
     deleteMessage,
     acceptInvitation,
     declineInvitation,
+    sendTyping, // ← ADD THIS
+    typingUsers, // ← ADD THIS
+    isConnected, // ← ADD THIS (optional, for debugging)
   } = useMessaging();
-
-   useEffect(()=>{
-     
-     selectConversation(conversationId)
-    },[conversationId])
-    
-    // console.log(currentMessages,"currentMessages")
+useEffect(() => {
+  if (conversationId) selectConversation(conversationId);
+}, [conversationId]);
+  // console.log(currentMessages,"currentMessages")
   const [showGroupDiscovery, setShowGroupDiscovery] = useState(false);
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
@@ -59,21 +60,26 @@ const Messaging = () => {
   };
 
   return (
-    <div className=" flex bg-background" style={{
+    <div
+      className=" flex bg-background"
+      style={{
         // top: `${height + 10}px`,
-        height: `calc(100dvh - ${height+50}px)`,
-      }}>
-    {/* <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-2rem)] flex bg-background"> */}
+        height: `calc(100dvh - ${(height + mobileHeight + 30)}px)`,
+      }}
+    >
+      {/* <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-2rem)] flex bg-background"> */}
       {/* Conversation List - hidden on mobile when chat is open */}
       <div
         className={cn(
           "w-full lg:w-100 border-r border-border shrink-0",
-          selectedConversation || showGroupDiscovery ? "hidden lg:flex" : "flex"
+          selectedConversation || showGroupDiscovery
+            ? "hidden lg:flex"
+            : "flex",
         )}
       >
         <ConversationList
           conversations={conversations}
-          selectedId={selectedConversation?.id}
+          selectedId={selectedConversation?.conversationId}
           searchQuery={searchQuery}
           sortBy={sortBy}
           isLoading={isLoading}
@@ -81,13 +87,14 @@ const Messaging = () => {
           onSortChange={setSortBy}
           onSelect={(conv) => {
             setShowGroupDiscovery(false);
-            selectConversation(conv.id);
+            selectConversation(conv.conversationId);
+            // console.log("lol",conv)
           }}
           invitations={invitations}
           onAcceptInvitation={acceptInvitation}
           onDeclineInvitation={declineInvitation}
           onBrowseGroups={() => {
-            selectConversation(null);
+            null;
             setShowGroupDiscovery(true);
           }}
           onNewMessage={() => setNewMessageOpen(true)}
@@ -95,13 +102,19 @@ const Messaging = () => {
       </div>
 
       {/* New Message Dialog */}
-      <NewMessageDialog open={newMessageOpen} onOpenChange={setNewMessageOpen} />
+      <NewMessageDialog
+        open={newMessageOpen}
+        onOpenChange={setNewMessageOpen}
+        conversations={conversations}
+      />
 
       {/* Main content area */}
       <div
         className={cn(
           "flex-1 flex flex-col",
-          !selectedConversation && !showGroupDiscovery ? "hidden lg:flex" : "flex"
+          !selectedConversation && !showGroupDiscovery
+            ? "hidden lg:flex"
+            : "flex",
         )}
       >
         {showGroupDiscovery ? (
@@ -120,6 +133,8 @@ const Messaging = () => {
               onSendMediaFile={sendMediaFile}
               onRetryMessage={retryMessage}
               onDeleteMessage={deleteMessage}
+              onTyping={sendTyping} // Add this
+              typingUsers={typingUsers} // Add this
               onOpenGroupSettings={
                 selectedConversation.type === "PUBLIC_GROUP"
                   ? () => setGroupSettingsOpen(true)
@@ -151,7 +166,9 @@ const Messaging = () => {
                 </svg>
               </div>
               <p className="font-medium">Select a conversation</p>
-              <p className="text-sm mt-1">Choose from your existing conversations</p>
+              <p className="text-sm mt-1">
+                Choose from your existing conversations
+              </p>
             </div>
           </div>
         )}

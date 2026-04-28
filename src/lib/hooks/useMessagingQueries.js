@@ -184,45 +184,83 @@ export function useMarkAsRead() {
  */
 export function useSendMedia() {
   const queryClient = useQueryClient();
-  const appendMessage = useMessagingStore((s) => s.appendMessage);
-  const updateConversation = useMessagingStore((s) => s.updateConversation);
 
   return useMutation({
     mutationFn: ({ conversationId, formData }) =>
       messagingService.uploadMedia(conversationId, formData),
 
     onMutate: async ({ conversationId, optimisticMessage }) => {
-      // Cancel outgoing refetches for this conversation
-      await queryClient.cancelQueries(messagingKeys.messages(conversationId));
+      await queryClient.cancelQueries({ queryKey: ["messages", conversationId] });
+
+      const previousMessages = queryClient.getQueryData(["messages", conversationId]);
 
       if (optimisticMessage) {
-        appendMessage(conversationId, optimisticMessage);
-        updateConversation(conversationId, {
-          lastMessage: optimisticMessage.content || 'Sent an attachment',
-          lastMessageAt: optimisticMessage.createdAt,
+        queryClient.setQueryData(["messages", conversationId], (old) => {
+          const existing = old?.data ?? [];
+          return { ...old, data: [...existing, optimisticMessage] };
+        });
+
+        // Move conversation to top with last message preview
+        queryClient.setQueryData(["conversations"], (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map(conv =>
+              conv.conversationId === conversationId
+                ? {
+                    ...conv,
+                    lastMessage: optimisticMessage.content || "Sent an attachment",
+                    lastMessageAt: optimisticMessage.createdAt,
+                  }
+                : conv
+            ).sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+          };
         });
       }
 
-      return { conversationId };
+      return { conversationId, previousMessages };
     },
 
-    onSuccess: (_data, { conversationId }) => {
-      queryClient.invalidateQueries(messagingKeys.messages(conversationId));
-      queryClient.invalidateQueries(messagingKeys.conversations);
-    },
+ onSuccess: (response, { conversationId, optimisticMessage }) => {
+  const realMessage = response?.data;
+
+  queryClient.setQueryData(["messages", conversationId], (old) => {
+    return {
+      ...old,
+      data: (old?.data ?? []).map(msg =>
+        msg.id === optimisticMessage.id
+          ? {
+              ...optimisticMessage,           // keep all optimistic fields (senderId, senderName, createdAt, isOwn etc.)
+              id: realMessage.messageId,      // upgrade to real ID
+              messageId: realMessage.messageId,
+              mediaUrl: realMessage.mediaUrl, // use real server URL instead of blob
+              type: realMessage.type,
+              status: "delivered",
+            }
+          : msg
+      )
+    };
+  });
+
+  queryClient.invalidateQueries({ queryKey: ["conversations"] });
+},
 
     onError: (error, { conversationId, optimisticMessage }) => {
-      // Mark optimistic message as failed
       if (optimisticMessage) {
-        const updateMessage = useMessagingStore.getState().updateMessage;
-        updateMessage(conversationId, optimisticMessage.id, { status: 'failed' });
+        queryClient.setQueryData(["messages", conversationId], (old) => {
+          return {
+            ...old,
+            data: (old?.data ?? []).map(msg =>
+              msg.id === optimisticMessage.id ? { ...msg, status: "failed" } : msg
+            )
+          };
+        });
       }
-      toast.error('Failed to send message');
-      console.error('Send message error:', error);
+      toast.error("Failed to send attachment");
+      console.error("Send media error:", error);
     },
   });
 }
-
 // ─── Delete Message & Conversation ───────────────────────────────
 
 /**
