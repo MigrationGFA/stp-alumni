@@ -25,6 +25,7 @@ import { formatMessageDate, groupMessagesByDate } from "@/lib/helper";
 import { toast } from "sonner";
 import { ModernScrollArea } from "@/components/shared/ScrollArea";
 import { useRouter } from "@/i18n/routing";
+import useAuthStore from "@/lib/store/useAuthStore";
 
 const IMAGE_TYPES = [
   "image/jpeg",
@@ -61,6 +62,7 @@ export function ChatView({
   const imageInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
+   const { token } = useAuthStore();
   const router = useRouter();
   //  console.log("Selecting conversation:", conversation);
 
@@ -256,7 +258,7 @@ useEffect(() => {
       {/* Messages */}
       <ModernScrollArea className="flex-1 w-full">
         <div className="p-4 space-y-6 max-w-3xl">
-          {isLoading && (
+          {(isLoading || !token) && (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-stp-blue-light" />
             </div>

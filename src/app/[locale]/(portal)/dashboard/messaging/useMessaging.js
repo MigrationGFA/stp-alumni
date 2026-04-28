@@ -17,8 +17,9 @@ export function useMessaging() {
   const unreadDebounceRef = useRef(null);
   const lastUnreadInvalidationRef = useRef(0);
   // Helper to get temp ID for retry
-const getTempId = () => `temp-${Date.now()}-${Math.random()}`;
-const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, createdAt } }
+  const getTempId = () => `temp-${Date.now()}-${Math.random()}`;
+  const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, createdAt } }
+  const presenceMapRef = useRef({});
 
   // State
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -32,7 +33,7 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
     id: conv.conversationId,
     conversationId: conv.conversationId,
     type: conv.type,
-    name: conv.type === "DIRECT" 
+    name: conv.type === "DIRECT"
       ? `${conv.otherUser?.firstName || ""} ${conv.otherUser?.lastName || ""}`.trim() || conv.name
       : conv.name,
     avatar: conv.avatarPath,
@@ -42,7 +43,7 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
     unreadCount: conv.unreadCount,
     memberCount: conv.memberCount,
     userId: conv.otherUser?.userId,
-    online: false,
+    online: presenceMapRef.current[conv.otherUser?.userId] === "online",
   });
 
   // Queries
@@ -65,7 +66,7 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
     enabled: !!token,
   });
 
-    // ─── API Mutations ───────────────────────────────────────────
+  // ─── API Mutations ───────────────────────────────────────────
   const { mutate: sendMediaMutation } = useSendMedia();
   const { mutate: deleteMessageMutation } = useDeleteMessage();
   const { mutate: deleteConversationMutation } = useDeleteConversation();
@@ -75,95 +76,94 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
   const { mutate: sendInvitationMutation } = useSendInvitation();
 
   // Send message mutation with optimistic update
-  const sendMessageMutation = useMutation({
-    mutationFn: ({ conversationId, content }) => 
-      messagingService.sendMessage(conversationId, content),
+  // const sendMessageMutation = useMutation({
+  //   mutationFn: ({ conversationId, content }) => 
+  //     messagingService.sendMessage(conversationId, content),
 
-    onMutate: async ({ conversationId, content }) => {
-      // Cancel ongoing refetches
-      await queryClient.cancelQueries({ queryKey: ["messages", conversationId] });
-      
-      // Snapshot previous messages
-      const previousMessages = queryClient.getQueryData(["messages", conversationId]);
-      
-      // Create optimistic message
-      const tempId = `temp-${Date.now()}-${Math.random()}`;
-      const optimisticMessage = {
-        id: tempId,
-        messageId: tempId,
-        content,
-        type: "text",
-        createdAt: new Date().toISOString(),
-        senderId: currentUserId,
-        senderName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "You",
-        senderAvatar: user?.profileImagePath,
-        conversationId: conversationId,
-        isOwn: true,
-        status: "sending"
-      };
-      
-      // Update cache with optimistic message - wrap in { data: [...] }
-      queryClient.setQueryData(["messages", conversationId], (old) => {
-        const existing = old?.data ?? [];
-        return { ...old, data: [...existing, optimisticMessage] };
-      });
-      
-      // Update conversation list (move to top, update last message)
-      queryClient.setQueryData(["conversations", searchQuery, sortBy], (old) => {
-        if (!old?.data || !Array.isArray(old.data)) return old;
-        return {
-          ...old,
-          data: [
-            {
-              ...old.data.find(c => c.conversationId === conversationId),
-              lastMessage: content,
-              lastMessageAt: new Date().toISOString(),
-            },
-            ...old.data.filter(c => c.conversationId !== conversationId)
-          ].filter(Boolean)
-        };
-      });
-      
-      return { tempId, conversationId, previousMessages };
-    },
+  //   onMutate: async ({ conversationId, content }) => {
+  //     // Cancel ongoing refetches
+  //     await queryClient.cancelQueries({ queryKey: ["messages", conversationId] });
 
-    onSuccess: (response, variables, context) => {
-      // Replace optimistic message with real one from REST
-      const realMessage = response?.data;
-      if (realMessage && context?.conversationId) {
-        queryClient.setQueryData(["messages", context.conversationId], (old) => {
-          return {
-            ...old,
-            data: (old?.data ?? []).map(msg =>
-              msg.id === context.tempId
-                ? { ...realMessage, id: realMessage.messageId, isOwn: true, status: "delivered" }
-                : msg
-            )
-          };
-        });
-      }
-      
-      // Invalidate conversations to update last message
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
-    },
+  //     // Snapshot previous messages
+  //     const previousMessages = queryClient.getQueryData(["messages", conversationId]);
 
-    onError: (error, variables, context) => {
-      // Mark message as failed
-      if (context?.conversationId) {
-        queryClient.setQueryData(["messages", context.conversationId], (old) => {
-          return {
-            ...old,
-            data: (old?.data ?? []).map(msg =>
-              msg.id === context.tempId ? { ...msg, status: "failed" } : msg
-            )
-          };
-        });
-      }
-      toast.error("Failed to send message");
-    },
-  });
+  //     // Create optimistic message
+  //     const tempId = `temp-${Date.now()}-${Math.random()}`;
+  //     const optimisticMessage = {
+  //       id: tempId,
+  //       messageId: tempId,
+  //       content,
+  //       type: "text",
+  //       createdAt: new Date().toISOString(),
+  //       senderId: currentUserId,
+  //       senderName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "You",
+  //       senderAvatar: user?.profileImagePath,
+  //       conversationId: conversationId,
+  //       isOwn: true,
+  //       status: "sending"
+  //     };
 
-  
+  //     // Update cache with optimistic message - wrap in { data: [...] }
+  //     queryClient.setQueryData(["messages", conversationId], (old) => {
+  //       const existing = old?.data ?? [];
+  //       return { ...old, data: [...existing, optimisticMessage] };
+  //     });
+
+  //     // Update conversation list (move to top, update last message)
+  //     queryClient.setQueryData(["conversations", searchQuery, sortBy], (old) => {
+  //       if (!old?.data || !Array.isArray(old.data)) return old;
+  //       return {
+  //         ...old,
+  //         data: [
+  //           {
+  //             ...old.data.find(c => c.conversationId === conversationId),
+  //             lastMessage: content,
+  //             lastMessageAt: new Date().toISOString(),
+  //           },
+  //           ...old.data.filter(c => c.conversationId !== conversationId)
+  //         ].filter(Boolean)
+  //       };
+  //     });
+
+  //     return { tempId, conversationId, previousMessages };
+  //   },
+
+  //   onSuccess: (response, variables, context) => {
+  //     // Replace optimistic message with real one from REST
+  //     const realMessage = response?.data;
+  //     if (realMessage && context?.conversationId) {
+  //       queryClient.setQueryData(["messages", context.conversationId], (old) => {
+  //         return {
+  //           ...old,
+  //           data: (old?.data ?? []).map(msg =>
+  //             msg.id === context.tempId
+  //               ? { ...realMessage, id: realMessage.messageId, isOwn: true, status: "delivered" }
+  //               : msg
+  //           )
+  //         };
+  //       });
+  //     }
+
+  //     // Invalidate conversations to update last message
+  //     queryClient.invalidateQueries({ queryKey: ["conversations"] });
+  //   },
+
+  //   onError: (error, variables, context) => {
+  //     // Mark message as failed
+  //     if (context?.conversationId) {
+  //       queryClient.setQueryData(["messages", context.conversationId], (old) => {
+  //         return {
+  //           ...old,
+  //           data: (old?.data ?? []).map(msg =>
+  //             msg.id === context.tempId ? { ...msg, status: "failed" } : msg
+  //           )
+  //         };
+  //       });
+  //     }
+  //     toast.error("Failed to send message");
+  //   },
+  // });
+
   const sendMediaFile = useCallback(
     (file, caption = "") => {
       if (!selectedConversationId || !file) return;
@@ -199,150 +199,83 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
   );
 
   // WebSocket handlers
-  // const handleNewMessage = useCallback((wsMessage) => {
-  //   const conversationId = wsMessage.conversationId;
-    
-  //   const newMessage = {
-  //     id: wsMessage.messageId,
-  //     messageId: wsMessage.messageId,
-  //     content: wsMessage.content,
-  //     type: wsMessage.messageType || "text",
-  //     createdAt: wsMessage.createdAt,
-  //     senderId: wsMessage.senderId,
-  //     senderName: wsMessage.senderName,
-  //     senderAvatar: wsMessage.senderAvatar,
-  //     conversationId: conversationId,
-  //     isOwn: wsMessage.senderId === currentUserId,
-  //     status: "delivered"
-  //   };
-    
-  //   // Update messages cache - wrap in { data: [...] }
-  //   queryClient.setQueryData(["messages", conversationId], (old) => {
-  //     const existing = old?.data;
-  //     if (!existing || !Array.isArray(existing)) return { data: [newMessage] };
-      
-  //     // Check if message already exists (by temp ID matching content within last 5 seconds)
-  //     const existingIndex = existing.findIndex(m => 
-  //       m.content === wsMessage.content && 
-  //       Math.abs(new Date(m.createdAt) - new Date(wsMessage.createdAt)) < 5000
-  //     );
-      
-  //     if (existingIndex !== -1) {
-  //       // Replace temp message
-  //       const updated = [...existing];
-  //       updated[existingIndex] = newMessage;
-  //       return { ...old, data: updated };
-  //     }
-      
-  //     // Check for duplicate by ID
-  //     if (existing.some(m => m.id === newMessage.id)) return old;
-      
-  //     // Add new message
-  //     return { ...old, data: [...existing, newMessage] };
-  //   });
-    
-  //   // Update conversation list
-  //   queryClient.setQueryData(["conversations", searchQuery, sortBy], (old) => {
-  //     if (!old?.data || !Array.isArray(old.data)) return old;
-  //     return {
-  //       ...old,
-  //       data: old.data.map(conv => 
-  //         conv.conversationId === conversationId
-  //           ? { ...conv, lastMessage: wsMessage.content, lastMessageAt: wsMessage.createdAt }
-  //           : conv
-  //       ).sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
-  //     };
-  //   });
-    
-  //   // Debounced unread count update
-  //   const now = Date.now();
-  //   if (now - lastUnreadInvalidationRef.current > 5000) {
-  //     queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
-  //     lastUnreadInvalidationRef.current = now;
-  //   } else {
-  //     if (unreadDebounceRef.current) clearTimeout(unreadDebounceRef.current);
-  //     unreadDebounceRef.current = setTimeout(() => {
-  //       queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
-  //     }, 2000);
-  //   }
-  // }, [currentUserId, queryClient, searchQuery, sortBy]);
 
   const handleNewMessage = useCallback((wsMessage) => {
-  const conversationId = wsMessage.conversationId;
+    const conversationId = wsMessage.conversationId;
 
-  const newMessage = {
-    id: wsMessage.messageId,
-    messageId: wsMessage.messageId,
-    content: wsMessage.content,
-    type: wsMessage.messageType || "text",
-    createdAt: wsMessage.createdAt,
-    senderId: wsMessage.senderId,
-    senderName: wsMessage.senderName,
-    senderAvatar: wsMessage.senderAvatar,
-    conversationId,
-    isOwn: wsMessage.senderId === currentUserId,
-    status: "delivered"
-  };
-
-  queryClient.setQueryData(["messages", conversationId], (old) => {
-    const existing = old?.data;
-    if (!existing || !Array.isArray(existing)) return { data: [newMessage] };
-
-    // Check for duplicate by real messageId
-    if (existing.some(m => m.messageId === wsMessage.messageId)) return old;
-
-    // Find matching optimistic message from sender
-    if (wsMessage.senderId === currentUserId) {
-      const tempId = Object.keys(pendingMessagesRef.current).find(id => {
-        const p = pendingMessagesRef.current[id];
-        return p.content === wsMessage.content && p.conversationId === conversationId;
-      });
-
-      if (tempId) {
-        delete pendingMessagesRef.current[tempId]; // clean up
-        return {
-          ...old,
-          data: existing.map(m => m.id === tempId ? newMessage : m)
-        };
-      }
-    }
-
-    // New message from someone else
-    return { ...old, data: [...existing, newMessage] };
-  });
-
-  // Update conversation list
-  queryClient.setQueryData(["conversations", searchQuery, sortBy], (old) => {
-    if (!old?.data || !Array.isArray(old.data)) return old;
-    return {
-      ...old,
-      data: old.data.map(conv =>
-        conv.conversationId === conversationId
-          ? { ...conv, lastMessage: wsMessage.content, lastMessageAt: wsMessage.createdAt }
-          : conv
-      ).sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+    const newMessage = {
+      id: wsMessage.messageId,
+      messageId: wsMessage.messageId,
+      content: wsMessage.content,
+      type: wsMessage.messageType || "text",
+      createdAt: wsMessage.createdAt,
+      senderId: wsMessage.senderId,
+      senderName: wsMessage.senderName,
+      senderAvatar: wsMessage.senderAvatar,
+      conversationId,
+      isOwn: wsMessage.senderId === currentUserId,
+      status: "delivered"
     };
-  });
 
-  // Debounced unread invalidation
-  const now = Date.now();
-  if (now - lastUnreadInvalidationRef.current > 5000) {
-    queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
-    lastUnreadInvalidationRef.current = now;
-  } else {
-    if (unreadDebounceRef.current) clearTimeout(unreadDebounceRef.current);
-    unreadDebounceRef.current = setTimeout(() => {
+    queryClient.setQueryData(["messages", conversationId], (old) => {
+      const existing = old?.data;
+      if (!existing || !Array.isArray(existing)) return { data: [newMessage] };
+
+      // Check for duplicate by real messageId
+      if (existing.some(m => m.messageId === wsMessage.messageId)) return old;
+
+      // Find matching optimistic message from sender
+      if (wsMessage.senderId === currentUserId) {
+        const tempId = Object.keys(pendingMessagesRef.current).find(id => {
+          const p = pendingMessagesRef.current[id];
+          return p.content === wsMessage.content && p.conversationId === conversationId;
+        });
+
+        if (tempId) {
+          delete pendingMessagesRef.current[tempId]; // clean up
+          return {
+            ...old,
+            data: existing.map(m => m.id === tempId ? newMessage : m)
+          };
+        }
+      }
+
+      // New message from someone else
+      return { ...old, data: [...existing, newMessage] };
+    });
+
+    // Update conversation list
+    queryClient.setQueryData(["conversations", searchQuery, sortBy], (old) => {
+      if (!old?.data || !Array.isArray(old.data)) return old;
+      return {
+        ...old,
+        data: old.data.map(conv =>
+          conv.conversationId === conversationId
+            ? { ...conv, lastMessage: wsMessage.content, lastMessageAt: wsMessage.createdAt }
+            : conv
+        ).sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+      };
+    });
+
+    // Debounced unread invalidation
+    const now = Date.now();
+    if (now - lastUnreadInvalidationRef.current > 5000) {
       queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
-    }, 2000);
-  }
-}, [currentUserId, queryClient, searchQuery, sortBy]);
+      lastUnreadInvalidationRef.current = now;
+    } else {
+      if (unreadDebounceRef.current) clearTimeout(unreadDebounceRef.current);
+      unreadDebounceRef.current = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
+      }, 2000);
+    }
+  }, [currentUserId, queryClient, searchQuery, sortBy]);
 
   const handleTyping = useCallback((data) => {
     if (data.conversationId === selectedConversation?.conversationId && data.userId !== currentUserId) {
       if (typingUsers[data.userId]?.timeout) {
         clearTimeout(typingUsers[data.userId].timeout);
       }
-      
+
       const timeout = setTimeout(() => {
         setTypingUsers(prev => {
           const newState = { ...prev };
@@ -350,9 +283,9 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
           return newState;
         });
       }, 3000);
-      
-      setTypingUsers(prev => ({ 
-        ...prev, 
+
+      setTypingUsers(prev => ({
+        ...prev,
         [data.userId]: { name: data.name, timeout }
       }));
     }
@@ -363,7 +296,7 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
       queryClient.setQueryData(["messages", data.conversationId], (old) => {
         return {
           ...old,
-          data: (old?.data ?? []).map(msg => 
+          data: (old?.data ?? []).map(msg =>
             msg.senderId === data.userId && msg.status !== "read"
               ? { ...msg, status: "read" }
               : msg
@@ -373,19 +306,23 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
     }
   }, [selectedConversation?.conversationId, queryClient]);
 
-  const handlePresence = useCallback((data) => {
-    queryClient.setQueryData(["conversations", searchQuery, sortBy], (old) => {
-      if (!old?.data) return old;
-      return {
-        ...old,
-        data: old.data.map(conv => 
-          conv.userId === data.userId
-            ? { ...conv, online: data.status === "online" }
-            : conv
-        )
-      };
-    });
-  }, [queryClient, searchQuery, sortBy]);
+// Update handlePresence to write to the ref instead
+const handlePresence = useCallback((data) => {
+  presenceMapRef.current[data.userId] = data.status;
+
+  // Still update cache so ConversationList re-renders
+  queryClient.setQueryData(["conversations", searchQuery, sortBy], (old) => {
+    if (!old?.data) return old;
+    return {
+      ...old,
+      data: old.data.map(conv =>
+        conv.userId === data.userId
+          ? { ...conv, online: data.status === "online" }
+          : conv
+      )
+    };
+  });
+}, [queryClient, searchQuery, sortBy]);
 
   // Initialize WebSocket
   const { isConnected, sendMessage: wsSendMessage, sendTyping, sendReadReceipt } = useWebSocket({
@@ -396,9 +333,18 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
   });
 
   // Data transformations
-  const conversations = (conversationsData?.data || []).map(mapConversation);
+  // const conversations = (conversationsData?.data || []).map(mapConversation);
+  const conversations = (conversationsData?.data || []).map((conv) => {
+    const cached = queryClient.getQueryData(["conversations", searchQuery, sortBy]);
+    const cachedConv = cached?.data?.find(c => c.conversationId === conv.conversationId);
+
+    return {
+      ...mapConversation(conv),
+      online: cachedConv?.online ?? false, // preserve presence from cache
+    };
+  });
   const invitations = invitationsData?.data || [];
-  
+
   // Fix: Extract data array from messagesData
   const currentMessages = (messagesData?.data || []).map(msg => ({
     id: msg.messageId,
@@ -427,59 +373,59 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
   //     toast.error("No conversation selected");
   //     return;
   //   }
-    
+
   //   if (!content.trim()) return;
-    
+
   //   // Send via REST (with optimistic update)
   //   sendMessageMutation.mutate({ 
   //     conversationId: selectedConversation.conversationId, 
   //     content 
   //   });
-    
+
   //   // Also send via WebSocket for real-time to others
   //   // wsSendMessage(selectedConversation.conversationId, content);
   // }, [selectedConversation, sendMessageMutation, wsSendMessage]);
 
   const sendMessage = useCallback((content) => {
-  if (!selectedConversation?.conversationId) {
-    toast.error("No conversation selected");
-    return;
-  }
-  if (!content.trim()) return;
+    if (!selectedConversation?.conversationId) {
+      toast.error("No conversation selected");
+      return;
+    }
+    if (!content.trim()) return;
 
-  const conversationId = selectedConversation.conversationId;
-  const tempId = `temp-${Date.now()}-${Math.random()}`;
-  const createdAt = new Date().toISOString();
+    const conversationId = selectedConversation.conversationId;
+    const tempId = `temp-${Date.now()}-${Math.random()}`;
+    const createdAt = new Date().toISOString();
 
-  const optimisticMessage = {
-    id: tempId,
-    messageId: tempId,
-    content,
-    type: "text",
-    createdAt,
-    senderId: currentUserId,
-    senderName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "You",
-    senderAvatar: user?.profileImagePath,
-    conversationId,
-    isOwn: true,
-    status: "sending"
-  };
+    const optimisticMessage = {
+      id: tempId,
+      messageId: tempId,
+      content,
+      type: "text",
+      createdAt,
+      senderId: currentUserId,
+      senderName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "You",
+      senderAvatar: user?.profileImagePath,
+      conversationId,
+      isOwn: true,
+      status: "sending"
+    };
 
-  // Track this pending message for dedup in handleNewMessage
-  pendingMessagesRef.current[tempId] = { content, conversationId, createdAt };
+    // Track this pending message for dedup in handleNewMessage
+    pendingMessagesRef.current[tempId] = { content, conversationId, createdAt };
 
-  // Add to UI immediately
-  queryClient.setQueryData(["messages", conversationId], (old) => {
-    const existing = old?.data ?? [];
-    return { ...old, data: [...existing, optimisticMessage] };
-  });
+    // Add to UI immediately
+    queryClient.setQueryData(["messages", conversationId], (old) => {
+      const existing = old?.data ?? [];
+      return { ...old, data: [...existing, optimisticMessage] };
+    });
 
-  // WS only — backend saves + broadcasts
-  wsSendMessage(conversationId, content);
-}, [selectedConversation, currentUserId, user, queryClient, wsSendMessage]);
+    // WS only — backend saves + broadcasts
+    wsSendMessage(conversationId, content);
+  }, [selectedConversation, currentUserId, user, queryClient, wsSendMessage]);
 
 
-  
+
   const acceptInvitation = useCallback(
     (invitationId) => {
       respondToInvitationMutation({ invitationId, action: "accept" });
@@ -499,6 +445,16 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
       sendInvitationMutation({ recipientId, shortMessage });
     },
     [sendInvitationMutation]
+  );
+  const deleteMessage = useCallback(
+    (messageId) => {
+      if (!selectedConversationId) return;
+      deleteMessageMutation({
+        conversationId: selectedConversationId,
+        messageId,
+      });
+    },
+    [selectedConversationId, deleteMessageMutation]
   );
 
   const markAsRead = useCallback(
@@ -555,7 +511,7 @@ const pendingMessagesRef = useRef({}); // { tempId: { content, conversationId, c
     sendMessage,
     sendMediaFile,
     // retryMessage,
-    // deleteMessage,
+    deleteMessage,
     acceptInvitation,
     declineInvitation,
     sendTyping: handleTypingIndicator,
