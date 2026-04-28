@@ -26,7 +26,7 @@ export function useMessaging() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recent");
   const [typingUsers, setTypingUsers] = useState({});
-  const selectedConversationId = selectedConversation?.conversationId;
+const selectedConversationId = selectedConversation?.conversationId ?? null;
 
   // Map conversation from backend format
   const mapConversation = (conv) => ({
@@ -164,40 +164,39 @@ export function useMessaging() {
   //   },
   // });
 
-  const sendMediaFile = useCallback(
-    (file, caption = "") => {
-      if (!selectedConversationId || !file) return;
+const sendMediaFile = useCallback((file, caption = "") => {
+  if (!selectedConversationId || !file) return;
 
-      const tempId = generateId();
-      const now = new Date();
+  const tempId = `temp-${Date.now()}-${Math.random()}`;
+  const now = new Date().toISOString();
 
-      const optimisticMessage = {
-        id: tempId,
-        messageId: tempId,
-        conversationId: selectedConversationId,
-        senderId: currentUserId,
-        senderName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "You",
-        content: caption || file.name,
-        mediaUrl: URL.createObjectURL(file),
-        mediaType: file.type.startsWith("image/") ? "image" : "document",
-        createdAt: now,
-        isOwn: true,
-        status: "sending",
-      };
+  const optimisticMessage = {
+    id: tempId,
+    messageId: tempId,
+    conversationId: selectedConversationId,
+    senderId: currentUserId,
+    senderName: user?.firstName
+      ? `${user.firstName} ${user.lastName || ""}`.trim()
+      : "You",
+    senderAvatar: user?.profileImagePath,
+    content: caption || file.name,
+    mediaUrl: URL.createObjectURL(file),
+    mediaType: file.type.startsWith("image/") ? "image" : "document",
+    createdAt: now,
+    isOwn: true,
+    status: "sending",
+  };
+//  console.log(file, "useMessaging", optimisticMessage)
+  const formData = new FormData();
+  formData.append("mediaFile", file);
+  if (caption) formData.append("content", caption);
 
-      const formData = new FormData();
-      formData.append("mediaFile", file);
-      if (caption) formData.append("content", caption);
-
-      sendMediaMutation({
-        conversationId: selectedConversationId,
-        formData,
-        optimisticMessage,
-      });
-    },
-    [selectedConversationId, currentUserId, sendMediaMutation]
-  );
-
+  sendMediaMutation({
+    conversationId: selectedConversationId,
+    formData,
+    optimisticMessage,
+  });
+}, [selectedConversationId, currentUserId, user, sendMediaMutation]);
   // WebSocket handlers
 
   const handleNewMessage = useCallback((wsMessage) => {
@@ -357,6 +356,7 @@ const handlePresence = useCallback((data) => {
     senderAvatar: msg.senderAvatar,
     isOwn: msg.senderId === currentUserId,
     status: "delivered",
+    mediaUrl: msg.mediaPath,
   }));
 
   // Actions

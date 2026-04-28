@@ -16,6 +16,7 @@ const Messaging = () => {
 
   const {
     userSize: { height },
+    mobileSize:{height:mobileHeight}
   } = useNavbar();
   const {
     conversations,
@@ -39,11 +40,9 @@ const Messaging = () => {
     typingUsers, // ← ADD THIS
     isConnected, // ← ADD THIS (optional, for debugging)
   } = useMessaging();
-
-  useEffect(() => {
-    selectConversation(conversationId);
-  }, [conversationId]);
-
+useEffect(() => {
+  if (conversationId) selectConversation(conversationId);
+}, [conversationId]);
   // console.log(currentMessages,"currentMessages")
   const [showGroupDiscovery, setShowGroupDiscovery] = useState(false);
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
@@ -65,7 +64,7 @@ const Messaging = () => {
       className=" flex bg-background"
       style={{
         // top: `${height + 10}px`,
-        height: `calc(100dvh - ${height + 50}px)`,
+        height: `calc(100dvh - ${(height + mobileHeight + 30)}px)`,
       }}
     >
       {/* <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-2rem)] flex bg-background"> */}
@@ -106,6 +105,7 @@ const Messaging = () => {
       <NewMessageDialog
         open={newMessageOpen}
         onOpenChange={setNewMessageOpen}
+        conversations={conversations}
       />
 
       {/* Main content area */}

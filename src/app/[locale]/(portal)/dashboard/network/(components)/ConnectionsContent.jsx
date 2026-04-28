@@ -19,6 +19,7 @@ export function ConnectionsContent({
   uniqueSectors,
   activeSector,
   setActiveSector,
+  isNetworkLoading
 }) {
   const { options } = useNetworkStore();
   const { isLoading, error } = options;
@@ -31,7 +32,7 @@ export function ConnectionsContent({
   // console.log(displayList, "displayList");
   const titleString = `Explore Network (${displayList?.length})`;
 
-  if (isLoading) {
+  if (isLoading || isNetworkLoading) {
     return (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">

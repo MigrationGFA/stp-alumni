@@ -205,7 +205,7 @@ function SidebarWidgets({ t, height }) {
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 truncate">
-                      {message?.lastMessage.content || ""}
+                      {message?.lastMessage || ""}
                     </p>
                   </div>
                 </div>

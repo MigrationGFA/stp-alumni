@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Check, CheckCheck, Clock, AlertCircle, RotateCcw, Trash2, FileText, Download } from "lucide-react";
+import {
+  Check,
+  CheckCheck,
+  Clock,
+  AlertCircle,
+  RotateCcw,
+  Trash2,
+  FileText,
+  Download,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,27 +48,41 @@ function MessageStatus({ status }) {
 }
 
 function MediaContent({ message }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  console.log(message,"isImage")
   if (!message.mediaUrl) return null;
 
   const isImage =
     message.mediaType === "image" ||
     /\.(jpg|jpeg|png|gif|webp)$/i.test(message.mediaUrl);
 
+
   if (isImage) {
     return (
-      <div className="relative rounded-lg overflow-hidden mt-1 mb-1 max-w-xs">
+      // No margin, fills bubble edge to edge
+      <div className="relative w-[240px] h-[180px]">
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-black/10 animate-pulse flex items-center justify-center">
+            <div className="h-8 w-8 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+          </div>
+        )}
         <Image
           src={message.mediaUrl}
           alt="Shared image"
-          width={300}
-          height={200}
-          className="object-cover rounded-lg"
+          fill
+          className={cn(
+            "object-cover transition-opacity duration-300",
+            imageLoaded ? "opacity-100" : "opacity-0",
+          )}
           unoptimized={message.mediaUrl.startsWith("blob:")}
+          onLoad={() => setImageLoaded(true)}
         />
       </div>
     );
   }
 
+  // Document — keep padding here since it's inside the padded bubble
   const fileName = message.mediaUrl.split("/").pop() || "Document";
   return (
     <a
@@ -67,10 +90,10 @@ function MediaContent({ message }) {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "flex items-center gap-2 p-2 rounded-lg mt-1 mb-1 transition-colors",
+        "flex items-center gap-2 p-2 rounded-lg transition-colors",
         message.isOwn
           ? "bg-white/10 hover:bg-white/20"
-          : "bg-muted hover:bg-muted/80"
+          : "bg-muted hover:bg-muted/80",
       )}
     >
       <FileText className="h-5 w-5 shrink-0" />
@@ -80,7 +103,13 @@ function MediaContent({ message }) {
   );
 }
 
-export function MessageBubble({ message, senderAvatar, senderName, onRetry, onDelete }) {
+export function MessageBubble({
+  message,
+  senderAvatar,
+  senderName,
+  onRetry,
+  onDelete,
+}) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const isFailed = message.status === "failed";
   const createdAt =
@@ -93,7 +122,7 @@ export function MessageBubble({ message, senderAvatar, senderName, onRetry, onDe
       <div
         className={cn(
           "flex gap-3 group",
-          message.isOwn ? "flex-row-reverse" : "flex-row"
+          message.isOwn ? "flex-row-reverse" : "flex-row",
         )}
       >
         {!message.isOwn && (
@@ -113,7 +142,7 @@ export function MessageBubble({ message, senderAvatar, senderName, onRetry, onDe
         <div
           className={cn(
             "flex flex-col max-w-[70%]",
-            message.isOwn ? "items-end" : "items-start"
+            message.isOwn ? "items-end" : "items-start",
           )}
         >
           {!message.isOwn && (
@@ -128,7 +157,12 @@ export function MessageBubble({ message, senderAvatar, senderName, onRetry, onDe
                 {isFailed && onRetry && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRetry}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={onRetry}
+                      >
                         <RotateCcw className="h-3 w-3" />
                       </Button>
                     </TooltipTrigger>
@@ -155,16 +189,26 @@ export function MessageBubble({ message, senderAvatar, senderName, onRetry, onDe
 
             <div
               className={cn(
-                "px-4 py-2.5 rounded-2xl text-sm",
+                "rounded-2xl text-sm overflow-hidden",
                 message.isOwn
                   ? "bg-stp-blue-light text-white rounded-br-md"
                   : "bg-muted text-foreground rounded-bl-md",
-                isFailed && "opacity-60"
+                // Only add padding if it's a text-only message
+                !message.mediaUrl && "px-4 py-2.5",
+                isFailed && "opacity-60",
               )}
             >
               <MediaContent message={message} />
               {message.content && (
-                <span className="whitespace-pre-wrap">{message.content}</span>
+                <span
+                  className={cn(
+                    "whitespace-pre-wrap",
+                    // If there's media + caption, add padding just to the text
+                    message.mediaUrl && "block px-3 py-2 text-xs",
+                  )}
+                >
+                  {message.content}
+                </span>
               )}
             </div>
           </div>

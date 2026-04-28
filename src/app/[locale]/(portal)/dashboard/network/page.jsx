@@ -22,6 +22,7 @@ import { ConnectionsContent } from "./(components)/ConnectionsContent";
 import { NetworkSearch } from "./(components)/NetworkSearch";
 import { PeopleConnection } from "./(components)/PeopleConnection";
 import ConnectedUser from "./(components)/ConnectedUser";
+import ConnectionSkeleton from "./(components)/ConnectionSkeleton";
 // import { PeopleSuggestions } from "./(components)/PeopleSuggestions";
 // import { PeopleConnection } from "./(components)/PeopleConnection";
 
@@ -74,7 +75,7 @@ const Page = () => {
 
   const suggestions =
     useMemo(() => {
-     return  network?.filter(
+      return network?.filter(
         (user) =>
           user.connectionStatus === null || user.connectionStatus === "PENDING",
       );
@@ -129,6 +130,7 @@ const Page = () => {
               activeSector={activeSector}
               uniqueSectors={uniqueSectors}
               setActiveSector={setActiveSector}
+              isNetworkLoading={isNetworkLoading}
             />
           </>
         </TabsContent>
@@ -137,11 +139,17 @@ const Page = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-base font-semibold">
-                My Nework ({connections?.length})
+                My Nework ({connections?.length || 0})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-0">
-              {connections?.length === 0 ? (
+              {isNetworkLoading ? (
+                <>
+                <ConnectionSkeleton />
+                <ConnectionSkeleton />
+                <ConnectionSkeleton />
+                </>
+              ) : connections?.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-6">
                   No accepted connection
                 </p>

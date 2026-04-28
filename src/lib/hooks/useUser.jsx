@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
         logout(); 
         
         // 3. Kick them back to login
-        router.push('/login'); 
+        router.replace('/login'); 
       }
     },
   });

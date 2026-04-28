@@ -74,8 +74,8 @@ export function ConversationList({
   };
 
   const pendingCount = invitations.length;
-  console.log(conversations.filter(ele=>(ele.online)), "conversations");
-  console.table(conversations)
+  // console.log(conversations.filter(ele=>(ele.online)), "conversations");
+  // console.table(conversations)
 
   return (
     <div className="flex flex-col h-full w-full bg-card">

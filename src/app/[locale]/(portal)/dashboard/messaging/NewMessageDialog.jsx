@@ -28,7 +28,7 @@ function getInitials(name) {
  * Step 1: Search and select a user from the network.
  * Step 2: Write a short intro message and send the invitation.
  */
-export function NewMessageDialog({ open, onOpenChange }) {
+export function NewMessageDialog({ open, onOpenChange,conversations }) {
   const [step, setStep] = useState("search"); // "search" | "compose"
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -44,21 +44,30 @@ export function NewMessageDialog({ open, onOpenChange }) {
     staleTime: 30 * 1000,
   });
 
-  const users = (() => {
-    const raw = networkData?.data || networkData || {};
-    const all = [
-      ...(Array.isArray(raw.networkUsers) ? raw.networkUsers : []),
-      ...(Array.isArray(raw.sameSkillUsers) ? raw.sameSkillUsers : []),
-      ...(Array.isArray(raw.sameSectorUsers) ? raw.sameSectorUsers : []),
-    ];
-    // Deduplicate by userId
-    const seen = new Set();
-    return all.filter((u) => {
-      if (seen.has(u.userId)) return false;
-      seen.add(u.userId);
-      return true;
-    });
-  })();
+ // Replace the existing users filter with:
+const users = (() => {
+  const raw = networkData?.data || [];
+  const seen = new Set();
+  const uniqueUsers = raw.filter((u) => {
+    if (seen.has(u.userId)) return false;
+    seen.add(u.userId);
+    return true;
+  });
+  
+  // Only show ACCEPTED connections that don't have existing conversations
+  const chattedUserIds = new Set(
+    conversations
+      ?.filter(conv => conv.type === "DIRECT" && conv.lastMessage !== null)
+      .map(conv => conv.userId) || []
+  );
+  
+  return uniqueUsers.filter(user => 
+    user.connectionStatus === "ACCEPTED" && 
+    !chattedUserIds.has(user.userId)
+  );
+})();
+
+  console.log(users, "network users for messaging");
 
   // Filter by search
   const filteredUsers = searchQuery.trim()
