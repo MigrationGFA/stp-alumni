@@ -1,19 +1,22 @@
 "use client";
 
-import { useState,  useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Search,
-  TrendingUp,
-  Clock,
-  ArrowUpRight,
-} from "lucide-react";
+import { Search, TrendingUp, Clock, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useQuery,  useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import postService from "@/lib/services/postService";
 import PostCard from "./NewsfeedCard";
+import { useScreenSize } from "react-haiku";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const hotTopics = [
   {
@@ -43,7 +46,7 @@ export default function NewsFeed() {
     queryFn: postService.getNewsfeed,
   });
 
-  // 👇 Save mutation wired up
+  const screenSize = useScreenSize();
 
   const allPosts = useMemo(() => {
     if (!data?.data) return [];
@@ -148,26 +151,8 @@ export default function NewsFeed() {
 
         {/* Controls Bar - Mobile Optimized */}
         <div className="pb-4 mb-4 sm:mb-6">
-          <div className="flex flex-col gap-4">
-            {/* Filter Tabs - Full width on mobile */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-              {filterTabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={cn(
-                    "px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border flex-shrink-0",
-                    activeTab === tab.key
-                      ? "bg-stp-blue-light text-white border-stp-blue-light shadow-md shadow-stp-blue-light/25"
-                      : "bg-white text-slate-600 border-slate-200 hover:border-stp-blue-light/50 hover:text-stp-blue-light",
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Search - Full width, below tabs on mobile */}
+          <div className="flex flex-col gap-3">
+            {/* Search */}
             <div className="relative w-full">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -177,9 +162,45 @@ export default function NewsFeed() {
                 className="pl-10 text-sm bg-white border-slate-200 focus:border-stp-blue-light focus:ring-stp-blue-light/20 rounded-xl h-11"
               />
             </div>
+
+            {/* Filter Tabs */}
+            {screenSize.lt("md") ? (
+              <Select value={activeTab} onValueChange={setActiveTab}>
+                <SelectTrigger className="w-full rounded-xl border-slate-200 bg-white h-11 focus:ring-[#155DFC] focus:border-[#155DFC]">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent className="border-slate-200">
+                  {filterTabs.map((tab) => (
+                    <SelectItem
+                      key={tab.key}
+                      value={tab.key}
+                      className="focus:bg-[#155DFC]/10 focus:text-[#155DFC] data-[state=checked]:bg-[#155DFC] data-[state=checked]:text-white"
+                    >
+                      {tab.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {filterTabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={cn(
+                      "px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border shrink-0",
+                      activeTab === tab.key
+                        ? "bg-stp-blue-light text-white border-stp-blue-light shadow-md shadow-stp-blue-light/25"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-stp-blue-light/50 hover:text-stp-blue-light",
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-8 space-y-4 sm:space-y-6">

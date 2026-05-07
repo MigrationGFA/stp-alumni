@@ -136,9 +136,9 @@ export function InvitationItem({ invitation, index, len }) {
     mutationFn: (data) =>
       networkService.acceptConnection(invitation.connectionId),
     onSuccess: () => {
+      toast.success("Connection request accepted");
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
       queryClient.invalidateQueries({ queryKey: ["network"] });
-      toast.success("Connection request accepted");
     },
   });
 

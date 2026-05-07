@@ -1,5 +1,5 @@
 "use client";
-import { Home, Users, ShoppingBag, Newspaper, Calendar, Briefcase } from "lucide-react";
+import { Home, Users, ShoppingBag, Newspaper, Calendar, Briefcase, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, usePathname } from "@/i18n/routing";
 import { useSize } from "react-haiku";
@@ -19,6 +19,7 @@ const navItems = [
   { icon: Briefcase, label: "Deal Room", href: "/dashboard/deal-room" },
   { icon: Newspaper, label: "Feed", href: "/dashboard/newsfeed" },
   { icon: Calendar, label: "Events", href: "/dashboard/events" },
+  { icon: BookOpen, label: "Resources", href: "/dashboard/resources" },
 ];
 
 export function MobileBottomNav() {
@@ -34,7 +35,8 @@ export function MobileBottomNav() {
   return (
    <TooltipProvider delayDuration={200}>
   <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border lg:hidden" ref={elementRef}>
-    <div className="flex items-center justify-around h-16">
+    {/* <div className="flex items-center justify-around h-16"> */}
+    <div className="flex items-center h-16 overflow-x-auto scrollbar-hide px-2 gap-1">
       {navItems.map((item) => {
         const isActive =
           item.href === "/dashboard"
@@ -47,7 +49,7 @@ export function MobileBottomNav() {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 min-w-[60px] px-2 h-full transition-colors shrink-0",
+                 "flex flex-col items-center justify-center gap-1 min-w-[64px] h-full transition-colors shrink-0",
                   isActive ? "text-primary" : "text-muted-foreground",
                 )}
               >

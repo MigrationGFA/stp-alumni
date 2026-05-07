@@ -73,10 +73,12 @@ function SidebarWidgets({ t, height }) {
         <div className="space-y-6">
           {/* Your Network */}
           <div>
-            <h3 className="font-semibold text-[#233389] mb-4">
-              {t("yourNetwork")}
-            </h3>
-            <div className="space-y-3">
+            <div className="bg-white rounded-lg p-4 lg:p-6">
+              <h3 className="font-semibold text-[#233389] mb-4">
+                {t("yourNetwork")}
+              </h3>
+
+              {/* <div className="bg-white rounded-lg p-4 lg:p-6"> */}
               {isLoadingNetwork ? (
                 <div className="flex justify-center p-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#233389]"></div>
@@ -86,55 +88,55 @@ function SidebarWidgets({ t, height }) {
                   .slice(0, 5)
                   .filter((ele) => ele.connectionStatus === "ACCEPTED")
                   .map((contact, index) => (
-                    <div
-                      key={contact.userId || index}
-                      className="bg-white rounded-lg p-4 flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
-                          <Image
-                            src={
-                              contact.profileImagePath ||
-                              "/assets/Your Newtork Image.jpg"
-                            }
-                            alt={contact.name || contact.firstName || "User"}
-                            width={40}
-                            height={40}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <Link
-                            href={`/dashboard/profile/${contact.userId}`}
-                            className="hover:underline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                            }}
-                          >
-                            <p className="font-medium text-xs text-[#233389] truncate">
-                              {contact.firstName || "Anonymous"}{" "}
-                              {contact.lastName}
+                    <div key={contact.userId || index} className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
+                            <Image
+                              src={
+                                contact.profileImagePath ||
+                                "/assets/Your Newtork Image.jpg"
+                              }
+                              alt={contact.name || contact.firstName || "User"}
+                              width={40}
+                              height={40}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <Link
+                              href={`/dashboard/profile/${contact.userId}`}
+                              className="hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                            >
+                              <p className="font-medium text-xs text-[#233389] truncate">
+                                {contact.firstName || "Anonymous"}{" "}
+                                {contact.lastName}
+                              </p>
+                            </Link>
+                            <p className="text-xs text-gray-600 truncate">
+                              {contact.role || contact.email || "Member"}
                             </p>
-                          </Link>
-                          <p className="text-xs text-gray-600 truncate">
-                            {contact.role || contact.email || "Member"}
-                          </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {contact.connectionStatus === "ACCEPTED" && (
-                          <Link
-                            href={`/dashboard/messaging`}
-                            className="p-1 hover:bg-gray-100 rounded"
-                          >
-                            <MessageCircle className="h-4 w-4 text-[#233389]" />
-                          </Link>
-                        )}
-                        {contact.connectionStatus === null && (
-                          <button className="p-1 hover:bg-gray-100 rounded">
-                            <MoreHorizontal className="h-4 w-4 text-[#233389]" />
-                          </button>
-                        )}
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {contact.connectionStatus === "ACCEPTED" && (
+                            <Link
+                              href={`/dashboard/messaging`}
+                              className="p-1 hover:bg-gray-100 rounded"
+                            >
+                              <MessageCircle className="h-4 w-4 text-[#233389]" />
+                            </Link>
+                          )}
+                          {contact.connectionStatus === null && (
+                            <button className="p-1 hover:bg-gray-100 rounded">
+                              <MoreHorizontal className="h-4 w-4 text-[#233389]" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))
@@ -212,9 +214,7 @@ function SidebarWidgets({ t, height }) {
               ))}
             </div>
             <button className="w-full mt-4 text-center text-sm py-2 border border-[#233389] text-[#233389] hover:bg-[#233389] hover:text-white rounded-2xl">
-              <Link  href="/dashboard/messaging" >
-              {t("seeMore")}
-              </Link>
+              <Link href="/dashboard/messaging">{t("seeMore")}</Link>
             </button>
           </div>
         </div>

@@ -83,7 +83,7 @@ function CommentModal({ open, onClose, post }) {
   } = usePostComments(post?.id);
 
   const comments = data?.data || [];
-  // console.log(comments,"comments")
+  console.log(comments,"comments")
 
   // POST a new comment
   const { mutate: addComment, isPending: isSubmitting } = useCommentPost();
@@ -145,7 +145,7 @@ function CommentModal({ open, onClose, post }) {
           <div className="flex gap-3 mt-3">
             <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
               <Image
-                src={post?.profileImage || "/assets/Profile Image.jpg"}
+                src={post?.profileImagePath || "/assets/Profile Image.jpg"}
                 alt={post?.authorFirstName || "User"}
                 width={36}
                 height={36}
@@ -289,7 +289,7 @@ useEffect(() => {
 
   const handleComment = () => {
     setCommentModalOpen(true);
-    onComment?.(post.id); // still call the external callback if needed
+    // onComment?.(post.id); // still call the external callback if needed
   };
 
   const handleFollow = () => onFollow?.(post.author?.id);

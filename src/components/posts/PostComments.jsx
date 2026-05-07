@@ -44,6 +44,7 @@ export default function PostComments({ postId }) {
     );
   }
 
+  console.log(comments,"lol")
   return (
     <div className="space-y-4">
       {/* Comment List */}
