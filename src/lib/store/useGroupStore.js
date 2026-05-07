@@ -15,9 +15,33 @@ export const useGroupStore = create((set) => ({
       groups: state.groups 
         ? state.groups.map(group => 
             group.groupId === groupId 
-              ? { ...group, isMember, memberCount: isMember ? group.memberCount + 1 : group.memberCount - 1 }
+              ? { 
+                  ...group, 
+                  isMember, 
+                  memberCount: isMember 
+                    ? (parseInt(group.memberCount) || 0) + 1 
+                    : Math.max(0, (parseInt(group.memberCount) || 0) - 1) 
+                }
               : group
           )
         : null
+    })),
+
+  // 👇 NEW: Add newly created group to store
+  addGroupLocally: (newGroup) =>
+    set((state) => ({
+      groups: state.groups 
+        ? [...state.groups, { 
+            ...newGroup, 
+            isMember: true, // Creator is automatically a member
+            myRole: 'ADMIN',
+            memberCount: 1,
+          }] 
+        : [{ 
+            ...newGroup, 
+            isMember: true, 
+            myRole: 'ADMIN',
+            memberCount: 1,
+          }],
     })),
 }));

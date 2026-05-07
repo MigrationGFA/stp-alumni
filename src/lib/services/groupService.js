@@ -6,9 +6,20 @@ const groupService = {
    * Includes `isMember` boolean to indicate if the current user is a member.
    */
   getGroups: async () => {
-    const response = await api.get('/groups');
+    const response = await api.get('/network/groups');
     return response.data;
   },
+
+   createGroup: async (groupData) => {
+    // groupData: { name, description, thumbnailUrl? }
+    // privacyMode is always "PUBLIC" per your spec
+    const response = await api.post('/network/groups', {
+      ...groupData,
+      privacyMode: 'PUBLIC', // Force public per backend spec
+    });
+    return response.data;
+  },
+
 
   /**
    * Toggle membership for a group (action: "JOIN" or "LEAVE")
@@ -17,8 +28,14 @@ const groupService = {
    * @param {string} userId 
    */
   toggleMembership: async (groupId, action,userId) => {
-    const response = await api.post(`/groups/${groupId}/member`, {
+    const response = await api.post(`/network/groups/${groupId}/member`, {
       action,userId
+    });
+    return response.data;
+  },
+    getGroupMembers: async (groupId, page = 1, limit = 20) => {
+    const response = await api.get(`/network/groups/${groupId}/members`, {
+      params: { page, limit },
     });
     return response.data;
   },
@@ -27,14 +44,14 @@ const groupService = {
    * Create a new group
    * @param {FormData} formData - including name, description, and thumbnail
    */
-  createGroup: async (formData) => {
-    const response = await api.post('/groups', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  },
+  // createGroup: async (formData) => {
+  //   const response = await api.post('/groups', formData, {
+  //     headers: {
+  //       'Content-Type': 'multipart/form-data',
+  //     },
+  //   });
+  //   return response.data;
+  // },
 
   /**
    * Manage a group member (action: "ADD" or "REMOVE")

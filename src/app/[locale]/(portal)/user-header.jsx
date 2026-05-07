@@ -84,67 +84,85 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
 
   return (
     <>
-
-    <header
-      className={`sticky top-0 z-30 w-full px-6 md:px-8 py-4 transition-all duration-300 flex items-center justify-between ${
-        isScrolled
-          ? "bg-[#E8ECF4]/60 backdrop-blur-md border-b border-white/20 shadow-sm"
-          : "bg-[#E8ECF4] border-b border-transparent"
-      }`}
-      ref={elementRef}
-    >
-      {/* Mobile logo */}
-      <Link
-        href="/dashboard"
-        className="flex lg:hidden items-center justify-center gap-3"
+      <header
+        className={`sticky top-0 z-30 w-full px-6 md:px-8 py-4 transition-all duration-300 flex items-center justify-between ${
+          isScrolled
+            ? "bg-[#E8ECF4]/60 backdrop-blur-md border-b border-white/20 shadow-sm"
+            : "bg-[#E8ECF4] border-b border-transparent"
+        }`}
+        ref={elementRef}
       >
-        <Image
-          src="/assets/logo-removebg-preview.png"
-          alt="STP Alumni"
-          width={140}
-          height={40}
-          className="object-contain h-10 w-auto"
-          priority
-        />
-      </Link>
+        {/* Mobile logo */}
+        <Link
+          href="/dashboard"
+          className="flex lg:hidden items-center justify-center gap-3"
+        >
+          <Image
+            src="/assets/logo-removebg-preview.png"
+            alt="STP Alumni"
+            width={140}
+            height={40}
+            className="object-contain h-10 w-auto"
+            priority
+          />
+        </Link>
 
-      {/* Sidebar toggle (desktop) */}
-      <button
-        onClick={toggleSidebar}
-        className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-500"
-      >
-        {isCollapsed ? (
-          <PanelLeftOpen size={20} />
-        ) : (
-          <PanelLeftClose size={20} />
-        )}
-      </button>
+        {/* Sidebar toggle (desktop) */}
+        <button
+          onClick={toggleSidebar}
+          className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-500"
+        >
+          {isCollapsed ? (
+            <PanelLeftOpen size={20} />
+          ) : (
+            <PanelLeftClose size={20} />
+          )}
+        </button>
 
-      <div className="flex items-center justify-end">
-        <div className="flex items-center gap-4">
-          <button
+        <div className="flex items-center justify-end">
+          <div className="flex items-center gap-4">
+            <button
               onClick={() => setIsSearchOpen(true)}
-            className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm"
-            title="Search (⌘K)"
-          >
-            <Search className="h-4 w-4 text-[#020618]" />
-          </button>
-          {/* Message Button */}
-          <Link
-            href={"/dashboard/messaging"}
-            className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm"
-          >
-            <MessageSquareMore className="h-4 w-4 text-[#020618]" />
-          </Link>
+              className="sm:p-3 rounded-full transition-all sm:bg-[#02061814] hover:bg-white/60 active:scale-95 sm:shadow-sm"
+              title="Search (⌘K)"
+            >
+              <Search className="h-4 w-4 text-stp-blue-light" />
+            </button>
+            {/* Message Button */}
+            <Link
+              href={"/dashboard/messaging"}
+              className="sm:p-3 rounded-full transition-all sm:bg-[#02061814] hover:bg-white/60 active:scale-95 sm:shadow-sm"
+            >
+              <MessageSquareMore className="h-4 w-4 text-stp-blue-light" />
+            </Link>
 
-          {/* Notification Button */}
-          {/* <button className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm">
+            {/* Notification Button */}
+            {/* <button className="p-3 rounded-full transition-all bg-[#02061814] hover:bg-white/60 active:scale-95 shadow-sm">
             <Bell className="h-4 w-4 md:h-6 md:w-6 text-[#020618]" />
           </button> */}
 
-          {/* Mobile: ProfileDrawer trigger */}
-          <ProfileDrawer data={headerData}>
-            <button className="lg:hidden flex items-center gap-2 cursor-pointer">
+            {/* Mobile: ProfileDrawer trigger */}
+            <ProfileDrawer data={headerData}>
+              <button className="lg:hidden flex items-center gap-2 cursor-pointer">
+                <Avatar className="h-6 sm:h-10 w-6 sm:w-10 border-2 border-accent">
+                  <AvatarImage src={headerData.img} />
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden sm:block">
+                  <h1 className="text-[#020618] font-semibold">
+                    {headerData.name}
+                  </h1>
+                  <p className="text-[#02061873] font-light text-sm">
+                    {headerData.email}
+                  </p>
+                </div>
+              </button>
+            </ProfileDrawer>
+
+            {/* Desktop profile */}
+            <div className="gap-1 items-center hidden lg:flex">
               <Avatar className="h-10 w-10 border-2 border-accent">
                 <AvatarImage src={headerData.img} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
@@ -159,35 +177,15 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
                   {headerData.email}
                 </p>
               </div>
-            </button>
-          </ProfileDrawer>
-
-          {/* Desktop profile */}
-          <div className="gap-1 items-center hidden lg:flex">
-            <Avatar className="h-10 w-10 border-2 border-accent">
-              <AvatarImage src={headerData.img} />
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="hidden sm:block">
-              <h1 className="text-[#020618] font-semibold">
-                {headerData.name}
-              </h1>
-              <p className="text-[#02061873] font-light text-sm">
-                {headerData.email}
-              </p>
             </div>
           </div>
         </div>
-      </div>
-    </header>
-     <FloatingSearch
-        isOpen={isSearchOpen} 
-        onClose={() => setIsSearchOpen(false)} 
+      </header>
+      <FloatingSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
       />
     </>
-
   );
 }
 

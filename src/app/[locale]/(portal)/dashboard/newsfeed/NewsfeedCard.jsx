@@ -38,12 +38,14 @@ export default function PostCard({ post, variant = "grid" }) {
   const CardContent = () => (
     <>
       {/* Image Section */}
-      <div
-        className={cn(
-          "relative overflow-hidden",
-          isFeatured ? "aspect-[21/9] sm:aspect-[21/10]" : "aspect-[16/9]"
-        )}
-      >
+     <div
+  className={cn(
+    "relative overflow-hidden",
+    isFeatured 
+      ? "aspect-[21/9] sm:aspect-[21/10] lg:aspect-[21/9]" // 👈 Mobile-friendly
+      : "aspect-[16/9]"
+  )}
+>
         <img
           src={
             post.image ||
@@ -54,7 +56,7 @@ export default function PostCard({ post, variant = "grid" }) {
         />
         <div
           className={cn(
-            "absolute inset-0 bg-gradient-to-t transition-opacity",
+            "absolute inset-0 bg-linear-to-t transition-opacity",
             isFeatured
               ? "from-black/60 via-black/20 to-transparent"
               : "from-black/40 to-transparent opacity-0 group-hover:opacity-100"

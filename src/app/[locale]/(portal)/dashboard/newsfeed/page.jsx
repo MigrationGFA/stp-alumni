@@ -1,27 +1,18 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState,  useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Search,
-  Heart,
-  MessageCircle,
-  Share2,
-  Bookmark,
   TrendingUp,
   Clock,
-  ChevronRight,
   ArrowUpRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery,  useQueryClient } from "@tanstack/react-query";
 import postService from "@/lib/services/postService";
-import { format } from "date-fns";
-import { Link } from "@/i18n/routing";
-import { useToggleSave } from "./useNewsfeed";
 import PostCard from "./NewsfeedCard";
 
 const hotTopics = [
@@ -41,22 +32,11 @@ const hotTopics = [
     image:
       "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=100&h=100&fit=crop",
   },
-  {
-    id: 3,
-    title: "Sector Rotation Strategies for Growth",
-    date: "Fri, Dec 15, 2025",
-    time: "7:00PM",
-    image:
-      "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=100&h=100&fit=crop",
-  },
 ];
 
 export default function NewsFeed() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [likedPosts, setLikedPosts] = useState(new Set());
-  const [savedPosts, setSavedPosts] = useState(new Set());
-  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["newsfeed"],
@@ -125,33 +105,6 @@ export default function NewsFeed() {
     });
   }, [allPosts, activeTab, searchQuery]);
 
-  // 👇 Save handler wired to mutation
-  const handleSave = (postId) => {
-    saveMutation.mutate(postId);
-    // Also update local state for immediate UI feedback
-    setSavedPosts((prev) => {
-      const next = new Set(prev);
-      if (next.has(postId)) {
-        next.delete(postId);
-      } else {
-        next.add(postId);
-      }
-      return next;
-    });
-  };
-
-  // const handleLike = (postId) => {
-  //   setLikedPosts((prev) => {
-  //     const next = new Set(prev);
-  //     if (next.has(postId)) {
-  //       next.delete(postId);
-  //     } else {
-  //       next.add(postId);
-  //     }
-  //     return next;
-  //   });
-  // };
-
   const featuredPost = filteredPosts?.[0];
   const gridPosts = filteredPosts?.slice(1) || [];
 
@@ -165,9 +118,9 @@ export default function NewsFeed() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-10">
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -175,15 +128,15 @@ export default function NewsFeed() {
                   Latest Updates
                 </Badge>
               </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight">
                 News Feed
               </h1>
-              <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl">
+              <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl">
                 Stay informed with the latest market insights, industry updates,
                 and expert analysis.
               </p>
             </div>
-            <div className="text-sm text-slate-500 flex items-center gap-1.5">
+            <div className="text-xs sm:text-sm text-slate-500 flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
               <span>
                 {allPosts.length} article{allPosts.length !== 1 ? "s" : ""}{" "}
@@ -193,17 +146,17 @@ export default function NewsFeed() {
           </div>
         </div>
 
-        {/* Controls Bar - Sticky removed */}
-        <div className="pb-4 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 w-full lg:w-auto scrollbar-hide">
+        {/* Controls Bar - Mobile Optimized */}
+        <div className="pb-4 mb-4 sm:mb-6">
+          <div className="flex flex-col gap-4">
+            {/* Filter Tabs - Full width on mobile */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
               {filterTabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   className={cn(
-                    "px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border",
+                    "px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border flex-shrink-0",
                     activeTab === tab.key
                       ? "bg-stp-blue-light text-white border-stp-blue-light shadow-md shadow-stp-blue-light/25"
                       : "bg-white text-slate-600 border-slate-200 hover:border-stp-blue-light/50 hover:text-stp-blue-light",
@@ -214,32 +167,32 @@ export default function NewsFeed() {
               ))}
             </div>
 
-            {/* Search */}
-            <div className="relative w-full lg:w-80">
+            {/* Search - Full width, below tabs on mobile */}
+            <div className="relative w-full">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Search articles, authors, topics..."
+                placeholder="Search articles, authors..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 text-sm bg-white border-slate-200 focus:border-stp-blue-light focus:ring-stp-blue-light/20 rounded-xl h-10"
+                className="pl-10 text-sm bg-white border-slate-200 focus:border-stp-blue-light focus:ring-stp-blue-light/20 rounded-xl h-11"
               />
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-4 sm:space-y-6">
             {filteredPosts.length > 0 ? (
               <>
-                {/* Featured Post */}
+                {/* Featured Post - Mobile aspect ratio fix */}
                 {featuredPost && (
                   <PostCard post={featuredPost} variant="featured" />
                 )}
 
                 {/* Grid Posts */}
                 {gridPosts.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     {gridPosts.map((post) => (
                       <PostCard key={post.id} post={post} />
                     ))}
@@ -247,24 +200,23 @@ export default function NewsFeed() {
                 )}
               </>
             ) : (
-              <div className="text-center py-16">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                  <Search className="h-7 w-7 text-slate-400" />
+              <div className="text-center py-12 sm:py-16">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                  <Search className="h-6 w-6 sm:h-7 sm:w-7 text-slate-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">
                   No articles found
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-xs sm:text-sm text-slate-500">
                   Try adjusting your search or filter criteria
                 </p>
               </div>
             )}
           </div>
 
-          {/* Sidebar */}
-          <aside className="lg:col-span-4 space-y-6">
-            {/* Hot Topics - Sticky kept */}
-            <div className="bg-white rounded-xl border border-slate-200/60 p-5 sm:p-6 sticky top-24">
+          {/* Sidebar - Hidden on mobile, sticky on desktop */}
+          <aside className="hidden lg:block lg:col-span-4 space-y-6">
+            <div className="bg-white rounded-xl border border-slate-200/60 p-6 sticky top-24">
               <div className="flex items-center gap-2 mb-5">
                 <TrendingUp className="h-5 w-5 text-stp-blue-light" />
                 <h3 className="font-semibold text-slate-900">
