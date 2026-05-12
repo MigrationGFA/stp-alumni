@@ -12,34 +12,45 @@ import { toast } from 'sonner';
 function normalizePost(post) {
   if (post._normalized) return post;
 
-  // Parse imagePaths — could be an array, a JSON string, or undefined
-  let images = post.imagePaths ?? post.images ?? [];
+  // ✅ Parse imageUrls/imagePaths — could be an array, a JSON string, or undefined
+  let images = post.imageUrls ?? post.imagePaths ?? post.images ?? [];
   if (typeof images === 'string') {
     try { images = JSON.parse(images); } catch { images = []; }
   }
   if (!Array.isArray(images)) images = [];
 
-  // Ensure each image path is a full URL
-  const baseUrl = 'https://app.gfa-tech.com/stp/';
+  // Ensure each image path is a full URL (backend already returns full URLs)
   images = images
     .filter(Boolean)
-    .map((img) => (img.startsWith('http') ? img : `${baseUrl}${img}`));
+    .map((img) => img.startsWith('http') ? img : `https://app.gfa-tech.com/stp/${img}`);
+
+  // ✅ Build author object from backend fields
+  const author = {
+    id: post.authorId || post.user_id,
+    name: `${post.firstName || ''} ${post.lastName || ''}`.trim() || post.authorName || 'Unknown',
+    firstName: post.firstName,
+    lastName: post.lastName,
+    profileImagePath: post.profileImagePath,
+    title: post.authorTitle || post.title,
+    companyName: post.companyName,
+  };
 
   return {
     ...post,
     _normalized: true,
-    id: post.postId || post.id,
-    images,
+    id: post.postId || post.id || post.post_id,
+    images, // ✅ Now populated from imageUrls
+    author, // ✅ Properly mapped author
+    createdAt: post.createdAt || post.created_at,
     likes: {
-      count: parseInt(post.likes, 10) || 0,
-      isLiked: !!post.hasLiked,
+      count: post.likeCount || parseInt(post.likes, 10) || 0,
+      isLiked: post.hasUserLiked || !!post.hasLiked,
     },
     comments: {
-      count: parseInt(post.comments, 10) || 0,
+      count: post.commentCount || parseInt(post.comments, 10) || 0,
     },
   };
 }
-
 /**
  * Hook to fetch all posts for the feed
  */
