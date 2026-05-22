@@ -290,7 +290,7 @@ export function DealRoomView({
           <div className="space-y-6 py-2">
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">
-                Add new member
+                Add new member lol
               </p>
               <div className="flex gap-2">
                 <Input

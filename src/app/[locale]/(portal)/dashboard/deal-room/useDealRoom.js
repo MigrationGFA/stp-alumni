@@ -14,6 +14,7 @@ import {
 } from "@/lib/hooks/useMessagingQueries";
 import useMessagingStore from "@/lib/store/useMessagingStore";
 import useAuthStore from "@/lib/store/useAuthStore";
+import { useMyDealroom } from "@/lib/hooks/useDealroomQueries";
 
 /** Stable empty array to avoid infinite re-render loops in Zustand selectors */
 const EMPTY_ARRAY = [];
@@ -83,7 +84,7 @@ export function useDealRoom() {
   const currentUserId = currentUser?.id || currentUser?.userId;
 
   // ─── API Queries ─────────────────────────────────────────────
-  const { data: rawConversations, isLoading: convsLoading } = useConversations();
+  const { data: rawConversations, isLoading: convsLoading } = useMyDealroom();
   const { data: rawMessagesData, isLoading: msgsLoading } = useMessages(selectedRoomId);
 
   // ─── API Mutations ───────────────────────────────────────────
