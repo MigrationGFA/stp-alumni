@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+'use client';
+import { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,113 +7,139 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { FileText, Paperclip } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Paperclip, X, FileText, CheckCircle2, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const INITIAL_MEMBERS = [];
-const INITIAL_DOCUMENTS = [];
+const STEPS = ['name', 'members', 'documents'];
+const STEP_LABELS = { name: 'Name', members: 'Members', documents: 'Documents' };
+
+function StepIndicator({ current }) {
+  return (
+    <div className="flex items-center gap-2 mb-6">
+      {STEPS.map((step, i) => {
+        const idx = STEPS.indexOf(current);
+        const done = i < idx;
+        const active = i === idx;
+        return (
+          <div key={step} className="flex items-center gap-2">
+            <div
+              className={cn(
+                'flex items-center justify-center h-6 w-6 rounded-full text-xs font-medium transition-all',
+                done && 'bg-stp-blue-light text-white',
+                active && 'bg-stp-blue-light text-white ring-2 ring-stp-blue-light/30',
+                !done && !active && 'bg-muted text-muted-foreground',
+              )}
+            >
+              {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+            </div>
+            <span
+              className={cn(
+                'text-xs',
+                active ? 'text-foreground font-medium' : 'text-muted-foreground',
+              )}
+            >
+              {STEP_LABELS[step]}
+            </span>
+            {i < STEPS.length - 1 && (
+              <ChevronRight className="h-3 w-3 text-muted-foreground mx-1" />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export function CreateDealRoomModal({ open, onOpenChange, onCreate }) {
-  const [step, setStep] = useState("name"); // "name" | "members" | "documents"
-  const [roomName, setRoomName] = useState("");
-  const [memberSearch, setMemberSearch] = useState("");
-  const [members, setMembers] = useState(INITIAL_MEMBERS);
-  const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
+  const [step, setStep] = useState('name');
+  const [roomName, setRoomName] = useState('');
+  const [roomDescription, setRoomDescription] = useState('');
+  const [memberSearch, setMemberSearch] = useState('');
+  const [members, setMembers] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [isLaunching, setIsLaunching] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!open) {
-      setStep("name");
-      setRoomName("");
-      setMemberSearch("");
-      setMembers(INITIAL_MEMBERS);
-      setDocuments(INITIAL_DOCUMENTS);
+      setStep('name');
+      setRoomName('');
+      setRoomDescription('');
+      setMemberSearch('');
+      setMembers([]);
+      setDocuments([]);
+      setIsLaunching(false);
     }
   }, [open]);
-
-  const handleNameNext = () => {
-    if (!roomName.trim()) return;
-    setStep("members");
-  };
 
   const handleAddMember = () => {
     const name = memberSearch.trim();
     if (!name) return;
-
     setMembers((prev) => {
-      if (prev.some((m) => m.name.toLowerCase() === name.toLowerCase())) {
-        return prev;
-      }
-      const nextId = `member_${Date.now()}_${prev.length + 1}`;
-      return [...prev, { id: nextId, name }];
+      if (prev.some((m) => m.name.toLowerCase() === name.toLowerCase())) return prev;
+      return [...prev, { id: `member_${Date.now()}`, name }];
     });
-    setMemberSearch("");
+    setMemberSearch('');
   };
 
-  const handleRemoveMember = (id) => {
-    setMembers((prev) => prev.filter((m) => m.id !== id));
-  };
-
-  const handleMembersNext = () => {
-    setStep("documents");
-  };
-
-  const handleFileSelected = (event) => {
-    const file = event.target.files?.[0];
+  const handleFileSelected = (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-
     setDocuments((prev) => [
       ...prev,
-      {
-        id: `doc_${Date.now()}_${prev.length + 1}`,
-        name: file.name,
-        file,
-      },
+      { id: `doc_${Date.now()}`, name: file.name, file },
     ]);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleLaunch = () => {
-    if (!roomName.trim()) return;
-    const payload = {
-      name: roomName.trim(),
-      members,
-      documents,
-    };
-    onCreate?.(payload);
-  };
-
-  const handleDialogChange = (nextOpen) => {
-    onOpenChange?.(nextOpen);
+  const handleLaunch = async () => {
+    if (!roomName.trim() || isLaunching) return;
+    setIsLaunching(true);
+    await onCreate?.({ name: roomName.trim(), description: roomDescription.trim(), members, documents });
+    setIsLaunching(false);
   };
 
   const renderNameStep = () => (
     <>
-      <DialogHeader>
-        <DialogTitle>Create Room</DialogTitle>
-        <DialogDescription>Create a new deal room</DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-2">
-        <Input
-          value={roomName}
-          onChange={(e) => setRoomName(e.target.value)}
-          placeholder="Interview with AM"
-          className="w-full"
-        />
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="room-name" className="text-sm font-medium">
+            Room name <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="room-name"
+            value={roomName}
+            onChange={(e) => setRoomName(e.target.value)}
+            placeholder="e.g. Series A Negotiations"
+            className="w-full"
+            onKeyDown={(e) => e.key === 'Enter' && roomName.trim() && setStep('members')}
+            autoFocus
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="room-desc" className="text-sm font-medium">
+            Description <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+          </Label>
+          <Input
+            id="room-desc"
+            value={roomDescription}
+            onChange={(e) => setRoomDescription(e.target.value)}
+            placeholder="Brief description of this deal room"
+            className="w-full"
+          />
+        </div>
       </div>
-      <DialogFooter>
+      <DialogFooter className="mt-6">
         <Button
-          className="bg-stp-blue-light text-white hover:bg-stp-blue-light/90 w-full sm:w-auto rounded-full"
-          onClick={handleNameNext}
+          className="w-full rounded-full bg-stp-blue-light text-white hover:bg-stp-blue-light/90"
+          onClick={() => setStep('members')}
           disabled={!roomName.trim()}
         >
-          Name a Room
+          Continue
         </Button>
       </DialogFooter>
     </>
@@ -120,22 +147,21 @@ export function CreateDealRoomModal({ open, onOpenChange, onCreate }) {
 
   const renderMembersStep = () => (
     <>
-      <DialogHeader>
-        <DialogTitle>Members</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-6 py-2">
+      <div className="space-y-5">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Add new member</p>
+          <Label className="text-sm font-medium">Add member</Label>
           <div className="flex gap-2">
             <Input
               value={memberSearch}
               onChange={(e) => setMemberSearch(e.target.value)}
-              placeholder="Search for a user name"
+              placeholder="Search by name or user ID"
               className="flex-1"
+              onKeyDown={(e) => e.key === 'Enter' && handleAddMember()}
             />
             <Button
-              className="bg-stp-blue-light text-white hover:bg-stp-blue-light/90 rounded-full px-6"
+              className="rounded-full bg-stp-blue-light text-white hover:bg-stp-blue-light/90 px-5"
               onClick={handleAddMember}
+              disabled={!memberSearch.trim()}
             >
               Add
             </Button>
@@ -143,48 +169,56 @@ export function CreateDealRoomModal({ open, onOpenChange, onCreate }) {
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">
-            List of member{members.length !== 1 ? "s" : ""}
-          </p>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">
+              Members {members.length > 0 && (
+                <span className="ml-1 text-xs text-muted-foreground">({members.length})</span>
+              )}
+            </Label>
+          </div>
           {members.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Added members will appear here.
-            </p>
+            <div className="rounded-lg border border-dashed border-border p-6 text-center">
+              <p className="text-sm text-muted-foreground">No members added yet.</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                You can also add them after creating the room.
+              </p>
+            </div>
           ) : (
-            <ul className="space-y-2 max-h-48 overflow-y-auto">
-              {members.map((member) => (
+            <ul className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+              {members.map((m) => (
                 <li
-                  key={member.id}
-                  className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
+                  key={m.id}
+                  className="flex items-center justify-between rounded-lg border border-border px-3 py-2 group"
                 >
-                  <span className="text-sm">{member.name}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => handleRemoveMember(member.id)}
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-full bg-stp-blue-light/10 text-stp-blue-light text-xs font-semibold flex items-center justify-center">
+                      {m.name[0].toUpperCase()}
+                    </div>
+                    <span className="text-sm">{m.name}</span>
+                  </div>
+                  <button
+                    onClick={() => setMembers((prev) => prev.filter((x) => x.id !== m.id))}
+                    className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded"
+                    aria-label={`Remove ${m.name}`}
                   >
-                    Remove
-                  </Button>
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </li>
               ))}
             </ul>
           )}
         </div>
       </div>
-      <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2">
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto rounded-full"
-          onClick={() => setStep("name")}
-        >
+
+      <DialogFooter className="mt-6 flex-row gap-2">
+        <Button variant="outline" className="flex-1 rounded-full" onClick={() => setStep('name')}>
           Back
         </Button>
         <Button
-          className="w-full sm:w-auto bg-stp-blue-light text-white hover:bg-stp-blue-light/90 rounded-full"
-          onClick={handleMembersNext}
+          className="flex-1 rounded-full bg-stp-blue-light text-white hover:bg-stp-blue-light/90"
+          onClick={() => setStep('documents')}
         >
-          Next
+          Continue
         </Button>
       </DialogFooter>
     </>
@@ -192,98 +226,104 @@ export function CreateDealRoomModal({ open, onOpenChange, onCreate }) {
 
   const renderDocumentsStep = () => (
     <>
-      <DialogHeader>
-        <DialogTitle>Upload Document</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-6 py-2">
+      <div className="space-y-5">
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-foreground">
-            Choose Document
-          </Label>
-          <div className="flex gap-2">
-            <Input
-              readOnly
-              placeholder="Select a File"
-              className="flex-1 cursor-pointer"
-              onClick={() => fileInputRef.current?.click()}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center justify-center rounded-full h-10 w-10 bg-muted text-muted-foreground hover:bg-muted/80"
-            >
-              <Paperclip className="h-4 w-4" />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              onChange={handleFileSelected}
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              className="bg-stp-blue-light text-white hover:bg-stp-blue-light/90 rounded-full flex-1"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              Add
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-full flex-1"
-              onClick={handleLaunch}
-            >
-              Skip
-            </Button>
-          </div>
+          <Label className="text-sm font-medium">Upload documents</Label>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border p-6 hover:border-stp-blue-light/50 hover:bg-muted/30 transition-all group cursor-pointer"
+          >
+            <div className="h-10 w-10 rounded-full bg-muted group-hover:bg-stp-blue-light/10 transition-colors flex items-center justify-center">
+              <Paperclip className="h-4 w-4 text-muted-foreground group-hover:text-stp-blue-light transition-colors" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium">Click to select a file</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Any file type up to 50MB</p>
+            </div>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileSelected}
+          />
         </div>
 
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">
-            Documents Uploaded
-          </p>
-          {documents.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Uploaded documents will appear here.
-            </p>
-          ) : (
-            <ul className="space-y-2">
+        {documents.length > 0 && (
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium">
+              Queued ({documents.length})
+            </Label>
+            <ul className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
               {documents.map((doc) => (
                 <li
                   key={doc.id}
-                  className="flex items-center gap-2 text-sm text-foreground"
+                  className="flex items-center gap-2.5 rounded-lg border border-border px-3 py-2"
                 >
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-stp-blue-light text-[10px] font-semibold text-white">
-                    PDF
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-stp-blue-light text-[10px] font-bold text-white shrink-0">
+                    <FileText className="h-3.5 w-3.5" />
                   </span>
-                  <span className="truncate flex-1">{doc.name}</span>
+                  <span className="text-sm truncate flex-1">{doc.name}</span>
+                  <button
+                    onClick={() => setDocuments((prev) => prev.filter((d) => d.id !== doc.id))}
+                    className="text-muted-foreground hover:text-destructive transition-colors p-1 shrink-0"
+                    aria-label="Remove document"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </li>
               ))}
             </ul>
-          )}
-        </div>
+          </div>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          Documents can also be uploaded after the room is created. Only members who have signed the NDA can view them.
+        </p>
       </div>
-      <DialogFooter className="flex flex-col gap-2">
+
+      <DialogFooter className="mt-6 flex-col gap-2">
         <Button
-          className="w-full bg-stp-blue-light text-white hover:bg-stp-blue-light/90 rounded-full"
+          className="w-full rounded-full bg-stp-blue-light text-white hover:bg-stp-blue-light/90 py-5"
           onClick={handleLaunch}
+          disabled={isLaunching}
         >
-          Launch Deal Room
+          {isLaunching ? 'Launching…' : 'Launch Deal Room'}
         </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1 rounded-full" onClick={() => setStep('members')}>
+            Back
+          </Button>
+          <Button
+            variant="ghost"
+            className="flex-1 rounded-full text-muted-foreground"
+            onClick={handleLaunch}
+            disabled={isLaunching}
+          >
+            Skip & Launch
+          </Button>
+        </div>
       </DialogFooter>
     </>
   );
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        {step === "name" && renderNameStep()}
-        {step === "members" && renderMembersStep()}
-        {step === "documents" && renderDocumentsStep()}
+        <DialogHeader>
+          <DialogTitle>Create Deal Room</DialogTitle>
+          <DialogDescription>
+            A secure, private space for confidential deal communications.
+          </DialogDescription>
+        </DialogHeader>
+
+        <StepIndicator current={step} />
+
+        {step === 'name' && renderNameStep()}
+        {step === 'members' && renderMembersStep()}
+        {step === 'documents' && renderDocumentsStep()}
       </DialogContent>
     </Dialog>
   );
 }
-

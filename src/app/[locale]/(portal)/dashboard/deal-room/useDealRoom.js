@@ -1,319 +1,268 @@
-import { useState, useCallback, useMemo } from "react";
-import {
-  useConversations,
-  useMessages,
-  useSendMedia,
-  useSendMessage,
-  useDeleteMessage,
-  useDeleteConversation,
-  useCreatePrivateGroup,
-  useInviteToGroup,
-  useRemoveMember,
-  useUpdatePrivateGroupSettings,
-  useMarkAsRead,
-} from "@/lib/hooks/useMessagingQueries";
-import useMessagingStore from "@/lib/store/useMessagingStore";
-import useAuthStore from "@/lib/store/useAuthStore";
-import { useCreateDealroom, useMyDealroom } from "@/lib/hooks/useDealroomQueries";
+'use client';
+import { useState, useCallback, useMemo, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
-/** Stable empty array to avoid infinite re-render loops in Zustand selectors */
+import useAuthStore from '@/lib/store/useAuthStore';
+import { useDealRoomSocket } from '@/lib/hooks/useDealRoomSocket';
+import { useMyDealroom , useDealroomById,
+  useCreateDealroom,
+  useAddMembers,
+  useRemoveDealroomMember,
+  useDealroomMessages,
+  useSendDealroomMessage,
+  useDeleteDealroomMessage,
+  useUploadDealroomFile,
+  dealroomKeys,} from '@/lib/hooks/useDealroomQueries';
+
 const EMPTY_ARRAY = [];
 
-export function generateId() {
-  return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-/**
- * Normalize a PRIVATE_GROUP conversation from the API to the shape the Deal Room UI expects.
- */
-function normalizeRoom(conv) {
-  const id = conv.conversationId || conv.id;
+/** Shape the list-view item from GET /dealrooms */
+function normalizeRoomSummary(raw) {
   return {
-    id,
-    conversationId: id,
-    name: conv.name || conv.title || "Unnamed Room",
-    avatar: conv.avatar || conv.thumbnail || null,
-    description: conv.description || "",
-    lastMessage: conv.lastMessage || conv.lastMessageContent || "",
-    lastMessageAt: conv.lastMessageAt || conv.updatedAt
-      ? new Date(conv.lastMessageAt || conv.updatedAt)
-      : new Date(),
-    unread: !!conv.unreadCount || conv.unread || false,
-    unreadCount: parseInt(conv.unreadCount, 10) || 0,
-    online: false,
-    onlineCount: 0,
-    members: conv.participants || conv.members || [],
-    memberLimit: conv.memberLimit || null,
-    type: "PRIVATE_GROUP",
+    id: raw.roomId,
+    roomId: raw.roomId,
+    roomName: raw.roomName || 'Unnamed Room',
+    roomDescription: raw.roomDescription || '',
+    isLocked: raw.isLocked || false,
+    status: raw.status || 'ACTIVE',
+    memberCount: raw.memberCount ?? 1,
+    createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
+    createdBy: `${raw.firstName || ''} ${raw.lastName || ''}`.trim(),
+    documentUrl: raw.documentUrl || null,
+    // enriched after detail fetch
+    members: [],
+    hasSignedNda: false,
   };
 }
 
-/**
- * Normalize a message from the API to the shape the Deal Room UI expects.
- */
+/** Shape the full room from GET /dealrooms/:roomId */
+function normalizeRoomDetail(raw) {
+  return {
+    id: raw.roomId,
+    roomId: raw.roomId,
+    roomName: raw.roomName || 'Unnamed Room',
+    roomDescription: raw.roomDescription || '',
+    isLocked: raw.isLocked || false,
+    status: raw.status || 'ACTIVE',
+    memberCount: raw.members?.length ?? 1,
+    createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
+    createdBy: raw.createdBy || null,
+    createdByName: `${raw.firstName || ''} ${raw.lastName || ''}`.trim(),
+    members: (raw.members || []).map((m) => ({
+      userId: m.userId,
+      id: m.userId,
+      name: `${m.firstName || ''} ${m.lastName || ''}`.trim(),
+      firstName: m.firstName,
+      lastName: m.lastName,
+      email: m.email,
+      title: m.title || '',
+      companyName: m.companyName || '',
+      avatar: m.profileImagePath || null,
+      ndaSigned: m.ndaSigned || false,
+      ndaSignedAt: m.ndaSignedAt ? new Date(m.ndaSignedAt) : null,
+      joinedAt: m.joinedAt ? new Date(m.joinedAt) : null,
+    })),
+    hasSignedNda: raw.hasSignedNda || false,
+    documentUrl: raw.documentUrl || null,
+  };
+}
+
+/** Normalize a message from API */
 function normalizeMessage(msg, currentUserId) {
   const senderId = msg.senderId || msg.userId;
   const isOwn = senderId === currentUserId;
-
   return {
     id: msg.messageId || msg.id,
     messageId: msg.messageId || msg.id,
-    roomId: msg.conversationId,
+    roomId: msg.roomId || msg.conversationId,
     senderId,
-    senderName: msg.senderName || msg.name || (isOwn ? "You" : "User"),
+    senderName: msg.senderName || (isOwn ? 'You' : 'Member'),
     senderAvatar: msg.senderAvatar || msg.profileImagePath || null,
-    content: msg.content || msg.message || "",
+    content: msg.content || msg.message || '',
     mediaUrl: msg.mediaUrl || null,
     mediaType: msg.mediaType || null,
+    fileId: msg.fileId || null,
+    streamUrl: msg.streamUrl || null,
     createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
     isOwn,
-    status: msg.status || (isOwn ? "sent" : "read"),
+    status: msg.status || (isOwn ? 'sent' : 'read'),
+    type: msg.messageType || 'text',
   };
 }
 
-/**
- * Main Deal Room hook — replaces the old mock-based hook.
- * Fetches real data from the API via React Query, filtering for PRIVATE_GROUP conversations.
- */
 export function useDealRoom() {
   const [selectedRoomId, setSelectedRoomId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("recent");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('recent');
+  const [typingUsers, setTypingUsers] = useState([]);
+  const typingClearTimers = useRef({});
 
   const currentUser = useAuthStore((s) => s.user);
   const currentUserId = currentUser?.id || currentUser?.userId;
+  const queryClient = useQueryClient();
 
-  // ─── API Queries ─────────────────────────────────────────────
-  const { data: rawConversations, isLoading: convsLoading } = useMyDealroom();
-  const { data: rawMessagesData, isLoading: msgsLoading } = useMessages(selectedRoomId);
+  // ─── Queries ───────────────────────────────────────────────────
+  const { data: rawRooms, isLoading: roomsLoading } = useMyDealroom();
+  const { data: rawRoomDetail, isLoading: roomDetailLoading } = useDealroomById(selectedRoomId);
+  const {
+    data: messagesData,
+    isLoading: msgsLoading,
+    fetchNextPage,
+    hasNextPage,
+  } = useDealroomMessages(selectedRoomId);
 
-  // ─── API Mutations ───────────────────────────────────────────
-  const { mutateAsync: createPrivateGroupMutation } = useCreateDealroom();
-  const { mutate: inviteToGroupMutation } = useInviteToGroup();
-  const { mutate: removeMemberMutation } = useRemoveMember();
-  const { mutate: updateSettingsMutation } = useUpdatePrivateGroupSettings();
-  const { mutate: sendMediaMutation } = useSendMedia();
-  const { mutate: sendMessageMutation } = useSendMessage();
-  const { mutate: deleteMessageMutation } = useDeleteMessage();
-  const { mutate: deleteConversationMutation } = useDeleteConversation();
-  const { mutate: markAsReadMutation } = useMarkAsRead();
+  // ─── Mutations ─────────────────────────────────────────────────
+  const { mutateAsync: createRoomMutation } = useCreateDealroom();
+  const { mutate: addMembersMutation } = useAddMembers();
+  const { mutate: removeMemberMutation } = useRemoveDealroomMember();
+  const { mutate: sendMessageMutation } = useSendDealroomMessage();
+  const { mutate: deleteMessageMutation } = useDeleteDealroomMessage();
+  const { mutateAsync: uploadFileMutation } = useUploadDealroomFile();
 
-  // ─── Normalize rooms (PRIVATE_GROUP only) ────────────────────
+  // ─── WebSocket ─────────────────────────────────────────────────
+  const handleTyping = useCallback((data) => {
+    if (data.userId === currentUserId) return;
+    setTypingUsers((prev) => {
+      if (prev.find((u) => u.userId === data.userId)) return prev;
+      return [...prev, { userId: data.userId, name: data.name }];
+    });
+    // Auto-clear typing indicator after 3s
+    clearTimeout(typingClearTimers.current[data.userId]);
+    typingClearTimers.current[data.userId] = setTimeout(() => {
+      setTypingUsers((prev) => prev.filter((u) => u.userId !== data.userId));
+    }, 3000);
+  }, [currentUserId]);
+
+  const handleRead = useCallback(() => {
+    if (selectedRoomId) {
+      queryClient.invalidateQueries({ queryKey: dealroomKeys.messages(selectedRoomId) });
+    }
+  }, [selectedRoomId, queryClient]);
+
+  const { sendMessage: wsSendMessage, sendTyping, markRead } = useDealRoomSocket(
+    selectedRoomId,
+    {
+      onMessage: () => {}, // invalidation handled inside useDealRoomSocket
+      onTyping: handleTyping,
+      onRead: handleRead,
+    },
+  );
+
+  // ─── Derived data ───────────────────────────────────────────────
+
   const allRooms = useMemo(() => {
-    if (!rawConversations) return EMPTY_ARRAY;
-    const list = Array.isArray(rawConversations) ? rawConversations : [];
-    return list
-      // .filter((c) => c.type === "PRIVATE_GROUP")
-      // .map(normalizeRoom);
-  }, [rawConversations]);
+    if (!rawRooms) return EMPTY_ARRAY;
+    return rawRooms.map(normalizeRoomSummary);
+  }, [rawRooms]);
 
-  console.log(allRooms,"allRooms")
+  const selectedRoom = useMemo(() => {
+    if (!rawRoomDetail) {
+      // Fall back to summary while detail loads
+      return allRooms.find((r) => r.id === selectedRoomId) || null;
+    }
+    return normalizeRoomDetail(rawRoomDetail);
+  }, [rawRoomDetail, allRooms, selectedRoomId]);
 
-  // ─── Sort & filter ───────────────────────────────────────────
   const filteredRooms = useMemo(() => {
     let result = [...allRooms];
-
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase();
       result = result.filter(
-        (room) =>
-          room.name.toLowerCase().includes(query) ||
-          (room.lastMessage && room.lastMessage.toLowerCase().includes(query))
+        (r) =>
+          r.roomName.toLowerCase().includes(q) ||
+          r.roomDescription.toLowerCase().includes(q),
       );
     }
-
     result.sort((a, b) => {
-      switch (sortBy) {
-        case "unread":
-          if (a.unread !== b.unread) return a.unread ? -1 : 1;
-          return b.lastMessageAt.getTime() - a.lastMessageAt.getTime();
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "recent":
-        default:
-          return b.lastMessageAt.getTime() - a.lastMessageAt.getTime();
-      }
+      if (sortBy === 'name') return a.roomName.localeCompare(b.roomName);
+      return b.createdAt.getTime() - a.createdAt.getTime();
     });
-
     return result;
   }, [allRooms, searchQuery, sortBy]);
 
-  // ─── Selected room ──────────────────────────────────────────
-  const selectedRoom = useMemo(
-    () => allRooms.find((r) => r.id === selectedRoomId) || null,
-    [allRooms, selectedRoomId]
-  );
-
-  // ─── Normalize messages ─────────────────────────────────────
-  const apiMessages = useMemo(() => {
-    if (!selectedRoomId || !rawMessagesData) return EMPTY_ARRAY;
-    const raw = Array.isArray(rawMessagesData?.data)
-      ? rawMessagesData.data
-      : Array.isArray(rawMessagesData)
-        ? rawMessagesData
-        : [];
-    return raw
+  const currentMessages = useMemo(() => {
+    if (!messagesData) return EMPTY_ARRAY;
+    const flat = messagesData.pages.flat();
+    return flat
       .map((m) => normalizeMessage(m, currentUserId))
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-  }, [rawMessagesData, selectedRoomId, currentUserId]);
+  }, [messagesData, currentUserId]);
 
-  // Merge with optimistic store messages
-  const allStoreMessages = useMessagingStore((s) => s.messages);
-  const storeMessages = selectedRoomId
-    ? allStoreMessages[selectedRoomId] || EMPTY_ARRAY
-    : EMPTY_ARRAY;
-
-  const currentMessages = useMemo(() => {
-    const apiIds = new Set(apiMessages.map((m) => m.id));
-    const optimistic = storeMessages.filter((m) => !apiIds.has(m.id));
-    return [...apiMessages, ...optimistic].sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
-  }, [apiMessages, storeMessages]);
-
-  // ─── Actions ─────────────────────────────────────────────────
+  // ─── Actions ───────────────────────────────────────────────────
 
   const selectRoom = useCallback((roomId) => {
     setSelectedRoomId(roomId);
-    if (roomId) {
-      useMessagingStore.getState().setActiveConversation(roomId);
-    }
-  }, []);
+    setTypingUsers([]);
+    if (roomId) markRead();
+  }, [markRead]);
 
   const sendMessage = useCallback(
     (content) => {
       if (!selectedRoomId || !content.trim()) return;
-
-      const tempId = generateId();
-      const now = new Date();
-
-      const optimisticMessage = {
-        id: tempId,
-        messageId: tempId,
-        roomId: selectedRoomId,
-        conversationId: selectedRoomId,
-        senderId: currentUserId,
-        senderName: currentUser?.name || "You",
-        content: content.trim(),
-        createdAt: now,
-        isOwn: true,
-        status: "sending",
-      };
-
-      sendMessageMutation({
-        conversationId: selectedRoomId,
-        content: content.trim(),
-        optimisticMessage,
-      });
+      // Send via WS for real-time, REST for persistence
+      wsSendMessage(content);
+      sendMessageMutation({ roomId: selectedRoomId, content: content.trim() });
     },
-    [selectedRoomId, currentUserId, currentUser, sendMessageMutation]
-  );
-
-  const retryMessage = useCallback(
-    (messageId) => {
-      if (!selectedRoomId) return;
-      const msgs = useMessagingStore.getState().messages[selectedRoomId] || [];
-      const failedMsg = msgs.find((m) => m.id === messageId);
-      if (!failedMsg) return;
-
-      useMessagingStore.getState().updateMessage(selectedRoomId, messageId, {
-        status: "sending",
-      });
-
-      sendMessageMutation({
-        conversationId: selectedRoomId,
-        content: failedMsg.content,
-        optimisticMessage: null,
-      });
-    },
-    [selectedRoomId, sendMessageMutation]
+    [selectedRoomId, wsSendMessage, sendMessageMutation],
   );
 
   const deleteMessage = useCallback(
     (messageId) => {
       if (!selectedRoomId) return;
-      deleteMessageMutation({
-        conversationId: selectedRoomId,
-        messageId,
-      });
+      deleteMessageMutation({ roomId: selectedRoomId, messageId });
     },
-    [selectedRoomId, deleteMessageMutation]
-  );
-
-  const updateRoomName = useCallback(
-    (roomId, newName) => {
-      if (!newName?.trim()) return;
-      updateSettingsMutation({
-        groupId: roomId,
-        data: { name: newName.trim() },
-      });
-    },
-    [updateSettingsMutation]
-  );
-
-  const deleteRoom = useCallback(
-    (roomId) => {
-      if (!roomId) return;
-      deleteConversationMutation({ conversationId: roomId });
-      if (selectedRoomId === roomId) setSelectedRoomId(null);
-    },
-    [selectedRoomId, deleteConversationMutation]
-  );
-
-  const markAsRead = useCallback(
-    (roomId) => {
-      if (roomId) markAsReadMutation({ conversationId: roomId });
-    },
-    [markAsReadMutation]
+    [selectedRoomId, deleteMessageMutation],
   );
 
   const addMember = useCallback(
     (roomId, userId) => {
-      inviteToGroupMutation({ groupId: roomId, userId });
+      addMembersMutation({ roomId, userIds: [userId] });
     },
-    [inviteToGroupMutation]
+    [addMembersMutation],
   );
 
   const removeMember = useCallback(
     (roomId, userId) => {
-      removeMemberMutation({ groupId: roomId, userId });
+      removeMemberMutation({ roomId, userId });
     },
-    [removeMemberMutation]
+    [removeMemberMutation],
   );
 
-  /**
-   * Create a new deal room.
-   * Returns a promise that resolves with the new room's conversationId.
-   */
-  const createRoom = useCallback(
-    async ({ name, description = "", memberLimit, members = [] }) => {
-      if (!name?.trim()) return null;
-
+  const uploadFile = useCallback(
+    async (file, onProgress) => {
+      if (!selectedRoomId) return null;
       try {
-        const result = await createPrivateGroupMutation({
-          name: name.trim(),
-          description,
-          memberLimit,
+        const result = await uploadFileMutation({
+          roomId: selectedRoomId,
+          file,
+          onUploadProgress: (e) => {
+            const pct = Math.round((e.loaded * 100) / e.total);
+            onProgress?.(pct);
+          },
         });
-
-        const conversationId = result?.data?.conversationId;
-        if (!conversationId) return null;
-
-        // Invite members sequentially
-        for (const member of members) {
-          const userId = member.userId || member.id;
-          if (userId) {
-            inviteToGroupMutation({ groupId: conversationId, userId });
-          }
-        }
-
-        setSelectedRoomId(conversationId);
-        return { id: conversationId };
+        return result?.data || null;
       } catch {
         return null;
       }
     },
-    [createPrivateGroupMutation, inviteToGroupMutation]
+    [selectedRoomId, uploadFileMutation],
+  );
+
+  const createRoom = useCallback(
+    async ({ name, description = '' }) => {
+      if (!name?.trim()) return null;
+      try {
+        const result = await createRoomMutation({ name: name.trim(), description });
+        const roomId = result?.data?.roomId || result?.data?.conversationId;
+        if (!roomId) return null;
+        setSelectedRoomId(roomId);
+        return { id: roomId };
+      } catch {
+        return null;
+      }
+    },
+    [createRoomMutation],
   );
 
   return {
@@ -323,22 +272,25 @@ export function useDealRoom() {
     currentMessages,
     searchQuery,
     sortBy,
-    isLoading: convsLoading,
+    isLoading: roomsLoading,
+    isRoomDetailLoading: roomDetailLoading,
     isMessagesLoading: msgsLoading,
     currentUserId,
+    currentUser,
+    typingUsers,
+    hasMoreMessages: hasNextPage,
 
     // Actions
     setSearchQuery,
     setSortBy,
     selectRoom,
     sendMessage,
-    retryMessage,
+    sendTyping,
     deleteMessage,
-    updateRoomName,
-    deleteRoom,
     addMember,
     removeMember,
+    uploadFile,
     createRoom,
-    markAsRead,
+    loadMoreMessages: fetchNextPage,
   };
 }
