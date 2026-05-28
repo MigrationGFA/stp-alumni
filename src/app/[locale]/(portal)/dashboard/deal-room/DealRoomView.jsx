@@ -54,7 +54,7 @@ export function DealRoomView({
   const [editNameOpen, setEditNameOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
   const [documentsOpen, setDocumentsOpen] = useState(false);
-  const [editNameValue, setEditNameValue] = useState(room.name);
+  const [editNameValue, setEditNameValue] = useState(room.roomName || "");
   const [addMemberSearch, setAddMemberSearch] = useState("");
 
   const [hasAcknowledgedNDA, setHasAcknowledgedNDA] = useState(false);
@@ -165,12 +165,12 @@ export function DealRoomView({
   };
 
   const handleEditNameOpen = () => {
-    setEditNameValue(room.name);
+    setEditNameValue(room.roomName || "");
     setEditNameOpen(true);
   };
 
   const handleEditNameSubmit = () => {
-    if (editNameValue.trim() && editNameValue.trim() !== room.name) {
+    if (editNameValue.trim() && editNameValue.trim() !== room.roomName || "") {
       onUpdateRoomName?.(room.id, editNameValue.trim());
     }
     setEditNameOpen(false);
@@ -208,9 +208,9 @@ export function DealRoomView({
           </Button>
 
           <Avatar className="h-10 w-10">
-            <AvatarImage src={room.avatar} alt={room.name} />
+            <AvatarImage src={room.avatar} alt={room.roomName || ""} />
             <AvatarFallback>
-              {room.name
+              {room.roomName || ""
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
@@ -218,9 +218,9 @@ export function DealRoomView({
           </Avatar>
 
           <div>
-            <h2 className="font-semibold text-foreground">{room.name}</h2>
+            <h2 className="font-semibold text-foreground">{room.roomName || ""}</h2>
             <p className="text-sm text-primary">
-              {onlineCount} member{onlineCount !== 1 ? "s" : ""} online
+              {room.memberCount} member{room.membersCount !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
@@ -477,7 +477,7 @@ export function DealRoomView({
                       key={message.id}
                       message={message}
                       senderAvatar={message.senderAvatar || room.avatar}
-                      senderName={message.senderName || room.name}
+                      senderName={message.senderName || room.roomName || ""}
                       onRetry={() => onRetryMessage(message.id)}
                       onDelete={() => onDeleteMessage(message.id)}
                     />

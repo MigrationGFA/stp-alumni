@@ -14,7 +14,7 @@ import {
 } from "@/lib/hooks/useMessagingQueries";
 import useMessagingStore from "@/lib/store/useMessagingStore";
 import useAuthStore from "@/lib/store/useAuthStore";
-import { useMyDealroom } from "@/lib/hooks/useDealroomQueries";
+import { useCreateDealroom, useMyDealroom } from "@/lib/hooks/useDealroomQueries";
 
 /** Stable empty array to avoid infinite re-render loops in Zustand selectors */
 const EMPTY_ARRAY = [];
@@ -88,7 +88,7 @@ export function useDealRoom() {
   const { data: rawMessagesData, isLoading: msgsLoading } = useMessages(selectedRoomId);
 
   // ─── API Mutations ───────────────────────────────────────────
-  const { mutateAsync: createPrivateGroupMutation } = useCreatePrivateGroup();
+  const { mutateAsync: createPrivateGroupMutation } = useCreateDealroom();
   const { mutate: inviteToGroupMutation } = useInviteToGroup();
   const { mutate: removeMemberMutation } = useRemoveMember();
   const { mutate: updateSettingsMutation } = useUpdatePrivateGroupSettings();
@@ -103,11 +103,11 @@ export function useDealRoom() {
     if (!rawConversations) return EMPTY_ARRAY;
     const list = Array.isArray(rawConversations) ? rawConversations : [];
     return list
-      .filter((c) => c.type === "PRIVATE_GROUP")
-      .map(normalizeRoom);
+      // .filter((c) => c.type === "PRIVATE_GROUP")
+      // .map(normalizeRoom);
   }, [rawConversations]);
 
-  // console.log(rawConversations,"rawConversations")
+  console.log(allRooms,"allRooms")
 
   // ─── Sort & filter ───────────────────────────────────────────
   const filteredRooms = useMemo(() => {

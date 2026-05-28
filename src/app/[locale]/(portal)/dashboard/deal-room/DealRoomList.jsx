@@ -136,10 +136,10 @@ export function DealRoomList({
                   <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                     <AvatarImage
                       src={room.avatar}
-                      alt={room.name}
+                      alt={room.roomName}
                     />
                     <AvatarFallback>
-                      {room.name
+                      {room.roomName
                         .split(" ")
                         .map((n) => n[0])
                         .join("")}
@@ -161,11 +161,11 @@ export function DealRoomList({
                           : "text-muted-foreground",
                       )}
                     >
-                      {room.name}
+                      {room.roomName}
                     </span>
-                    <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                    {/* <span className="text-xs text-muted-foreground shrink-0 ml-2">
                       {formatRelativeTime(room.lastMessageAt)}
-                    </span>
+                    </span> */}
                   </div>
                   <p
                     className={cn(
@@ -175,7 +175,8 @@ export function DealRoomList({
                         : "text-muted-foreground",
                     )}
                   >
-                    {room.lastMessage.content}
+                    {room.roomDescription || "No description available"}
+                    {/* {room.lastMessage.content} */}
                   </p>
                 </div>
 
