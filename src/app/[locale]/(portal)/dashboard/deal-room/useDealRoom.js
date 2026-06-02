@@ -119,7 +119,7 @@ export function useDealRoom() {
   const { mutate: addMembersMutation } = useAddMembers();
   const { mutate: removeMemberMutation } = useRemoveDealroomMember();
   const { mutate: sendMessageMutation } = useSendDealroomMessage();
-  const { mutate: deleteMessageMutation } = useDeleteDealroomMessage();
+  const { mutateAsync: deleteMessageMutation,isPending:isDeletePending } = useDeleteDealroomMessage();
   const { mutateAsync: uploadFileMutation } = useUploadDealroomFile();
 
   // ─── WebSocket ─────────────────────────────────────────────────
@@ -210,12 +210,19 @@ export function useDealRoom() {
   );
 
   const deleteMessage = useCallback(
-    (messageId) => {
+    async (messageId,callback) => {
       if (!selectedRoomId) return;
-      deleteMessageMutation({ roomId: selectedRoomId, messageId });
+      try {
+        await deleteMessageMutation({ roomId: selectedRoomId, messageId });
+        // toast.success('Message deleted');
+        callback?.();
+      } catch (error) {
+        // toast.error(error?.response?.data?.message || 'Failed to delete message');
+      }
     },
     [selectedRoomId, deleteMessageMutation],
   );
+       
 
   const addMember = useCallback(
     (roomId, userId) => {
@@ -281,6 +288,7 @@ export function useDealRoom() {
     currentUser,
     typingUsers,
     hasMoreMessages: hasNextPage,
+    isDeletePending,
 
     // Actions
     setSearchQuery,

@@ -5,6 +5,7 @@ import { DealRoomView } from "./DealRoomView";
 import { DealRoomList } from "./DealRoomList";
 import { useDealRoom } from "./useDealRoom";
 import { CreateDealRoomModal } from "./CreateDealRoomModal";
+import { useNavbar } from "@/contexts/NavbarContext";
 
 const DealRoom = () => {
   const {
@@ -14,8 +15,10 @@ const DealRoom = () => {
     searchQuery,
     sortBy,
     roomsLoading,
+    isRoomDetailLoading,
     currentUserId,
     typingUsers,
+    isDeletePending,
     setSearchQuery,
     setSortBy,
     selectRoom,
@@ -36,14 +39,25 @@ const DealRoom = () => {
     setIsCreateModalOpen(false);
   };
 
+    const {
+      userSize: { height },
+      mobileSize: { height: mobileHeight },
+    } = useNavbar();
+
   return (
     <>
-      <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-2rem)] flex bg-background">
+      <div
+        className=" flex bg-background"
+        style={{
+          // top: `${height + 10}px`,
+          height: `calc(100dvh - ${height + mobileHeight + 30}px)`,
+        }}
+      >
         {/* Room list */}
         <div
           className={cn(
             "w-full lg:w-96 border-r border-border shrink-0",
-            selectedRoom ? "hidden lg:flex" : "flex"
+            selectedRoom ? "hidden lg:flex" : "flex",
           )}
         >
           <DealRoomList
@@ -63,7 +77,7 @@ const DealRoom = () => {
         <div
           className={cn(
             "flex-1 flex flex-col min-w-0",
-            !selectedRoom ? "hidden lg:flex" : "flex"
+            !selectedRoom ? "hidden lg:flex" : "flex",
           )}
         >
           {selectedRoom ? (
@@ -72,6 +86,8 @@ const DealRoom = () => {
               messages={currentMessages}
               currentUserId={currentUserId}
               roomsLoading={roomsLoading}
+              isRoomDetailLoading={isRoomDetailLoading}
+              isDeletePending={isDeletePending}
               typingUsers={typingUsers}
               onBack={() => selectRoom(null)}
               onSendMessage={sendMessage}
@@ -85,14 +101,24 @@ const DealRoom = () => {
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
                 <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                  <svg className="h-7 w-7 text-muted-foreground opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  <svg
+                    className="h-7 w-7 text-muted-foreground opacity-50"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
                       d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                     />
                   </svg>
                 </div>
                 <p className="font-medium text-sm">Select a deal room</p>
-                <p className="text-xs mt-1 opacity-60">Choose from your existing rooms</p>
+                <p className="text-xs mt-1 opacity-60">
+                  Choose from your existing rooms
+                </p>
               </div>
             </div>
           )}
