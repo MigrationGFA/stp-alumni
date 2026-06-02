@@ -57,6 +57,7 @@ export function useAddMembers() {
     mutationFn: ({ roomId, userIds }) => dealroomService.addMembers(roomId, userIds),
     onSuccess: (_, { roomId }) => {
       queryClient.invalidateQueries({ queryKey: dealroomKeys.room(roomId) });
+      queryClient.invalidateQueries({ queryKey: dealroomKeys.myrooms });
       toast.success('Member added');
     },
     onError: (error) => {
@@ -134,6 +135,22 @@ export function useUploadDealroomFile() {
     },
     onError: (error) => {
       toast.error(error?.response?.data?.message || 'Failed to upload file');
+    },
+  });
+}
+
+
+export function useSignNda() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roomId }) => dealroomService.signNda(roomId),
+    onSuccess: (_, { roomId }) => {
+      // Refetch room detail so hasSignedNda flips to true
+      queryClient.invalidateQueries({ queryKey: dealroomKeys.room(roomId) });
+      toast.success('NDA signed — welcome to the deal room.');
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to sign NDA');
     },
   });
 }

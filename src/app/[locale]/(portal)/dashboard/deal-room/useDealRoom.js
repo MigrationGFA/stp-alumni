@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 
 import useAuthStore from '@/lib/store/useAuthStore';
 import { useDealRoomSocket } from '@/lib/hooks/useDealRoomSocket';
-import { useMyDealroom , useDealroomById,
+import {
+  useMyDealroom, useDealroomById,
   useCreateDealroom,
   useAddMembers,
   useRemoveDealroomMember,
@@ -13,7 +14,9 @@ import { useMyDealroom , useDealroomById,
   useSendDealroomMessage,
   useDeleteDealroomMessage,
   useUploadDealroomFile,
-  dealroomKeys,} from '@/lib/hooks/useDealroomQueries';
+  dealroomKeys,
+} from '@/lib/hooks/useDealroomQueries';
+import { useSearchParams } from 'next/navigation';
 
 const EMPTY_ARRAY = [];
 
@@ -92,7 +95,8 @@ function normalizeMessage(msg, currentUserId) {
 }
 
 export function useDealRoom() {
-  const [selectedRoomId, setSelectedRoomId] = useState(null);
+  const searchParams = useSearchParams();
+  const [selectedRoomId, setSelectedRoomId] = useState(searchParams.get("roomId") || null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('recent');
   const [typingUsers, setTypingUsers] = useState([]);
@@ -114,7 +118,7 @@ export function useDealRoom() {
 
   // ─── Mutations ─────────────────────────────────────────────────
   const { mutateAsync: createRoomMutation } = useCreateDealroom();
-  const { mutate: addMembersMutation } = useAddMembers();
+  const { mutateAsync: addMembersMutation } = useAddMembers();
   const { mutate: removeMemberMutation } = useRemoveDealroomMember();
   const { mutate: sendMessageMutation } = useSendDealroomMessage();
   const { mutate: deleteMessageMutation } = useDeleteDealroomMessage();
@@ -143,7 +147,7 @@ export function useDealRoom() {
   const { sendMessage: wsSendMessage, sendTyping, markRead } = useDealRoomSocket(
     selectedRoomId,
     {
-      onMessage: () => {}, // invalidation handled inside useDealRoomSocket
+      onMessage: () => { }, // invalidation handled inside useDealRoomSocket
       onTyping: handleTyping,
       onRead: handleRead,
     },
@@ -216,8 +220,8 @@ export function useDealRoom() {
   );
 
   const addMember = useCallback(
-    (roomId, userId) => {
-      addMembersMutation({ roomId, userIds: [userId] });
+    (roomId, userIds) => {
+      addMembersMutation({ roomId, userIds });
     },
     [addMembersMutation],
   );
@@ -272,7 +276,7 @@ export function useDealRoom() {
     currentMessages,
     searchQuery,
     sortBy,
-    isLoading: roomsLoading,
+     roomsLoading,
     isRoomDetailLoading: roomDetailLoading,
     isMessagesLoading: msgsLoading,
     currentUserId,
