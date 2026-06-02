@@ -62,6 +62,7 @@ export function useAddMembers() {
     },
     onError: (error) => {
       toast.error(error?.response?.data?.message || 'Failed to add member');
+      console.error('Add member error:', error);
     },
   });
 }

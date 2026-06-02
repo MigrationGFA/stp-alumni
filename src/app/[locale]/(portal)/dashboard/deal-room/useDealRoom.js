@@ -2,11 +2,9 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-
-import useAuthStore from '@/lib/store/useAuthStore';
-import { useDealRoomSocket } from '@/lib/hooks/useDealRoomSocket';
 import {
-  useMyDealroom, useDealroomById,
+  useMyDealroom,
+  useDealroomById,
   useCreateDealroom,
   useAddMembers,
   useRemoveDealroomMember,
@@ -16,7 +14,8 @@ import {
   useUploadDealroomFile,
   dealroomKeys,
 } from '@/lib/hooks/useDealroomQueries';
-import { useSearchParams } from 'next/navigation';
+import { useDealRoomSocket } from '@/lib/hooks/useDealRoomSocket';
+import useAuthStore from '@/lib/store/useAuthStore';
 
 const EMPTY_ARRAY = [];
 
@@ -95,8 +94,7 @@ function normalizeMessage(msg, currentUserId) {
 }
 
 export function useDealRoom() {
-  const searchParams = useSearchParams();
-  const [selectedRoomId, setSelectedRoomId] = useState(searchParams.get("roomId") || null);
+  const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('recent');
   const [typingUsers, setTypingUsers] = useState([]);
@@ -118,7 +116,7 @@ export function useDealRoom() {
 
   // ─── Mutations ─────────────────────────────────────────────────
   const { mutateAsync: createRoomMutation } = useCreateDealroom();
-  const { mutateAsync: addMembersMutation } = useAddMembers();
+  const { mutate: addMembersMutation } = useAddMembers();
   const { mutate: removeMemberMutation } = useRemoveDealroomMember();
   const { mutate: sendMessageMutation } = useSendDealroomMessage();
   const { mutate: deleteMessageMutation } = useDeleteDealroomMessage();
@@ -147,7 +145,7 @@ export function useDealRoom() {
   const { sendMessage: wsSendMessage, sendTyping, markRead } = useDealRoomSocket(
     selectedRoomId,
     {
-      onMessage: () => { }, // invalidation handled inside useDealRoomSocket
+      onMessage: () => {}, // invalidation handled inside useDealRoomSocket
       onTyping: handleTyping,
       onRead: handleRead,
     },
@@ -206,7 +204,7 @@ export function useDealRoom() {
       if (!selectedRoomId || !content.trim()) return;
       // Send via WS for real-time, REST for persistence
       wsSendMessage(content);
-      sendMessageMutation({ roomId: selectedRoomId, content: content.trim() });
+      // sendMessageMutation({ roomId: selectedRoomId, content: content.trim() });
     },
     [selectedRoomId, wsSendMessage, sendMessageMutation],
   );
@@ -220,8 +218,8 @@ export function useDealRoom() {
   );
 
   const addMember = useCallback(
-    (roomId, userIds) => {
-      addMembersMutation({ roomId, userIds });
+    (roomId, userId) => {
+      addMembersMutation({ roomId, userIds: [userId] });
     },
     [addMembersMutation],
   );

@@ -300,6 +300,7 @@ export function DealRoomView({
   messages,
   currentUserId,
   typingUsers = [],
+  roomsLoading,
   onBack,
   onSendMessage,
   onSendTyping,
@@ -376,6 +377,15 @@ export function DealRoomView({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+
+  if(roomsLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+  
   const messageGroups = groupMessagesByDate(messages);
   const members = room?.members || [];
 

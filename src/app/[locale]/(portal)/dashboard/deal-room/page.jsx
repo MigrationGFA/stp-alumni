@@ -71,6 +71,7 @@ const DealRoom = () => {
               room={selectedRoom}
               messages={currentMessages}
               currentUserId={currentUserId}
+              roomsLoading={roomsLoading}
               typingUsers={typingUsers}
               onBack={() => selectRoom(null)}
               onSendMessage={sendMessage}

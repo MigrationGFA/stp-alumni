@@ -30,7 +30,7 @@ export default function PortalLayout({ children }) {
             isCollapsed={isCollapsed} 
           />
           
-          <div className={`flex-1 sm:p-4 lg:p-6 ${passwordChangeRequired ? "blur-sm" : ""}`}>
+          <div className={`flex-1 sm:p-4 lg:p-6`}>
             {children}
           </div>
         </main>
