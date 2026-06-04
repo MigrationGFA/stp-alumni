@@ -78,6 +78,7 @@ export function DealRoomView({
   onAddMember,
   onRemoveMember,
   onUploadFile,
+  retryMessage
 }) {
   const [newMessage, setNewMessage] = useState("");
   const [editNameOpen, setEditNameOpen] = useState(false);
@@ -342,6 +343,7 @@ export function DealRoomView({
                         senderName={message.senderName || ""}
                         onDelete={(callback) => onDeleteMessage?.(message.id, callback)}
                         isDeletePending={isDeletePending}
+                         onRetry={() => retryMessage(message.id)}
                       />
                     ))}
                   </div>

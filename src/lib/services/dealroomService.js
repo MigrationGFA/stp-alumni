@@ -25,13 +25,13 @@ const dealroomService = {
 
   // ─── Members ───────────────────────────────────────────────────
 
-  addMembers: async (roomId, userIds) => {
-    const response = await api.post(`/dealrooms/${roomId}/members`, {
-      members: Array.isArray(userIds) ? userIds : [...userIds],
-    });
-    return response.data;
-  },
-
+addMembers: async (roomId, userIds) => {
+  console.log('addMembers payload:', { roomId, userIds, type: typeof userIds, isArray: Array.isArray(userIds) });
+  const body = { members: userIds };
+  console.log('body being sent:', JSON.stringify(body));
+  const response = await api.post(`/dealrooms/${roomId}/members`, body);
+  return response.data;
+},
   removeMember: async (roomId, userId) => {
     const response = await api.delete(`/dealrooms/${roomId}/members/${userId}`);
     return response.data;

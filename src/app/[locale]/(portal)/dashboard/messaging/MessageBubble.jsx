@@ -118,7 +118,7 @@ export function MessageBubble({
       ? message.createdAt
       : new Date(message.createdAt);
 
-      console.log(message,"message in bubble")
+      console.log(message,"message in bubble", typeof message.mediaUrl)
 
   return (
     <>
@@ -157,7 +157,7 @@ export function MessageBubble({
           <div className="flex items-end gap-2">
             {message.isOwn && (
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                {isFailed && onRetry && (
+                {isFailed && onRetry && (message.content && message.mediaUrl.length >0) &&(
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button

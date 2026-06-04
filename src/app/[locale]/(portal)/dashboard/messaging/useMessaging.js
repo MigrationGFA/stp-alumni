@@ -203,7 +203,7 @@ export function useMessaging() {
       mediaType: file.type.startsWith("image/") ? "image" : "document",
       tempMediaUrl: optimisticMessage.mediaUrl
     };
-    console.log("calling sendMediaMutation with", { conversationId: selectedConversationId, optimisticMessage: optimisticMessage?.id });
+    // console.log("calling sendMediaMutation with", { conversationId: selectedConversationId, optimisticMessage });
     sendMediaMutation({
       conversationId: selectedConversationId,
       formData,
@@ -496,6 +496,39 @@ export function useMessaging() {
   }, [selectedConversation, currentUserId, user, queryClient, wsSendMessage]);
 
 
+  const retryMessage = useCallback(
+  (messageId) => {
+
+    // console.log("Retrying message", messageId, "in conversation", selectedConversationId);
+    if (!selectedConversationId) return;
+
+    const queryKey = messagingKeys.messages(selectedConversationId);
+    const cached = queryClient.getQueryData(queryKey);
+    const failedMsg = cached?.data?.find((m) => m.id === messageId || m.messageId === messageId);
+
+    // console.log(failedMsg)
+    if (!failedMsg?.content || failedMsg?.mediaType.length !== 0) return;
+    // Mark as sending again in cache
+    console.log("✅")
+    queryClient.setQueryData(queryKey, (old) => ({
+      ...old,
+      data: (old?.data ?? []).map((m) =>
+        m.id === messageId ? { ...m, status: "sending" } : m
+      ),
+    }));
+
+    // Re-register in pendingMessagesRef so handleNewMessage can dedup it
+    pendingMessagesRef.current[messageId] = {
+      content: failedMsg.content,
+      conversationId: selectedConversationId,
+      createdAt: failedMsg.createdAt,
+    };
+
+    // WS only — same as sendMessage
+    wsSendMessage(selectedConversationId, failedMsg.content);
+  },
+  [selectedConversationId, queryClient, wsSendMessage],
+);
 
   const acceptInvitation = useCallback(
     (invitationId) => {
@@ -581,7 +614,7 @@ export function useMessaging() {
     selectConversation,
     sendMessage,
     sendMediaFile,
-    // retryMessage,
+    retryMessage,
     deleteMessage,
     acceptInvitation,
     declineInvitation,

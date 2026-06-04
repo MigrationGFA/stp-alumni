@@ -222,15 +222,35 @@ export function useDealRoom() {
     },
     [selectedRoomId, deleteMessageMutation],
   );
-       
+       const retryMessage = useCallback(
+  async (messageId) => {
+    if (!selectedRoomId) return;
 
-  const addMember = useCallback(
-    (roomId, userId) => {
-      addMembersMutation({ roomId, userIds: [userId] });
-    },
-    [addMembersMutation],
-  );
+    // Find the failed message in current messages
+    const failedMsg = currentMessages.find((m) => m.id === messageId);
+    if (!failedMsg?.content) return;
 
+    try {
+      // Send via WS + REST, same as a normal send
+      wsSendMessage(failedMsg.content);
+      // await sendMessageMutation({
+      //   roomId: selectedRoomId,
+      //   content: failedMsg.content,
+      // });
+    } catch {
+      // mutation's onError already toasts
+    }
+  },
+  [selectedRoomId, currentMessages, wsSendMessage, sendMessageMutation],
+);
+
+const addMember = useCallback(
+  (roomId, userIds) => {
+    const ids = Array.isArray(userIds) ? userIds : [userIds];
+    addMembersMutation({ roomId, userIds: ids });
+  },
+  [addMembersMutation],
+);
   const removeMember = useCallback(
     (roomId, userId) => {
       removeMemberMutation({ roomId, userId });
@@ -298,6 +318,7 @@ export function useDealRoom() {
     sendTyping,
     deleteMessage,
     addMember,
+    retryMessage,
     removeMember,
     uploadFile,
     createRoom,

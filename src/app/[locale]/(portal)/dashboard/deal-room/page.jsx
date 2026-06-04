@@ -29,6 +29,7 @@ const DealRoom = () => {
     removeMember,
     uploadFile,
     createRoom,
+    retryMessage
   } = useDealRoom();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -96,6 +97,7 @@ const DealRoom = () => {
               onAddMember={addMember}
               onRemoveMember={removeMember}
               onUploadFile={uploadFile}
+              retryMessage={retryMessage}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
