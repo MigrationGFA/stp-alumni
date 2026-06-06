@@ -46,9 +46,11 @@ export const useInfiniteSearch = (query, type = "all", limit = 20) => {
     const [allResults, setAllResults] = useState(null);
     const queryClient = useQueryClient();
 
+    // ✅ ALWAYS query with type="all" to keep counts accurate across all tabs
+    // Filter on frontend based on active tab
     const { data, isLoading, isFetchingNextPage, error } = useQuery({
-        queryKey: ["search", query, type, page, limit],
-        queryFn: () => searchService.search({ q: query, type, page, limit }),
+        queryKey: ["search", query, "all", page, limit],
+        queryFn: () => searchService.search({ q: query, type: "all", page, limit }),
         enabled: !!query && query.trim().length > 0,
     });
 
@@ -79,25 +81,18 @@ export const useInfiniteSearch = (query, type = "all", limit = 20) => {
     const fetchNextPage = useCallback(() => {
         if (!data?.data) return;
 
-        // If filtering by specific type, check that type's results
-        if (type !== "all") {
-            const currentResults = data.data[type] || [];
-            // If we got fewer results than limit, we're at the end
-            if (currentResults.length < limit) return;
-            setPage((prev) => prev + 1);
-            return;
-        }
-
-        // If "all" type: check if ANY category could have more results
-        // We assume: if any category returned a full page, there might be more
-        const hasMoreInAny = Object.values(data.data || {}).some(
-            (results) => Array.isArray(results) && results.length === limit
+        // Since we always fetch "all", check total results
+        // Calculate total items across all categories
+        const totalResults = Object.values(data.data || {}).reduce(
+            (sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0),
+            0
         );
 
-        if (hasMoreInAny) {
+        // If we got a full page of results, there might be more
+        if (totalResults >= limit) {
             setPage((prev) => prev + 1);
         }
-    }, [data, limit, type]);
+    }, [data, limit]);
 
     const resetSearch = useCallback(() => {
         setPage(1);
@@ -107,18 +102,27 @@ export const useInfiniteSearch = (query, type = "all", limit = 20) => {
 
     // Calculate hasNextPage based on last page's result length
     const hasNextPage = !!data?.data && (() => {
-        if (type !== "all") {
-            const results = data.data[type] || [];
-            return results.length === limit;
-        }
-        // For "all", check if any category had a full page
-        return Object.values(data.data || {}).some(
-            (results) => Array.isArray(results) && results.length === limit
+        const totalResults = Object.values(data.data || {}).reduce(
+            (sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0),
+            0
         );
+        return totalResults >= limit;
     })();
 
+    // ✅ Filter results based on active tab
+    let filteredResults = allResults;
+    if (allResults && type !== "all") {
+        filteredResults = {
+            ...allResults,
+            data: {
+                [type]: allResults.data[type] || [],
+            },
+            counts: allResults.counts,
+        };
+    }
+
     return {
-        data: allResults,
+        data: filteredResults,
         isLoading,
         isFetchingNextPage,
         hasNextPage,

@@ -17,6 +17,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
+import { useMutation } from "@tanstack/react-query";
+import networkService from "@/lib/services/networkService";
 
 export const formatMySQLDate = (dateStr, formatStr = "MMM d, yyyy") => {
   if (!dateStr) return "";
@@ -31,6 +33,7 @@ export const formatMySQLDate = (dateStr, formatStr = "MMM d, yyyy") => {
 
 // 👤 People Card
 export function PeopleResultCard({ person }) {
+
   return (
     <Link href={`/dashboard/profile/${person.user_id}`}>
       <div className="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 hover:border-[#155DFC]/30 hover:shadow-md transition-all bg-white">
@@ -87,10 +90,15 @@ export function PeopleResultCard({ person }) {
             </p>
           )}
         </div>
-
-        <Button variant="outline" size="sm" className="shrink-0">
-          Connect
-        </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            // disabled={true}
+          >
+            View Profile
+          </Button>
+       
       </div>
     </Link>
   );
@@ -262,7 +270,7 @@ export function GroupResultCard({ group }) {
         </div>
 
         <Button variant="outline" size="sm" className="w-full mt-3">
-          Join Group
+          View Group
         </Button>
       </div>
     </Link>
