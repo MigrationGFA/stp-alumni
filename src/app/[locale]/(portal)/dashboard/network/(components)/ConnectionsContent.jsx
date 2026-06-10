@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import {
   Select,
   SelectContent,
@@ -13,25 +12,19 @@ import useNetworkStore from "@/lib/store/useNetworkStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import NewUsersConnection from "./NewUsersConnection";
 
-
 export function ConnectionsContent({
   displayList = [],
-  uniqueSectors,
+  uniqueSectors = [],
   activeSector,
   setActiveSector,
-  isNetworkLoading
+  isNetworkLoading,
 }) {
-  const { options } = useNetworkStore();
-  const { isLoading, error } = options;
+  const { options = {} } = useNetworkStore();
+  const { isLoading } = options;
 
-  // Decide which list to render. If the user has connections, show them.
-  // Otherwise, fallback to showing the general network (All available active users).
-  // const hasConnections = myConnections && myConnections.length > 0;
-  // const displayList = hasConnections ? myConnections : networkUsers || [];
+  const titleString = `Explore Network (${displayList?.length || 0})`;
 
-  // console.log(displayList, "displayList");
-  const titleString = `Explore Network (${displayList?.length})`;
-
+  // Keep the loading skeleton early return since we don't know the layout state yet
   if (isLoading || isNetworkLoading) {
     return (
       <Card>
@@ -55,33 +48,23 @@ export function ConnectionsContent({
     );
   }
 
-  if (displayList.length === 0) {
-    return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base font-semibold">Network</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-8">
-            No network connections found yet.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  // Render the core card layout reliably so the Filter Select is ALWAYS visible
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-base font-semibold">{titleString}</CardTitle>
-        <Select value={activeSector} onValueChange={(value)=>setActiveSector(value)}>
+        
+        <Select
+          value={activeSector}
+          onValueChange={(value) => setActiveSector(value)}
+        >
           <SelectTrigger className="w-40 text-[#020618]/50 text-sm">
             <SelectValue placeholder="Filter by Sector" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Filter</SelectLabel>
-      <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">All</SelectItem>
               {uniqueSectors.map((ele) => (
                 <SelectItem value={ele} key={ele}>
                   {ele}
@@ -91,17 +74,25 @@ export function ConnectionsContent({
           </SelectContent>
         </Select>
       </CardHeader>
+
       <CardContent className="space-y-0">
-        {displayList.map((connection, index) => {
-          return (
+        {/* Conditional check safely embedded inside the card content zone */}
+        {!displayList || displayList.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            {activeSector !== "all" 
+              ? `No network connections found in "${activeSector}".` 
+              : "No network connections found yet."}
+          </p>
+        ) : (
+          displayList.map((connection, index) => (
             <NewUsersConnection
               connection={connection}
-              key={connection.userId}
+              key={connection.userId || index}
               index={index}
               connectionTotal={displayList.length}
             />
-          );
-        })}
+          ))
+        )}
       </CardContent>
     </Card>
   );

@@ -1,16 +1,4 @@
-// import { redirect } from "next/navigation";
-// import { getLocale } from "next-intl/server";
-
-// export default async function NetworkEntryPage() {
-//   const locale = await getLocale();
-
-//   // Hard-coding the redirect path with the locale
-//   // prevents the "undefined" error caused by the library's internal resolver
-//   redirect(`/${locale}/dashboard/network/connections`);
-// }
-
 "use client";
-// remeber to lazy load renderContent componets
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
@@ -20,23 +8,19 @@ import useNetworkStore from "@/lib/store/useNetworkStore";
 import { InvitationsList } from "./(components)/InvitationsList";
 import { ConnectionsContent } from "./(components)/ConnectionsContent";
 import { NetworkSearch } from "./(components)/NetworkSearch";
-import { PeopleConnection } from "./(components)/PeopleConnection";
 import ConnectedUser from "./(components)/ConnectedUser";
 import ConnectionSkeleton from "./(components)/ConnectionSkeleton";
 import { useSearchParams } from "next/navigation";
-// import { PeopleSuggestions } from "./(components)/PeopleSuggestions";
-// import { PeopleConnection } from "./(components)/PeopleConnection";
 
 const Page = () => {
   const { setNetworkData, setLoading, setError } = useNetworkStore();
-   const searchParams = useSearchParams();
-    const active = searchParams.get("active");
+  const searchParams = useSearchParams();
+  const active = searchParams.get("active");
 
   const [search, setSearch] = useState("");
   const [activeSector, setActiveSector] = useState("all");
   const [activeTab, setActiveTab] = useState(active || "mine");
 
-  // Fetch all custom lists (networkUsers, sameSkillUsers, sameSectorUsers, connections)
   const {
     data: networkPayload,
     isLoading: isNetworkLoading,
@@ -52,14 +36,10 @@ const Page = () => {
     queryFn: networkService.getIncomingRequests,
   });
 
-  // Sync React Query state to Zustand
   useEffect(() => {
     setLoading(isNetworkLoading);
     if (networkError) setError(networkError);
-
-    if (networkPayload?.data) {
-      setNetworkData(networkPayload?.data);
-    }
+    if (networkPayload?.data) setNetworkData(networkPayload.data);
   }, [
     networkPayload,
     isNetworkLoading,
@@ -72,109 +52,119 @@ const Page = () => {
   const network = networkPayload?.data;
   const invitations = invitationsData?.data;
 
+  // 1. Core dataset divisions based on API status values
   const connections = useMemo(() => {
-    return network?.filter((user) => user.connectionStatus === "ACCEPTED");
+    return (
+      network?.filter((user) => user.connectionStatus === "ACCEPTED") || []
+    );
   }, [network]);
 
-  const suggestions =
-    useMemo(() => {
-      return network?.filter(
+  const suggestions = useMemo(() => {
+    return (
+      network?.filter(
         (user) =>
           user.connectionStatus === null || user.connectionStatus === "PENDING",
-      );
-    }, [network]) || [];
+      ) || []
+    );
+  }, [network]);
 
-  const fillteredData = useMemo(() => {
-    const data = activeTab === "network" ? network : invitations;
+  // 2. Select the base array depending on which tab is active, then apply global filter matching
+  const filteredData = useMemo(() => {
+    let baseData = [];
+    if (activeTab === "mine") baseData = connections;
+    else if (activeTab === "explore") baseData = suggestions;
+    else if (activeTab === "invitation") baseData = invitations || [];
 
-    return data?.filter((user) => {
+    if (activeTab === "explore") {
+      return baseData.filter((user) => {
+        const matchesSearch =
+          !search.trim() ||
+          user.firstName?.toLowerCase().includes(search.toLowerCase()) ||
+          user.lastName?.toLowerCase().includes(search.toLowerCase());
+
+        const matchesSector =
+          activeSector === "all" ||
+          (user.sector && user.sector.includes(activeSector));
+
+        return matchesSearch && matchesSector;
+      });
+    }
+    return baseData.filter((user) => {
       const matchesSearch =
-        user.firstName.toLowerCase().includes(search.toLowerCase()) ||
-        user.lastName.toLowerCase().includes(search.toLowerCase());
+        !search.trim() ||
+        user.firstName?.toLowerCase().includes(search.toLowerCase()) ||
+        user.lastName?.toLowerCase().includes(search.toLowerCase());
 
-      const matchesSector =
-        activeSector === "all" || user.sector.includes(activeSector);
-
-      return matchesSearch && matchesSector;
+      return matchesSearch;
     });
-  }, [network, invitations, search, activeTab, activeSector]);
+  }, [connections, suggestions, invitations, search, activeTab, activeSector]);
 
-  const uniqueSectors = [
-    ...new Set(network?.flatMap((item) => item.sector || [])),
-  ];
-
-  console.log("network payload:", network);
-  console.log("connections:", connections);
+  const uniqueSectors = useMemo(() => {
+    return [...new Set(network?.flatMap((item) => item.sector || []) || [])];
+  }, [network]);
 
   return (
     <>
       <NetworkSearch search={search} setSearch={setSearch} />
 
-      <Tabs defaultValue={activeTab} className="w-full">
-        <TabsList variant="line" className="">
-          <TabsTrigger value="mine" onClick={() => setActiveTab("mine")}>
-            My Networks
-          </TabsTrigger>
-          <TabsTrigger value="explore" onClick={() => setActiveTab("explore")}>
-            Explore
-          </TabsTrigger>
-          <TabsTrigger
-            value="invitation"
-            onClick={() => setActiveTab("invitation")}
-          >
-            Invitation
-          </TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList variant="line">
+          <TabsTrigger value="mine">My Networks</TabsTrigger>
+          <TabsTrigger value="explore">Explore</TabsTrigger>
+          <TabsTrigger value="invitation">Invitation</TabsTrigger>
         </TabsList>
 
+        {/* Explore Tab content using filtered result */}
         <TabsContent value="explore">
-          <>
-            <ConnectionsContent
-              displayList={suggestions}
-              activeSector={activeSector}
-              uniqueSectors={uniqueSectors}
-              setActiveSector={setActiveSector}
-              isNetworkLoading={isNetworkLoading}
-            />
-          </>
+          <ConnectionsContent
+            displayList={filteredData}
+            activeSector={activeSector}
+            uniqueSectors={uniqueSectors}
+            setActiveSector={setActiveSector}
+            isNetworkLoading={isNetworkLoading}
+          />
         </TabsContent>
 
+        {/* My Network Tab content using filtered result */}
         <TabsContent value="mine">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-base font-semibold">
-                My Nework ({connections?.length || 0})
+                My Network ({filteredData.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-0">
               {isNetworkLoading ? (
                 <>
-                <ConnectionSkeleton />
-                <ConnectionSkeleton />
-                <ConnectionSkeleton />
+                  <ConnectionSkeleton />
+                  <ConnectionSkeleton />
+                  <ConnectionSkeleton />
                 </>
-              ) : connections?.length === 0 ? (
+              ) : filteredData.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-6">
-                  No accepted connection
+                  {search
+                    ? "No matching connections found"
+                    : "No accepted connection"}
                 </p>
               ) : (
-                connections?.map((connection, index) => (
+                filteredData.map((connection, index) => (
                   <ConnectedUser
                     key={connection.userId}
                     connection={connection}
                     index={index}
-                    connectionTotal={connections.length}
+                    connectionTotal={filteredData.length}
                   />
                 ))
               )}
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Invitation Tab content using filtered result */}
         <TabsContent value="invitation">
-          <InvitationsList invitations={invitations} isLoading={isLoading} />
+          <InvitationsList invitations={filteredData} isLoading={isLoading} />
         </TabsContent>
       </Tabs>
-      {/* <PeopleSuggestions />
-      <PeopleConnection /> */}
     </>
   );
 };
