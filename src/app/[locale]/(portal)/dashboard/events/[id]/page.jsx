@@ -17,51 +17,42 @@ import { Link, redirect } from "@/i18n/routing";
 import React, { useState } from "react";
 import { CreateEventModal } from "@/components/(market-events)/CreateEventModal";
 import eventService from "@/lib/services/eventService";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-
-// ... (keep your allEvents and otherEvents mock data here)
-//  const otherEvents = [
-
-//   {
-
-//     id: 1,
-
-//     name: "Lead with a Grounded Confidence in a Changing World",
-
-//     date: "Fri, Dec 15, 2025",
-
-//     time: "7:00PM",
-
-//     organizer: "Leadership Academy",
-
-//     attendees: 45,
-
-//     cover: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop",
-
-//     status: "upcoming",
-
-//   }, ]
+import { toast } from "sonner";
 
 export default function EventDetail({ params }) {
   const { id } = React.use(params);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["events", id],
     queryFn: () => eventService.getEventById(id),
   });
 
-  const { data: eventsResponse, isLoading: isPending } = useQuery({
-    queryKey: ["events"],
-    queryFn:eventService.getEvents,
+  const { mutate, isPending: isRegistering } = useMutation({
+    mutationKey: ["register-vent", id],
+    mutationFn: eventService.registerEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["events", id]);
+    },
   });
 
-  const otherEvents = eventsResponse?.data?.filter((ele) => ele.event_id !== id);
+  const { data: eventsResponse, isLoading: isPending } = useQuery({
+    queryKey: ["events"],
+    queryFn: eventService.getEvents,
+  });
+
+  const otherEvents = eventsResponse?.data
+    ?.filter((ele) => ele.event_id !== id)
+    ?.slice()
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 5);
 
   const event = data?.data;
 
-  console.log(eventsResponse, "otherEvents");
+  console.log(event, "event");
 
   const formatEventDateTime = (startTime, endTime) => {
     const start = new Date(startTime);
@@ -116,7 +107,7 @@ export default function EventDetail({ params }) {
                     Event by
                   </span>
                   <span className="text-sm font-medium text-primary">
-                    {event?.createdBy}
+                    {event?.createdByName}
                   </span>
                 </div>
 
@@ -127,12 +118,14 @@ export default function EventDetail({ params }) {
                       {formatEventDateTime(event?.startTime, event?.endTime)}
                     </span>
                   </div>
-                 {(event.address || event.venue) && <div className="flex items-center gap-3 text-sm">
-                    <MapPinHouse className="h-4 w-4 text-stp-blue-light" />
-                    <span>
-                      {event?.address}, {event?.venue}
-                    </span>
-                  </div>}
+                  {(event.address || event.venue) && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <MapPinHouse className="h-4 w-4 text-stp-blue-light" />
+                      <span>
+                        {event?.address}, {event?.venue}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-3 text-sm capitalize">
                     <Video className="h-4 w-4 text-stp-blue-light" />
@@ -153,13 +146,18 @@ export default function EventDetail({ params }) {
 
                 <div className="flex items-center gap-2">
                   <span className="text-sm">
-                    {event?.attendees || 0} attendees
+                    {event?.attendeeCount || 0} attendees
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3 pt-2">
-                  <Button className="bg-stp-blue-light text-primary-foreground hover:bg-primary/90 rounded-2xl">
-                    Attend
+                  <Button
+                    className="bg-stp-blue-light text-primary-foreground hover:bg-primary/90 rounded-2xl"
+                    disabled={isRegistering || event.isRegistered}
+                    onClick={() => mutate(id)
+                    }
+                  >
+                    {event.isRegistered ? "Registered" : "Attend"}
                   </Button>
                   {/* <Button variant="outline" size="icon" className="rounded-full">
                     <Share2 className="h-4 w-4" />
@@ -196,7 +194,7 @@ export default function EventDetail({ params }) {
                     .map((_, i) => <SidebarSkeleton key={i} />)
                 : otherEvents.map((otherEvent) => (
                     <Link
-                      key={otherEvent.id}
+                      key={otherEvent.eventId}
                       className="flex gap-3 cursor-pointer hover:bg-muted/50 p-2 -mx-2 rounded-lg transition-colors"
                       href={`/dashboard/events/${otherEvent.eventId}`}
                     >
