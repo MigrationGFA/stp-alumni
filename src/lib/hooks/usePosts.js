@@ -97,6 +97,26 @@ export const useMyPosts = () => {
     },
   });
 };
+export const usePostById = (id) => {
+  // const setMyPosts = usePostStore((state) => state.setMyPosts);
+
+  return useQuery({
+    queryKey: ['post',id],
+    queryFn: async () => {
+      const data = await postService.getPostById(id);
+      const raw = Array.isArray(data) ? data : data?.data || [];
+      // const posts = raw.map(normalizePost);
+      // setMyPosts(posts);
+      return raw;
+    },
+    staleTime: 30 * 1000,
+    enabled: !!id,
+    onError: (error) => {
+      toast.error('Failed to load your posts');
+      console.error('Error fetching my posts:', error);
+    },
+  });
+};
 
 /**
  * Hook to create a new post

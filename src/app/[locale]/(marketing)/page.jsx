@@ -19,10 +19,10 @@ export default function HomePage() {
         <CommunityHero/>
         <Everything />
         <Professional />
-        <BuildTogether/>
+        {/* <BuildTogether/> */}
 
-        <JoinToday/>
-        <SupportCTA/>
+        {/* <JoinToday/> */}
+        {/* <SupportCTA/> */}
       </main>
     // </div>
   );

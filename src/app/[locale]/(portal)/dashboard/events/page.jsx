@@ -1,3 +1,4 @@
+"use client"
 import EventUi from "@/components/(market-events)/EventUi";
 import React from "react";
 import { Helmet } from "react-helmet-async";

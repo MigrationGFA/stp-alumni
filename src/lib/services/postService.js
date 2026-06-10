@@ -8,6 +8,10 @@ const postService = {
     const response = await api.get('/posts');
     return response.data;
   },
+  getPostById: async (postId) => {
+    const response = await api.get(`/posts/${postId}`);
+    return response.data;
+  },
   /**
    * Fetch all newsfeed
    */

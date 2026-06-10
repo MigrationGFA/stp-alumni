@@ -57,11 +57,11 @@ export default function EventDetail({ params }) {
     queryFn:eventService.getEvents,
   });
 
-  const otherEvents = eventsResponse?.data?.filter((ele) => ele.eventId !== id);
+  const otherEvents = eventsResponse?.data?.filter((ele) => ele.event_id !== id);
 
   const event = data?.data;
 
-  console.log(otherEvents, "otherEvents");
+  console.log(eventsResponse, "otherEvents");
 
   const formatEventDateTime = (startTime, endTime) => {
     const start = new Date(startTime);
