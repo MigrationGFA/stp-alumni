@@ -22,10 +22,11 @@
     "featureNetwork": "Réseau Mondial"
   },
   "Footer": {
-    "brandName": "Blazing Torrent",
+    "brandName": "BlazingTorrent",
     "tagline": "Soutenir les diplômés, les entrepreneurs et les professionnels grâce au réseautage, au mentorat et aux opportunités.",
-    "copyright": "© {year} Blazing Torrent. Tous droits réservés.",
-    "email": "support@stpalumni.com",
+    "disclaimer": "BlazingTorrent est une plateforme dirigée par des anciens élèves pour les membres de la communauté Stanford Seed. Ce n'est pas une plateforme officielle de l'Université de Stanford, de la Stanford GSB ou de Stanford Seed.",
+    "copyright": "© {year} BlazingTorrent. Tous droits réservés.",
+    "email": "support@blazingtorrent.com",
     "product": {
       "title": "Produit",
       "features": "Fonctionnalités",
@@ -56,7 +57,7 @@
     "badgeText": "Inscrivez-vous aujourd'hui - C'est gratuit",
     "headlineMain": "Prêt à libérer votre ",
     "headlineSub": "plein potentiel ?",
-    "description": "Rejoignez plus de 10 000 diplômés qui réseautent, apprennent et progressent ensemble au sein de la communauté STP.",
+    "description": "Rejoignez plus de 10 000 diplômés qui réseautent, apprennent et progressent ensemble au sein de la communauté BlazingTorrent.",
     "getStarted": "Commencer gratuitement",
     "watchDemo": "Voir la démo",
     "featureFree": "Approuvé par des professionnels",
@@ -176,7 +177,10 @@
     "activeMember": "Membre actif",
     "industries": "Secteurs",
     "opportunityShared": "Opportunités partagées",
-    "sanctionRate": "Taux de sanction"
+    "sanctionRate": "Taux de satisfaction des membres",
+    "foundingTitle": "Programme des Membres Fondateurs",
+    "foundingDescription": "Nous acceptons actuellement un nombre limité d'adoptants précoces au sein de notre cohorte de fondateurs. Rejoignez d'autres anciens élèves certifiés de Stanford Seed pour commencer à réseauter, partager des opportunités et façonner notre communauté.",
+    "foundingCTA": "Demander un Accès Anticipé"
   },
   "Professional": {
     "network": {
@@ -335,5 +339,10 @@
     "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
     "passwordSameAsOld": "Le nouveau mot de passe doit être différent de l'actuel",
     "passwordMismatch": "Les mots de passe ne correspondent pas"
+  },
+  "SupportCTA": {
+    "title": "Des questions ? Nous sommes là pour vous aider",
+    "description": "Que vous soyez un nouveau candidat ou un membre actif, notre équipe est là pour vous aider. Contactez-nous directement à {email} ou envoyez-nous un message — nous vous répondrons rapidement.",
+    "button": "Support"
   }
 }

@@ -99,7 +99,7 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
         >
           <Image
             src="/assets/logo-removebg-preview.png"
-            alt="STP Alumni"
+            alt="BlazingTorrent"
             width={140}
             height={40}
             className="object-contain h-10 w-auto"

@@ -16,13 +16,12 @@ export default function HomePage() {
       
       <main>
         <Hero />
-        <CommunityHero/>
+        <CommunityHero />
         <Everything />
         <Professional />
-        {/* <BuildTogether/> */}
-
-        {/* <JoinToday/> */}
-        {/* <SupportCTA/> */}
+        <BuildTogether />
+        <JoinToday />
+        <SupportCTA />
       </main>
     // </div>
   );

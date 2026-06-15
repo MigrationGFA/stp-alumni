@@ -78,7 +78,7 @@ const Navbar = () => {
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/assets/logo-removebg-preview.png"
-            alt="STP Alumni"
+            alt="BlazingTorrent"
             width={240}
             height={50}
             className="object-contain h-[62px] w-auto"

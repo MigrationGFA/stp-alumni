@@ -14,8 +14,8 @@ import { AuthProvider } from "@/lib/hooks/useUser";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Blazing Torrent Alumni Network",
-  description: "Connect, collaborate, and grow with the Blazing Torrent alumni community. Discover opportunities, share insights, and build lasting relationships with fellow graduates and professionals.",
+  title: "BlazingTorrent | Private Business Exchange for Stanford Seed Alumni",
+  description: "BlazingTorrent is a private, verified platform for Stanford Seed alumni to discover curated opportunities, exchange market intelligence, and build strategic partnerships across Africa.",
 };
 
 export default async function RootLayout({ children, params }) {

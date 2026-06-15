@@ -33,11 +33,11 @@ export function Footer() {
     {
       title: t("legal.title"),
       links: [
-        { label: t("legal.privacyPolicy"), href: "#" },
-        { label: t("legal.termsOfService"), href: "#" },
-        { label: t("legal.cookiePolicy"), href: "#" },
-        { label: t("legal.gdpr"), href: "#" },
-        { label: t("legal.accessibility"), href: "#" },
+        { label: t("legal.privacyPolicy"), href: "/privacy" },
+        { label: t("legal.termsOfService"), href: "/terms" },
+        { label: t("legal.cookiePolicy"), href: "/cookie-policy" },
+        { label: t("legal.gdpr"), href: "/gdpr" },
+        { label: t("legal.accessibility"), href: "/accessibility" },
       ],
     },
   ];
@@ -51,7 +51,7 @@ export function Footer() {
           <div className="col-span-1 md:col-span-1">
             <Link href="/" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-l from-[#00D3F2] to-[#155DFC] text-white font-bold text-sm">
-                S
+                B
               </div>
               <span className="text-lg font-light text-white">
                 {t("brandName")}
@@ -59,6 +59,9 @@ export function Footer() {
             </Link>
             <p className="text-sm text-white/40 leading-relaxed mt-5">
               {t("tagline")}
+            </p>
+            <p className="text-[11px] text-white/30 leading-relaxed mt-4 pt-4 border-t border-white/5">
+              {t("disclaimer")}
             </p>
 
             <div className="flex gap-2 mt-3">
@@ -93,7 +96,9 @@ export function Footer() {
 
         <div className="pt-8 border-t border-[#1D293D] flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/40">
           <p>{t("copyright", { year: new Date().getFullYear() })}</p>
-          <p className="flex items-center gap-2">✉ {t("email")}</p>
+          <a href={`mailto:${t("email")}`} className="flex items-center gap-2 hover:text-white transition-colors">
+            ✉ {t("email")}
+          </a>
         </div>
       </Container>
     </footer>
