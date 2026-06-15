@@ -20,10 +20,11 @@
     "featureNetwork": "Global Network"
   },
   "Footer": {
-    "brandName": "Blazing Torrent",
+    "brandName": "BlazingTorrent",
     "tagline": "Empowering graduates, entrepreneurs, and professionals through networking, mentorship, and opportunities.",
-    "copyright": "© {year} Blazing Torrent. All rights reserved.",
-    "email": "support@stpalumni.com",
+    "disclaimer": "BlazingTorrent is an alumni-led platform for members of the Stanford Seed community. It is not an official platform of Stanford University, Stanford GSB, or Stanford Seed.",
+    "copyright": "© {year} BlazingTorrent. All rights reserved.",
+    "email": "support@blazingtorrent.com",
     "product": {
       "title": "Product",
       "features": "Features",
@@ -54,7 +55,7 @@
     "badgeText": "Join Today - It's Free",
     "headlineMain": "Ready to unlock your ",
     "headlineSub": "full potential?",
-    "description": "Join 10,000+ alumni who are networking, learning, and growing together in the STP community.",
+    "description": "Join 10,000+ alumni who are networking, learning, and growing together in the BlazingTorrent community.",
     "getStarted": "Get Started Free",
     "watchDemo": "Watch Demo",
     "featureFree": "Trusted by professionals",
@@ -165,7 +166,10 @@
     "activeMember": "Active member",
     "industries": "Industries",
     "opportunityShared": "Opportunity Shared",
-    "sanctionRate": "Sanction Rate"
+    "sanctionRate": "Member Satisfaction Rate",
+    "foundingTitle": "Founding Member Program",
+    "foundingDescription": "We are currently accepting a limited number of early adopters into our founding cohort. Join fellow verified Stanford Seed alumni to start networking, sharing opportunities, and shaping our community.",
+    "foundingCTA": "Apply for Early Access"
   },
   "Sidebar": {
     "dashboard": "Dashboard",
@@ -422,5 +426,10 @@
     "passwordSameAsOld": "New password must be different from the current one",
     "passwordMismatch": "Passwords do not match",
     "passwordStrengthError": "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)"
+  },
+  "SupportCTA": {
+    "title": "Have Questions? We're Here to Help",
+    "description": "Whether you are a new applicant or an active member, our team is here to assist you. Contact us directly at {email} or send us a message — we will respond promptly.",
+    "button": "Support"
   }
 }
