@@ -1,3 +1,5 @@
+"use client";
+
 import { Link } from '@/i18n/routing';
 import React from 'react';
 import { useTranslations } from 'next-intl';
@@ -14,7 +16,7 @@ const SupportCTA = () => {
         </h2>
         
         <p className="text-white/90 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed">
-          {t("description")}
+          {t("description", { email: "support@blazingtorrent.com" })}
         </p>
 
         <Link href="/contact" className="bg-[#002b2d] hover:bg-[#003d40] text-white font-semibold py-3 px-10 rounded-full transition-all duration-300 shadow-lg">

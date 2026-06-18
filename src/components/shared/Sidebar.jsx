@@ -77,7 +77,7 @@ const Sidebar = ({ isCollapsed }) => {
       >
         <Image
           src="/assets/logo-removebg-preview.png"
-          alt="STP Alumni"
+          alt="BlazingTorrent"
           width={75}
           height={50}
           className={`object-contain object-left opacity-100 ${isExpanded ? "max-w-50" : "max-w-12"}`}

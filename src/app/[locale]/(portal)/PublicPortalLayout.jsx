@@ -19,7 +19,7 @@ export default function PublicPortalLayout({ children, pageTitle }) {
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/assets/Blazing-Torrent-Color-logo.png"
-            alt="STP Alumni"
+            alt="BlazingTorrent"
             width={140}
             height={36}
             className="object-contain h-9 w-auto"
