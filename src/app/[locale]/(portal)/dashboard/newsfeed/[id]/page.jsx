@@ -29,7 +29,7 @@ import { useState, useRef, useMemo, useEffect } from "react";
 
 
 // Constants for word limits
-const MAX_WORDS = 50;
+const MAX_WORDS = 200;
 const WARNING_THRESHOLD = 0.8;
 
 export default function PostDetail() {
