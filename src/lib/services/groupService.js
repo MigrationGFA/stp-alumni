@@ -76,6 +76,15 @@ const groupService = {
     );
     return response.data;
   },
+
+   reportGroup: async (groupId, reason, description) => {
+    const response = await api.post(`/network/groups/${groupId}/reports`, {
+      reason,
+      description,
+    });
+    return response.data;
+  },
+
 };
 
 export default groupService;

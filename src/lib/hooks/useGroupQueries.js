@@ -50,6 +50,20 @@ export function useToggleMembership(groupId) {
   });
 }
 
+export const useReportGroup = (id) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({  reason, description }) =>
+      groupService.reportGroup(id, reason, description),
+    onSuccess: () => {
+      // Optionally invalidate group queries
+      queryClient.invalidateQueries({ queryKey: groupKeys.detail(id) });
+    },
+  });
+};
+
+
 // ─── Posts ─────────────────────────────────────────────────────────────────
 
 export function useGroupPosts(groupId) {
