@@ -99,7 +99,7 @@ export default function DashboardPage() {
                 </h2>
 
                 <p className="text-white/80 text-sm mb-6 max-w-md leading-relaxed">
-                  Join our interactive learning community and grow your skills
+                  Join our interactive learning community and grow your network
                   with industry experts.
                 </p>
 
@@ -141,7 +141,7 @@ export default function DashboardPage() {
                   bgGradient: "bg-gradient-to-br from-amber-50 to-amber-100/50",
                   iconBg: "bg-gradient-to-br from-amber-500 to-amber-600",
                   labelKey: "marketplace",
-                  description: "Shop & sell",
+                  description: "Explore business",
                 },
               ].map((action, index) => {
                 const Icon = action.icon;

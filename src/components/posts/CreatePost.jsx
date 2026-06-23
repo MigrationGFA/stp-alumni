@@ -116,14 +116,14 @@ export default function CreatePost({ onPostCreated }) {
   const canSubmit = (postContent.trim() || images.length > 0) && !isOverLimit && !isLoading;
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800/50 p-5 shadow-sm border border-gray-200/60 dark:border-gray-700/60 transition-all hover:shadow-md">
+    <div className="rounded-2xl bg-linear-to-br from-white via-white to-gray-50/50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800/50 p-5 shadow-sm border border-gray-200/60 dark:border-gray-700/60 transition-all hover:shadow-md">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-[#233389]/10 dark:bg-[#233389]/20">
+            {/* <div className="p-1.5 rounded-lg bg-[#233389]/10 dark:bg-[#233389]/20">
               <Sparkles className="h-4 w-4 text-[#233389]" />
-            </div>
+            </div> */}
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               Create Post
             </h3>
