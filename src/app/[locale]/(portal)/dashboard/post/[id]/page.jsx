@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   MoreHorizontal,
   X,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,20 +39,19 @@ import { Link } from "@/i18n/routing";
 import { useQuery } from "@tanstack/react-query";
 import networkService from "@/lib/services/networkService";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
-// Fetch single post by ID
-const fetchPostById = async (postId) => {
-  const response = await networkService.get(`/posts/${postId}`);
-  return response.data;
-};
+// Constants for word limits
+const MAX_WORDS = 1250;
+const WARNING_THRESHOLD = 0.8;
 
 /**
  * CommentItem — renders a single comment bubble
  */
 function CommentItem({ comment }) {
   return (
-    <div className="flex gap-3">
-      <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
+    <div className="flex gap-3 group animate-in fade-in slide-in-from-bottom-2 duration-200">
+      <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0 ring-2 ring-white shadow-sm">
         <Image
           src={
             comment.profileImagePath ||
@@ -65,7 +65,7 @@ function CommentItem({ comment }) {
         />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-2.5">
+        <div className="bg-gray-100 hover:bg-gray-100/80 rounded-2xl rounded-tl-sm px-4 py-2.5 transition-colors duration-200">
           <Link
             href={`/dashboard/profile/${comment.authorId || comment.userId}`}
             className="text-sm font-semibold text-[#233389] leading-tight hover:underline"
@@ -73,11 +73,11 @@ function CommentItem({ comment }) {
             {comment.firstName || comment.user?.name || "Anonymous"}{" "}
             {comment.lastName || ""}
           </Link>
-          <p className="text-sm text-gray-700 mt-0.5 break-words">
+          <p className="text-sm text-gray-700 mt-0.5 break-words leading-relaxed">
             {comment.comment}
           </p>
         </div>
-        <p className="text-xs text-gray-400 mt-1 pl-2">
+        <p className="text-xs text-gray-400 mt-1.5 pl-2">
           {comment.createdAt
             ? formatDistanceToNow(new Date(comment.createdAt))
             : "Just now"}
@@ -96,11 +96,11 @@ export default function PostPage({params}) {
   const postId = param.id;
   const t = useTranslations("Dashboard");
 
-  console.log(param,"postId")
-
   const [commentText, setCommentText] = useState("");
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(false);
+  const [fullImageOpen, setFullImageOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const dropdownRef = useRef(null);
   const textareaRef = useRef(null);
   const { data: currentUser } = useAuth();
@@ -110,8 +110,8 @@ export default function PostPage({params}) {
     data: post,
     isLoading,
     error,
-    // refetch,
-  } = usePostById(postId)
+    refetch,
+  } = usePostById(postId);
 
   // Fetch comments
   const {
@@ -131,6 +131,28 @@ export default function PostPage({params}) {
   // Comment mutation
   const { mutate: addComment, isPending: isSubmitting } = useCommentPost();
 
+  // Calculate word count
+  const wordCount = useMemo(() => {
+    if (!commentText.trim()) return 0;
+    return commentText.trim().split(/\s+/).length;
+  }, [commentText]);
+
+  const isOverLimit = wordCount > MAX_WORDS;
+  const showWarning = wordCount > MAX_WORDS * WARNING_THRESHOLD;
+  const wordPercentage = Math.min((wordCount / MAX_WORDS) * 100, 100);
+
+  const getWordCountColor = () => {
+    if (isOverLimit) return "text-red-500";
+    if (showWarning) return "text-amber-500";
+    return "text-emerald-500";
+  };
+
+  const getProgressColor = () => {
+    if (isOverLimit) return "bg-red-500";
+    if (showWarning) return "bg-amber-500";
+    return "bg-emerald-500";
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -143,6 +165,18 @@ export default function PostPage({params}) {
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openDropdown]);
+
+  // Prevent body scroll when full image modal is open
+  useEffect(() => {
+    if (fullImageOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [fullImageOpen]);
 
   // Auto-focus textarea
   useEffect(() => {
@@ -170,9 +204,22 @@ export default function PostPage({params}) {
     toast.success("Link copied to clipboard!");
   };
 
+  const handleCommentChange = (e) => {
+    const value = e.target.value;
+    const words = value.trim().split(/\s+/);
+    
+    if (words.length > MAX_WORDS && words.length > wordCount) {
+      const trimmedValue = value.split(/\s+/).slice(0, MAX_WORDS).join(" ");
+      setCommentText(trimmedValue);
+      toast.warning(`Maximum ${MAX_WORDS} words allowed`);
+    } else {
+      setCommentText(value);
+    }
+  };
+
   const handleSubmitComment = () => {
     const text = commentText.trim();
-    if (!text || isSubmitting) return;
+    if (!text || isSubmitting || isOverLimit) return;
 
     addComment(
       { postId: postId, comment: text },
@@ -180,8 +227,9 @@ export default function PostPage({params}) {
         onSuccess: () => {
           setCommentText("");
           refetchComments();
-          refetch(); // Refresh post to update comment count
+          refetch();
           textareaRef.current?.focus();
+          toast.success("Comment posted successfully!");
         },
       }
     );
@@ -194,17 +242,55 @@ export default function PostPage({params}) {
     }
   };
 
+  const openFullImage = (index) => {
+    setSelectedImageIndex(index);
+    setFullImageOpen(true);
+  };
+
+  const closeFullImage = () => {
+    setFullImageOpen(false);
+  };
+
+  const goToPreviousImage = () => {
+    setSelectedImageIndex((prev) => 
+      prev === 0 ? post.images.length - 1 : prev - 1
+    );
+  };
+
+  const goToNextImage = () => {
+    setSelectedImageIndex((prev) => 
+      prev === post.images.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  // Keyboard navigation for full image view
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!fullImageOpen) return;
+      
+      if (e.key === "Escape") {
+        closeFullImage();
+      } else if (e.key === "ArrowLeft") {
+        goToPreviousImage();
+      } else if (e.key === "ArrowRight") {
+        goToNextImage();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [fullImageOpen, selectedImageIndex]);
+
+  const canSubmit = commentText.trim() && !isOverLimit && !isSubmitting;
+
   // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 py-8">
-          {/* Back button skeleton */}
           <div className="mb-6">
             <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse" />
           </div>
-
-          {/* Post skeleton */}
           <div className="bg-white rounded-lg p-6">
             <div className="flex gap-3 mb-4">
               <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse" />
@@ -264,6 +350,9 @@ export default function PostPage({params}) {
     );
   }
 
+  const images = post.images || [];
+  const hasImages = images.length > 0;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
@@ -284,7 +373,7 @@ export default function PostPage({params}) {
               <div className="flex gap-3">
                 <Link
                   href={`/dashboard/profile/${post.authorId}`}
-                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gray-300 overflow-hidden shrink-0 block"
+                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gray-300 overflow-hidden shrink-0 block ring-2 ring-white shadow-sm"
                 >
                   <Image
                     src={post.profileImagePath || "/assets/Profile Image.jpg"}
@@ -349,52 +438,74 @@ export default function PostPage({params}) {
               </div>
             </div>
 
-            {/* ── Post Body with Read More ── */}
+            {/* ── Post Body ── */}
             {(post.body || post.content) && (
               <div className="mb-4">
-                <p className="text-gray-700 whitespace-pre-wrap text-sm sm:text-base">
+                <p className="text-gray-700 whitespace-pre-wrap text-sm sm:text-base leading-relaxed">
                   {post.body || post.content}
                 </p>
               </div>
             )}
 
             {/* ── Post Images ── */}
-            {Array.isArray(post.images) && post.images.length > 0 && (
+            {hasImages && (
               <div
                 className={`mb-4 gap-2 ${
-                  post.images.length === 1
-                    ? "grid grid-cols-1"
-                    : "grid grid-cols-2"
+                  images.length === 1 ? "grid grid-cols-1" : "grid grid-cols-2"
                 }`}
                 style={
-                  post.images.length === 3
+                  images.length === 3
                     ? { gridTemplateRows: "repeat(2, minmax(0, 1fr))" }
                     : {}
                 }
               >
-                {post.images.map((image, index) => (
-                  <div
-                    key={index}
-                    className={`relative bg-gray-200 rounded-lg overflow-hidden ${
-                      post.images.length === 3 && index === 0
-                        ? "row-span-2"
-                        : "aspect-video"
-                    }`}
-                    style={
-                      post.images.length === 3 && index === 0
-                        ? { gridRow: "1 / 3" }
-                        : {}
-                    }
-                  >
-                    <Image
-                      src={image}
-                      alt={`Post image ${index + 1}`}
-                      fill
-                      className="object-cover cursor-pointer"
-                      onClick={() => window.open(image, "_blank")}
-                    />
-                  </div>
-                ))}
+                {images.map((image, index) => {
+                  const isFirstOfThree = images.length === 3 && index === 0;
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={`relative bg-gray-200 rounded-lg overflow-hidden cursor-pointer group ${
+                        isFirstOfThree ? "row-span-2" : "aspect-video"
+                      }`}
+                      style={
+                        isFirstOfThree ? { gridRow: "1 / 3" } : {}
+                      }
+                      onClick={() => openFullImage(index)}
+                    >
+                      <Image
+                        src={image}
+                        alt={`Post image ${index + 1}`}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      
+                      {/* Overlay with zoom icon */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-2">
+                          <svg className="h-5 w-5 text-[#233389]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Show +N overlay for last image if there are more than 3 */}
+                      {index === 2 && images.length > 3 && (
+                        <div 
+                          className="absolute inset-0 bg-black/50 flex items-center justify-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openFullImage(2);
+                          }}
+                        >
+                          <span className="text-white text-2xl font-bold">
+                            +{images.length - 3}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -485,7 +596,9 @@ export default function PostPage({params}) {
                     !commentsError &&
                     comments.length === 0 && (
                       <div className="text-center py-8">
-                        <MessageSquare className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                        <div className="h-12 w-12 rounded-full bg-gray-100 mx-auto flex items-center justify-center mb-3">
+                          <MessageSquare className="h-6 w-6 text-gray-300" />
+                        </div>
                         <p className="text-sm text-gray-400">No comments yet.</p>
                         <p className="text-xs text-gray-400 mt-1">
                           Be the first to comment!
@@ -500,10 +613,10 @@ export default function PostPage({params}) {
                 </div>
               </ScrollArea>
 
-              {/* Comment Input */}
+              {/* Comment Input with Word Limit */}
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex gap-3 items-end">
-                  <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
+                  <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0 ring-2 ring-white shadow-sm">
                     <Image
                       src={
                         currentUser?.data?.profileImagePath ||
@@ -519,16 +632,51 @@ export default function PostPage({params}) {
                     <Textarea
                       ref={textareaRef}
                       value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
+                      onChange={handleCommentChange}
+                      onFocus={() => setIsFocused(true)}
+                      onBlur={() => setIsFocused(false)}
                       onKeyDown={handleKeyDown}
                       placeholder="Write a comment…"
-                      className="resize-none min-h-[44px] max-h-[120px] pr-12 rounded-2xl border-gray-200 focus-visible:ring-[#233389] text-sm py-2.5 bg-white"
+                      className={cn(
+                        "resize-none min-h-[44px] max-h-[120px] pr-12 rounded-2xl border-2 text-sm py-2.5 bg-white transition-all duration-200",
+                        isFocused
+                          ? "border-[#233389] ring-4 ring-[#233389]/10"
+                          : isOverLimit
+                          ? "border-red-400"
+                          : "border-gray-200 hover:border-gray-300",
+                        isOverLimit && "focus-visible:ring-red-400/10"
+                      )}
                       rows={1}
                     />
+                    
+                    {/* Word counter indicator */}
+                    {commentText.trim() && wordCount > 0 && (
+                      <div className="absolute -top-6 right-1 flex items-center gap-2">
+                        <span className={`text-[10px] font-medium ${getWordCountColor()}`}>
+                          {wordCount}/{MAX_WORDS}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Progress bar */}
+                    {commentText.trim() && wordCount > 0 && (
+                      <div className="absolute -bottom-1.5 left-3 right-3 h-0.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-300 rounded-full ${getProgressColor()}`}
+                          style={{ width: `${Math.min(wordPercentage, 100)}%` }}
+                        />
+                      </div>
+                    )}
+
                     <button
                       onClick={handleSubmitComment}
-                      disabled={!commentText.trim() || isSubmitting}
-                      className="absolute right-3 bottom-2.5 text-[#233389] disabled:text-gray-300 transition-colors hover:text-[#1d2a6e]"
+                      disabled={!canSubmit}
+                      className={cn(
+                        "absolute right-2.5 bottom-2.5 p-1.5 rounded-lg transition-all duration-200",
+                        canSubmit
+                          ? "text-[#233389] hover:bg-[#233389]/10 hover:scale-110 active:scale-95"
+                          : "text-gray-300 cursor-not-allowed"
+                      )}
                     >
                       {isSubmitting ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -538,14 +686,116 @@ export default function PostPage({params}) {
                     </button>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-2 pl-12">
-                  Ctrl + Enter to send
-                </p>
+
+                {/* Footer info */}
+                <div className="flex items-center justify-between mt-2 pl-12">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-400">
+                      ⌘ + Enter to send
+                    </span>
+                    {commentText.trim() && !isOverLimit && wordCount > 0 && (
+                      <>
+                        <span className="text-xs text-gray-300">•</span>
+                        <span className="text-xs text-gray-400">
+                          {MAX_WORDS - wordCount} words remaining
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  
+                  {commentText.trim() && showWarning && (
+                    <span className={`text-xs ${getWordCountColor()}`}>
+                      {isOverLimit ? "⚠️ Limit exceeded" : "⚠️ Approaching limit"}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ── Full Image Modal ── */}
+      {fullImageOpen && hasImages && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={closeFullImage}
+        >
+          {/* Close button */}
+          <button
+            onClick={closeFullImage}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10 p-2"
+          >
+            <X className="h-8 w-8" />
+          </button>
+
+          {/* Image counter */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium bg-black/50 px-4 py-2 rounded-full">
+            {selectedImageIndex + 1} / {images.length}
+          </div>
+
+          {/* Main image */}
+          <div 
+            className="relative max-w-[90vw] max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={images[selectedImageIndex]}
+              alt={`Post image ${selectedImageIndex + 1}`}
+              width={1200}
+              height={800}
+              className="object-contain max-w-[90vw] max-h-[90vh]"
+            />
+          </div>
+
+          {/* Navigation buttons */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToPreviousImage();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors p-2 bg-black/50 hover:bg-black/70 rounded-full"
+              >
+                <ChevronLeft className="h-8 w-8" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToNextImage();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors p-2 bg-black/50 hover:bg-black/70 rounded-full"
+              >
+                <ChevronRight className="h-8 w-8" />
+              </button>
+
+              {/* Thumbnail navigation */}
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedImageIndex(index);
+                    }}
+                    className={`h-2 rounded-full transition-all ${
+                      index === selectedImageIndex
+                        ? "w-8 bg-white"
+                        : "w-2 bg-white/50 hover:bg-white/70"
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Instructions */}
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 text-white/40 text-xs">
+            {images.length > 1 && "Use arrow keys to navigate • ESC to close"}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

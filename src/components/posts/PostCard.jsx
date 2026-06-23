@@ -12,6 +12,9 @@ import {
   Send,
   Loader2,
   Check,
+  X,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -375,6 +378,8 @@ export default function PostCard({
   const t = useTranslations("Dashboard");
   const [openDropdown, setOpenDropdown] = useState(false);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [fullImageOpen, setFullImageOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const dropdownRef = useRef(null);
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -404,11 +409,22 @@ export default function PostCard({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openDropdown]);
 
+  // Prevent body scroll when full image modal is open
+  useEffect(() => {
+    if (fullImageOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [fullImageOpen]);
+
   const handleLike = () => onLike?.(post.id);
 
   const handleComment = () => {
     setCommentModalOpen(true);
-    // onComment?.(post.id); // still call the external callback if needed
   };
 
   const handleFollow = () => onFollow?.(post.author?.id);
@@ -420,10 +436,52 @@ export default function PostCard({
 
   const handleCopyLink = () => {
     setOpenDropdown(false);
-    const postUrl = `${window.location.origin}/dashboard/newsfeed/${post.id}`;
+    const postUrl = `${window.location.origin}/dashboard/post/${post.id}`;
     navigator.clipboard.writeText(postUrl);
     onCopyLink?.(post.id);
   };
+
+  const openFullImage = (index) => {
+    setSelectedImageIndex(index);
+    setFullImageOpen(true);
+  };
+
+  const closeFullImage = () => {
+    setFullImageOpen(false);
+  };
+
+  const goToPreviousImage = () => {
+    setSelectedImageIndex((prev) => 
+      prev === 0 ? post.images.length - 1 : prev - 1
+    );
+  };
+
+  const goToNextImage = () => {
+    setSelectedImageIndex((prev) => 
+      prev === post.images.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  // Keyboard navigation for full image view
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!fullImageOpen) return;
+      
+      if (e.key === "Escape") {
+        closeFullImage();
+      } else if (e.key === "ArrowLeft") {
+        goToPreviousImage();
+      } else if (e.key === "ArrowRight") {
+        goToNextImage();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [fullImageOpen, selectedImageIndex]);
+
+  const images = post.images || [];
+  const hasImages = images.length > 0;
 
   return (
     <>
@@ -465,7 +523,6 @@ export default function PostCard({
 
           <div className="flex items-center gap-2 relative">
             {/* Follow Button */}
-            {/* Follow Button with different states */}
             {post.connectionStatus === null && (
               <Button
                 variant="outline"
@@ -478,7 +535,7 @@ export default function PostCard({
               </Button>
             )}
 
-            {post.connectionStatus === "PENDING" && (
+            {/* {post.connectionStatus === "PENDING" && (
               <Button
                 variant="outline"
                 size="sm"
@@ -488,13 +545,12 @@ export default function PostCard({
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                 {t("pending")}
               </Button>
-            )}
+            )} */}
 
             {post.connectionStatus === "ACCEPTED" && (
               <Button
                 variant="ghost"
                 size="sm"
-                // onClick={handleUnfollow}
                 className="text-gray-600 hover:text-red-600 hover:bg-red-50"
               >
                 <Check className="h-4 w-4 mr-1" />
@@ -534,7 +590,6 @@ export default function PostCard({
         </div>
 
         {/* ── Post Body ── */}
-        {/* ── Post Body with Read More ── */}
         {(post.body || post.content) && (
           <div className="mb-4">
             <p className="text-gray-700 whitespace-pre-wrap">
@@ -554,39 +609,62 @@ export default function PostCard({
         )}
 
         {/* ── Post Images ── */}
-        {Array.isArray(post.images) && post.images.length > 0 && (
+        {hasImages && (
           <div
             className={`mb-4 gap-2 ${
-              post.images.length === 1 ? "grid grid-cols-1" : "grid grid-cols-2"
+              images.length === 1 ? "grid grid-cols-1" : "grid grid-cols-2"
             }`}
             style={
-              post.images.length === 3
+              images.length === 3
                 ? { gridTemplateRows: "repeat(2, minmax(0, 1fr))" }
                 : {}
             }
           >
-            {post.images.map((image, index) => (
-              <div
-                key={index}
-                className={`relative bg-gray-200 rounded-lg overflow-hidden ${
-                  post.images.length === 3 && index === 0
-                    ? "row-span-2"
-                    : "aspect-video"
-                }`}
-                style={
-                  post.images.length === 3 && index === 0
-                    ? { gridRow: "1 / 3" }
-                    : {}
-                }
-              >
-                <Image
-                  src={image}
-                  alt={`Post image ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ))}
+            {images.map((image, index) => {
+              const isFirstOfThree = images.length === 3 && index === 0;
+              const remainingCount = images.length - 3;
+
+              return (
+                <div
+                  key={index}
+                  className={`relative bg-gray-200 rounded-lg overflow-hidden cursor-pointer group ${
+                    isFirstOfThree ? "row-span-2" : "aspect-video"
+                  }`}
+                  style={
+                    isFirstOfThree ? { gridRow: "1 / 3" } : {}
+                  }
+                  onClick={() => openFullImage(index)}
+                >
+                  <Image
+                    src={image}
+                    alt={`Post image ${index + 1}`}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  
+                  {/* Overlay with zoom icon */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-2">
+                      <svg className="h-5 w-5 text-[#233389]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Show +N overlay for last image if there are more than 3 */}
+                  {index === 2 && images.length > 3 && (
+                    <div 
+                      className="absolute inset-0 bg-black/50 flex items-center justify-center"
+                      onClick={() => openFullImage(2)}
+                    >
+                      <span className="text-white text-2xl font-bold">
+                        +{images.length - 3}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -614,10 +692,10 @@ export default function PostCard({
             {post.commentCount > 0 && (
               <button
                 onClick={handleComment}
-                className="text-sm text-gray-600 hover:underline "
+                className="text-sm text-gray-600 hover:underline"
               >
                 {post.commentCount}{" "}
-                {post.commentCountt === 1 ? "comment" : "comments"}
+                {post.commentCount === 1 ? "comment" : "comments"}
               </button>
             )}
           </div>
@@ -654,7 +732,89 @@ export default function PostCard({
         </div>
       </div>
 
-      {/* ── Comment Modal (rendered outside the card) ── */}
+      {/* ── Full Image Modal ── */}
+      {fullImageOpen && hasImages && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={closeFullImage}
+        >
+          {/* Close button */}
+          <button
+            onClick={closeFullImage}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10 p-2"
+          >
+            <X className="h-8 w-8" />
+          </button>
+
+          {/* Image counter */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium bg-black/50 px-4 py-2 rounded-full">
+            {selectedImageIndex + 1} / {images.length}
+          </div>
+
+          {/* Main image */}
+          <div 
+            className="relative max-w-[90vw] max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={images[selectedImageIndex]}
+              alt={`Post image ${selectedImageIndex + 1}`}
+              width={1200}
+              height={800}
+              className="object-contain max-w-[90vw] max-h-[90vh]"
+            />
+          </div>
+
+          {/* Navigation buttons */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToPreviousImage();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors p-2 bg-black/50 hover:bg-black/70 rounded-full"
+              >
+                <ChevronLeft className="h-8 w-8" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToNextImage();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors p-2 bg-black/50 hover:bg-black/70 rounded-full"
+              >
+                <ChevronRight className="h-8 w-8" />
+              </button>
+
+              {/* Thumbnail navigation */}
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedImageIndex(index);
+                    }}
+                    className={`h-2 rounded-full transition-all ${
+                      index === selectedImageIndex
+                        ? "w-8 bg-white"
+                        : "w-2 bg-white/50 hover:bg-white/70"
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Instructions */}
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 text-white/40 text-xs">
+            {images.length > 1 && "Use arrow keys to navigate • ESC to close"}
+          </div>
+        </div>
+      )}
+
+      {/* ── Comment Modal ── */}
       <CommentModal
         open={commentModalOpen}
         onClose={() => setCommentModalOpen(false)}

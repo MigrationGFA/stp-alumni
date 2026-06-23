@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import postService from '../services/postService';
 import usePostStore from '../store/usePostStore';
 import { toast } from 'sonner';
@@ -51,6 +51,68 @@ function normalizePost(post) {
     },
   };
 }
+
+
+export const useInfinitePostsFeed = () => {
+  const setPosts = usePostStore((state) => state.setPosts);
+  const CHUNK_SIZE = 5; // Number of posts to show per "page"
+
+  return useInfiniteQuery({
+    queryKey: ['posts', 'infinite'],
+    queryFn: async ({ pageParam = 1 }) => {
+      // Fetch all posts at once
+      const data = await postService.getPosts({
+        page: pageParam,
+        limit: 10,
+      });
+      
+      // Extract posts from the response
+      // Your response has a 'data' array directly
+      let allPosts = [];
+      let total = 0;
+      
+      if (data?.data && Array.isArray(data.data)) {
+        allPosts = data.data;
+        total = data.total || allPosts.length;
+      } else if (Array.isArray(data)) {
+        allPosts = data;
+        total = allPosts.length;
+      }
+      
+      // Normalize posts
+      const normalizedPosts = allPosts.map(normalizePost);
+      
+      // Store all posts in the store
+      setPosts(normalizedPosts);
+      
+      // Calculate chunk for this "page"
+      const startIndex = 0;
+      const endIndex = pageParam * CHUNK_SIZE;
+      const chunk = normalizedPosts.slice(startIndex, endIndex);
+      
+      // Determine if there are more posts to show
+      const hasMore = endIndex < normalizedPosts.length;
+      
+      console.log(`Page ${pageParam}: Showing ${chunk.length} posts, hasMore: ${hasMore}`);
+      
+      return {
+        data: chunk,
+        total: total,
+        nextPage: hasMore ? pageParam + 1 : undefined,
+      };
+    },
+    getNextPageParam: (lastPage) => {
+      return lastPage?.nextPage;
+    },
+    initialPageParam: 1,
+    staleTime: 30 * 1000,
+    onError: (error) => {
+      toast.error('Failed to load posts');
+      console.error('Error fetching posts:', error);
+    },
+  });
+};
+
 /**
  * Hook to fetch all posts for the feed
  */

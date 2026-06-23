@@ -4,10 +4,10 @@ const postService = {
   /**
    * Fetch all posts for the feed
    */
-  getPosts: async () => {
-    const response = await api.get('/posts');
-    return response.data;
-  },
+getPosts:async ({ page = 1, limit = 10 } = {}) => {
+  const response = await api.get(`/posts?page=${page}&limit=${limit}`);
+  return response.data;
+},
   getPostById: async (postId) => {
     const response = await api.get(`/posts/${postId}`);
     return response.data;

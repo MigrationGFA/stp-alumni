@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileDrawer } from "@/components/ProfileDrawer";
-import { useSize } from "react-haiku";
+import { useScreenSize, useSize } from "react-haiku";
 import { useNavbar } from "@/contexts/NavbarContext";
 import useAuthStore from "@/lib/store/useAuthStore";
 import { useAuth } from "@/lib/hooks/useUser";
@@ -36,6 +36,8 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
   const { width, height } = useSize(elementRef);
   const { setUserSize } = useNavbar();
 
+  const screenSize = useScreenSize()
+
   const router = useRouter();
 
   // Auth store data (from login response)
@@ -45,7 +47,7 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
   const { data: profileData } = useAuth();
 
   const profile = profileData?.data || profileData || {};
-  // console.log(user,"user",profile)
+  // console.log(screen.toString(),"user",screen.toString())
 
   // Merge: login response gives name/email, profile API gives image/details
   const displayName = user?.name || profile?.name || "User";
@@ -100,10 +102,10 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
           <Image
             src="/assets/logo-removebg-preview.png"
             alt="BlazingTorrent"
-            width={140}
+            width={screenSize.gt("md") ? 140 : 70}
             height={40}
             className="object-contain h-10"
-            style={{ width: "auto", height: "auto" }}
+            // style={{ width: "auto", height: "auto" }}
             priority
           />
         </Link>
@@ -144,18 +146,18 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
 
             {/* Mobile: ProfileDrawer trigger */}
             <ProfileDrawer data={headerData}>
-              <button className="lg:hidden flex items-center gap-2 cursor-pointer">
+              <button className="lg:hidden flex items-center gap-2 cursor-pointer min-w-0">
                 <Avatar className="h-6 sm:h-10 w-6 sm:w-10 border-2 border-accent">
                   <AvatarImage src={headerData.img} />
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="hidden sm:block">
-                  <h1 className="text-[#020618] font-semibold">
+                <div className="hidden sm:block max-w-[12rem]">
+                  <h1 className="text-[#020618] font-semibold truncate">
                     {headerData.name}
                   </h1>
-                  <p className="text-[#02061873] font-light text-sm">
+                  <p className="text-[#02061873] font-light text-sm truncate">
                     {headerData.email}
                   </p>
                 </div>
@@ -163,18 +165,18 @@ function UserHeader({ toggleSidebar, isCollapsed }) {
             </ProfileDrawer>
 
             {/* Desktop profile */}
-            <div className="gap-1 items-center hidden lg:flex">
+            <div className="gap-1 items-center hidden lg:flex min-w-0">
               <Avatar className="h-10 w-10 border-2 border-accent">
                 <AvatarImage src={headerData.img} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden sm:block">
-                <h1 className="text-[#020618] font-semibold">
+              <div className="hidden sm:block max-w-[5rem]">
+                <h1 className="text-[#020618] font-semibold truncate">
                   {headerData.name}
                 </h1>
-                <p className="text-[#02061873] font-light text-sm">
+                <p className="text-[#02061873] font-light text-sm truncate">
                   {headerData.email}
                 </p>
               </div>

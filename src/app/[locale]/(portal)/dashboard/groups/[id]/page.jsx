@@ -57,6 +57,7 @@ import {
   useCommentOnPost,
 } from "@/lib/hooks/useGroupQueries";
 import { Helmet } from "react-helmet-async";
+import { toast } from "sonner";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -146,7 +147,7 @@ function CommentsSection({ groupId, postId, onClose }) {
     if (showWarning) return "bg-amber-500";
     return "bg-emerald-500";
   };
-
+ 
   // Auto-focus on mount
   useEffect(() => {
     if (textareaRef.current) {
@@ -343,6 +344,15 @@ function PostCard({ post, groupId }) {
   const authorAvatar = post.authorAvatar || post.profileImagePath || null;
   const authorTitle = post.authorTitle || post.title || "";
 
+     const handleCopyLink = () => {
+    // setOpenDropdown(false);
+    const postUrl = `${window.location.origin}/dashboard/post/${post.id}`;
+    navigator.clipboard.writeText(postUrl);
+    toast.info("Copied Successfully")
+    // onCopyLink?.(post.id);
+  };
+
+
   return (
     <Card>
       <CardContent className="pt-4">
@@ -375,18 +385,18 @@ function PostCard({ post, groupId }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              {/* <DropdownMenuItem>
                 <Bookmark className="h-4 w-4 mr-2" />
                 Save post
-              </DropdownMenuItem>
-              <DropdownMenuItem>
+              </DropdownMenuItem> */}
+              <DropdownMenuItem onClick={handleCopyLink}>
                 <Link2 className="h-4 w-4 mr-2" />
                 Copy link
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive focus:text-destructive">
+              {/* <DropdownMenuItem className="text-destructive focus:text-destructive">
                 <FlagIcon className="h-4 w-4 mr-2" />
                 Report post
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

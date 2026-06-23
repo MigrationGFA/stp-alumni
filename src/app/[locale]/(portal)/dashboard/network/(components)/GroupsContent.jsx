@@ -207,6 +207,8 @@ export function GroupsContent() {
     setCurrentPage(1);
   };
 
+  
+
   if (isLoading) {
     return (
       <div className="space-y-6">
