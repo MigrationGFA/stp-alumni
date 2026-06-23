@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import {
@@ -24,18 +24,23 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "@/lib/helper";
 import { usePostComments, useCommentPost } from "@/lib/hooks/usePosts";
-import useAuthStore from "@/lib/store/useAuthStore";
+// import useAuthStore from "@/lib/store/useAuthStore";
 import { useAuth } from "@/lib/hooks/useUser";
 import { Link } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
+
+// Constants for word limits
+const MAX_WORDS = 50;
+const WARNING_THRESHOLD = 0.8;
 
 /**
- * CommentItem — renders a single comment bubble
+ * CommentItem — renders a single comment bubble with modern styling
  */
 function CommentItem({ comment }) {
-  // console.log(comment,"comment")
   return (
-    <div className="flex gap-3">
-      <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
+    <div className="flex gap-3 group animate-in fade-in slide-in-from-bottom-2 duration-200">
+      {/* Avatar */}
+      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#233389]/10 to-[#233389]/5 overflow-hidden shrink-0 ring-2 ring-white shadow-sm">
         <Image
           src={
             comment.profileImagePath ||
@@ -48,19 +53,21 @@ function CommentItem({ comment }) {
           className="h-full w-full object-cover"
         />
       </div>
+      
+      {/* Comment bubble */}
       <div className="flex-1 min-w-0">
-        <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-2.5">
+        <div className="bg-gray-50 hover:bg-gray-100/80 rounded-2xl rounded-tl-sm px-4 py-3 transition-colors duration-200 border border-gray-100/80">
           <p className="text-sm font-semibold text-[#233389] leading-tight">
             {comment.firstName || comment.user?.name || "Anonymous"}{" "}
             {comment.lastName || ""}
           </p>
-          <p className="text-sm text-gray-700 mt-0.5 break-words">
+          <p className="text-sm text-gray-700 mt-1 break-words leading-relaxed">
             {comment.comment}
           </p>
         </div>
-        <p className="text-xs text-gray-400 mt-1 pl-2">
+        <p className="text-xs text-gray-400 mt-1.5 pl-2">
           {comment.createdAt
-            ? formatDistanceToNow(new Date(comment.createdAt))
+            ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
             : "Just now"}
         </p>
       </div>
@@ -73,10 +80,11 @@ function CommentItem({ comment }) {
  */
 function CommentModal({ open, onClose, post }) {
   const [commentText, setCommentText] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef(null);
   const bottomRef = useRef(null);
 
-  // GET comments — only fires when modal is open and post.id exists
+  // GET comments
   const {
     data,
     isLoading: isLoadingComments,
@@ -84,10 +92,31 @@ function CommentModal({ open, onClose, post }) {
   } = usePostComments(post?.id);
 
   const comments = data?.data || [];
-  // console.log(comments,"comments")
 
   // POST a new comment
   const { mutate: addComment, isPending: isSubmitting } = useCommentPost();
+
+  // Calculate word count
+  const wordCount = useMemo(() => {
+    if (!commentText.trim()) return 0;
+    return commentText.trim().split(/\s+/).length;
+  }, [commentText]);
+
+  const isOverLimit = wordCount > MAX_WORDS;
+  const showWarning = wordCount > MAX_WORDS * WARNING_THRESHOLD;
+  const wordPercentage = Math.min((wordCount / MAX_WORDS) * 100, 100);
+
+  const getWordCountColor = () => {
+    if (isOverLimit) return "text-red-500";
+    if (showWarning) return "text-amber-500";
+    return "text-emerald-500";
+  };
+
+  const getProgressColor = () => {
+    if (isOverLimit) return "bg-red-500";
+    if (showWarning) return "bg-amber-500";
+    return "bg-emerald-500";
+  };
 
   // Auto-focus the textarea when the modal opens
   useEffect(() => {
@@ -107,7 +136,7 @@ function CommentModal({ open, onClose, post }) {
 
   const handleSubmit = () => {
     const text = commentText.trim();
-    if (!text || isSubmitting) return;
+    if (!text || isSubmitting || isOverLimit) return;
 
     addComment(
       { postId: post.id, comment: text },
@@ -127,29 +156,51 @@ function CommentModal({ open, onClose, post }) {
       handleSubmit();
     }
   };
+
+  const handleCommentChange = (e) => {
+    const value = e.target.value;
+    const words = value.trim().split(/\s+/);
+    
+    if (words.length > MAX_WORDS && words.length > wordCount) {
+      const trimmedValue = value.split(/\s+/).slice(0, MAX_WORDS).join(" ");
+      setCommentText(trimmedValue);
+    } else {
+      setCommentText(value);
+    }
+  };
+
   const { data: currentUser } = useAuth();
-
-  // console.log(currentUser,"sdnfknke")
-
   const commentCount = comments?.length ?? post?.comments?.count ?? 0;
+  const canSubmit = commentText.trim() && !isOverLimit && !isSubmitting;
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="sm:max-w-lg w-full p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-lg w-full p-0 gap-0 overflow-hidden rounded-2xl shadow-2xl border-0">
         {/* ── Header ── */}
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-gray-100">
-          <DialogTitle className="text-[#233389] text-base font-semibold">
-            Comments{commentCount > 0 ? ` (${commentCount})` : ""}
-          </DialogTitle>
+        <DialogHeader className="px-6 pt-5 pb-4 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50/50">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-[#233389] text-base font-semibold flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Comments
+              {commentCount > 0 && (
+                <span className="ml-1 text-sm font-medium text-gray-400">
+                  ({commentCount})
+                </span>
+              )}
+            </DialogTitle>
+            <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+              {commentCount} {commentCount === 1 ? "comment" : "comments"}
+            </span>
+          </div>
 
           {/* Compact post preview */}
-          <div className="flex gap-3 mt-3">
-            <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
+          <div className="flex gap-3 mt-4 p-3 bg-white/80 rounded-xl border border-gray-100/80">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#233389]/10 to-[#233389]/5 overflow-hidden shrink-0 ring-2 ring-white shadow-sm">
               <Image
                 src={post?.profileImagePath || "/assets/Profile Image.jpg"}
                 alt={post?.authorFirstName || "User"}
-                width={36}
-                height={36}
+                width={40}
+                height={40}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -157,7 +208,7 @@ function CommentModal({ open, onClose, post }) {
               <p className="text-sm font-semibold text-[#233389]">
                 {post?.authorFirstName} {post?.authorLastName}
               </p>
-              <p className="text-sm text-gray-600 line-clamp-2 mt-0.5">
+              <p className="text-sm text-gray-600 line-clamp-2 mt-0.5 leading-relaxed">
                 {post?.body || post?.content}
               </p>
             </div>
@@ -165,26 +216,32 @@ function CommentModal({ open, onClose, post }) {
         </DialogHeader>
 
         {/* ── Comments list ── */}
-        <ScrollArea style={{ maxHeight: "360px" }}>
+        <ScrollArea className="max-h-[360px]">
           <div className="px-6 py-4 space-y-4">
             {isLoadingComments && (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-[#233389]" />
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-[#233389]" />
               </div>
             )}
 
             {commentsError && (
-              <p className="text-center text-sm text-red-500 py-4">
-                Failed to load comments. Please try again.
-              </p>
+              <div className="text-center py-8">
+                <div className="h-12 w-12 rounded-full bg-red-50 mx-auto flex items-center justify-center mb-3">
+                  <MessageSquare className="h-5 w-5 text-red-400" />
+                </div>
+                <p className="text-sm text-red-500">Failed to load comments</p>
+                <p className="text-xs text-gray-400 mt-1">Please try again later</p>
+              </div>
             )}
 
             {!isLoadingComments && !commentsError && comments?.length === 0 && (
-              <div className="text-center py-8">
-                <MessageSquare className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">No comments yet.</p>
+              <div className="text-center py-12">
+                <div className="h-16 w-16 rounded-full bg-gray-50 mx-auto flex items-center justify-center mb-4">
+                  <MessageSquare className="h-8 w-8 text-gray-300" />
+                </div>
+                <p className="text-sm font-medium text-gray-500">No comments yet</p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Be the first to comment!
+                  Be the first to start the conversation!
                 </p>
               </div>
             )}
@@ -200,9 +257,9 @@ function CommentModal({ open, onClose, post }) {
         </ScrollArea>
 
         {/* ── Comment input ── */}
-        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
+        <div className="px-6 py-4 border-t border-gray-100 bg-gradient-to-b from-gray-50/50 to-white">
           <div className="flex gap-3 items-end">
-            <div className="h-9 w-9 rounded-full bg-gray-200 overflow-hidden shrink-0">
+            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#233389]/10 to-[#233389]/5 overflow-hidden shrink-0 ring-2 ring-white shadow-sm">
               <Image
                 src={
                   currentUser?.data?.profileImagePath ||
@@ -214,20 +271,59 @@ function CommentModal({ open, onClose, post }) {
                 className="h-full w-full object-cover"
               />
             </div>
+            
             <div className="flex-1 relative">
               <Textarea
                 ref={textareaRef}
                 value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
+                onChange={handleCommentChange}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
                 onKeyDown={handleKeyDown}
                 placeholder="Write a comment…"
-                className="resize-none min-h-[44px] max-h-[120px] pr-12 rounded-2xl border-gray-200 focus-visible:ring-[#233389] text-sm py-2.5 bg-white"
+                className={cn(
+                  "resize-none min-h-[44px] max-h-[120px] pr-12 rounded-2xl border-2 text-sm py-2.5 bg-white transition-all duration-200",
+                  isFocused
+                    ? "border-[#233389] ring-4 ring-[#233389]/10"
+                    : isOverLimit
+                    ? "border-red-400"
+                    : "border-gray-200 hover:border-gray-300",
+                  isOverLimit && "focus-visible:ring-red-400/10"
+                )}
                 rows={1}
+                style={{
+                  minHeight: "44px",
+                }}
               />
+              
+              {/* Word counter indicator */}
+              {commentText.trim() && wordCount > 0 && (
+                <div className="absolute -top-6 right-1 flex items-center gap-2">
+                  <span className={`text-xs font-medium ${getWordCountColor()}`}>
+                    {wordCount}/{MAX_WORDS}
+                  </span>
+                </div>
+              )}
+              
+              {/* Progress bar */}
+              {commentText.trim() && wordCount > 0 && (
+                <div className="absolute -bottom-1.5 left-3 right-3 h-0.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 rounded-full ${getProgressColor()}`}
+                    style={{ width: `${Math.min(wordPercentage, 100)}%` }}
+                  />
+                </div>
+              )}
+
               <button
                 onClick={handleSubmit}
-                disabled={!commentText.trim() || isSubmitting}
-                className="absolute right-3 bottom-2.5 text-[#233389] disabled:text-gray-300 transition-colors hover:text-[#1d2a6e]"
+                disabled={!canSubmit}
+                className={cn(
+                  "absolute right-2.5 bottom-2.5 p-1.5 rounded-lg transition-all duration-200",
+                  canSubmit
+                    ? "text-[#233389] hover:bg-[#233389]/10 hover:scale-110 active:scale-95"
+                    : "text-gray-300 cursor-not-allowed"
+                )}
               >
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -237,14 +333,36 @@ function CommentModal({ open, onClose, post }) {
               </button>
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-1.5 pl-12">
-            Ctrl + Enter to send
-          </p>
+
+          {/* Footer info */}
+          <div className="flex items-center justify-between mt-2 pl-12">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-400">
+                ⌘ + Enter to send
+              </span>
+              {commentText.trim() && !isOverLimit && wordCount > 0 && (
+                <>
+                  <span className="text-xs text-gray-300">•</span>
+                  <span className="text-xs text-gray-400">
+                    {MAX_WORDS - wordCount} words remaining
+                  </span>
+                </>
+              )}
+            </div>
+            
+            {/* Warning message */}
+            {commentText.trim() && showWarning && (
+              <span className={`text-xs ${getWordCountColor()}`}>
+                {isOverLimit ? "⚠️ Limit exceeded" : "⚠️ Approaching limit"}
+              </span>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
 
 export default function PostCard({
   post,

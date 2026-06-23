@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef,useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -107,6 +107,9 @@ function PostSkeleton() {
 
 function CommentsSection({ groupId, postId, onClose }) {
   const [commentText, setCommentText] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+  const textareaRef = useRef(null);
+  
   const { data, isLoading, fetchNextPage, hasNextPage } = usePostComments(
     groupId,
     postId,
@@ -118,41 +121,157 @@ function CommentsSection({ groupId, postId, onClose }) {
 
   const comments = data?.pages.flat() || [];
 
+  // Constants for word limits
+  const MAX_WORDS = 50;
+  const WARNING_THRESHOLD = 0.8;
+
+  // Calculate word count
+  const wordCount = useMemo(() => {
+    if (!commentText.trim()) return 0;
+    return commentText.trim().split(/\s+/).length;
+  }, [commentText]);
+
+  const isOverLimit = wordCount > MAX_WORDS;
+  const showWarning = wordCount > MAX_WORDS * WARNING_THRESHOLD;
+  const wordPercentage = Math.min((wordCount / MAX_WORDS) * 100, 100);
+
+  const getWordCountColor = () => {
+    if (isOverLimit) return "text-red-500";
+    if (showWarning) return "text-amber-500";
+    return "text-emerald-500";
+  };
+
+  const getProgressColor = () => {
+    if (isOverLimit) return "bg-red-500";
+    if (showWarning) return "bg-amber-500";
+    return "bg-emerald-500";
+  };
+
+  // Auto-focus on mount
+  useEffect(() => {
+    if (textareaRef.current) {
+      setTimeout(() => textareaRef.current?.focus(), 100);
+    }
+  }, []);
+
+  const handleCommentChange = (e) => {
+    const value = e.target.value;
+    const words = value.trim().split(/\s+/);
+    
+    if (words.length > MAX_WORDS && words.length > wordCount) {
+      const trimmedValue = value.split(/\s+/).slice(0, MAX_WORDS).join(" ");
+      setCommentText(trimmedValue);
+    } else {
+      setCommentText(value);
+    }
+  };
+
   const handleSubmit = () => {
-    if (!commentText.trim() || isPending) return;
-    submitComment(commentText.trim(), {
-      onSuccess: () => setCommentText(""),
+    const text = commentText.trim();
+    if (!text || isPending || isOverLimit) return;
+    
+    submitComment(text, {
+      onSuccess: () => {
+        setCommentText("");
+        textareaRef.current?.focus();
+      },
     });
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const canSubmit = commentText.trim() && !isOverLimit && !isPending;
+
   return (
     <div className="mt-4 pt-4 border-t space-y-3">
-      {/* Input */}
-      <div className="flex gap-2">
-        <Textarea
-          value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-          placeholder="Write a comment…"
-          className="min-h-[60px] resize-none text-sm flex-1"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit();
-            }
-          }}
-        />
-        <Button
-          size="icon"
-          className="h-9 w-9 shrink-0 self-end bg-stp-blue-light hover:bg-stp-blue-light/90 text-white rounded-full"
-          disabled={!commentText.trim() || isPending}
-          onClick={handleSubmit}
-        >
-          {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <SendHorizontal className="h-4 w-4" />
+      {/* Input with Word Limit */}
+      <div className="space-y-2">
+        <div className="relative">
+          <Textarea
+            ref={textareaRef}
+            value={commentText}
+            onChange={handleCommentChange}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            onKeyDown={handleKeyDown}
+            placeholder="Write a comment…"
+            className={cn(
+              "min-h-[60px] resize-none text-sm flex-1 pr-12 transition-all duration-200",
+              isFocused
+                ? "border-stp-blue-light ring-2 ring-stp-blue-light/10"
+                : isOverLimit
+                ? "border-red-400"
+                : "border-border",
+              isOverLimit && "focus-visible:ring-red-400/10"
+            )}
+          />
+          
+          {/* Word counter indicator */}
+          {commentText.trim() && wordCount > 0 && (
+            <div className="absolute -top-5 right-1 flex items-center gap-2">
+              <span className={`text-[10px] font-medium ${getWordCountColor()}`}>
+                {wordCount}/{MAX_WORDS}
+              </span>
+            </div>
           )}
-        </Button>
+          
+          {/* Progress bar */}
+          {commentText.trim() && wordCount > 0 && (
+            <div className="absolute -bottom-1.5 left-3 right-3 h-0.5 bg-muted rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 rounded-full ${getProgressColor()}`}
+                style={{ width: `${Math.min(wordPercentage, 100)}%` }}
+              />
+            </div>
+          )}
+
+          {/* Send button inside textarea */}
+          <Button
+            size="icon"
+            className={cn(
+              "absolute right-1.5 bottom-1.5 h-8 w-8 rounded-full transition-all duration-200",
+              canSubmit
+                ? "bg-stp-blue-light hover:bg-stp-blue-light/90 text-white"
+                : "bg-muted text-muted-foreground cursor-not-allowed"
+            )}
+            disabled={!canSubmit}
+            onClick={handleSubmit}
+          >
+            {isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <SendHorizontal className="h-3.5 w-3.5" />
+            )}
+          </Button>
+        </div>
+
+        {/* Footer info */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-muted-foreground">
+              Press <kbd className="px-1 py-0.5 bg-muted rounded text-[9px] font-mono">Enter</kbd> to send
+            </span>
+            {commentText.trim() && !isOverLimit && wordCount > 0 && (
+              <>
+                <span className="text-[10px] text-muted-foreground/30">•</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {MAX_WORDS - wordCount} words remaining
+                </span>
+              </>
+            )}
+          </div>
+          
+          {commentText.trim() && showWarning && (
+            <span className={`text-[10px] font-medium ${getWordCountColor()}`}>
+              {isOverLimit ? "⚠️ Limit exceeded" : "⚠️ Approaching limit"}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* List */}
@@ -161,27 +280,32 @@ function CommentsSection({ groupId, postId, onClose }) {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : comments.length === 0 ? (
-        <p className="text-xs text-muted-foreground text-center py-3">
-          No comments yet. Be the first!
-        </p>
+        <div className="text-center py-6">
+          <div className="h-12 w-12 rounded-full bg-muted/50 mx-auto flex items-center justify-center mb-3">
+            <MessageCircle className="h-5 w-5 text-muted-foreground/40" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            No comments yet. Be the first!
+          </p>
+        </div>
       ) : (
         <div className="space-y-3">
           {comments.map((c) => (
-            <div key={c.commentId || c.id} className="flex items-start gap-2.5">
+            <div key={c.commentId || c.id} className="flex items-start gap-2.5 group animate-in fade-in slide-in-from-bottom-2 duration-200">
               <Avatar className="h-7 w-7 shrink-0">
                 <AvatarImage src={c.authorAvatar || c.profileImagePath} />
-                <AvatarFallback className="text-[10px]">
+                <AvatarFallback className="text-[10px] bg-stp-blue-light/10 text-stp-blue-light">
                   {getInitials(
                     c.authorName || `${c.firstName || ""} ${c.lastName || ""}`,
                   )}
                 </AvatarFallback>
               </Avatar>
-              <div className="bg-muted rounded-xl px-3 py-2 flex-1 min-w-0">
+              <div className="bg-muted hover:bg-muted/80 rounded-xl px-3 py-2 flex-1 min-w-0 transition-colors duration-200">
                 <p className="text-xs font-semibold text-foreground truncate">
                   {c.authorName ||
-                    `${c.firstName || ""} ${c.lastName || ""}`.trim()}
+                    `${c.firstName || ""} ${c.lastName || ""}`.trim() || "Anonymous"}
                 </p>
-                <p className="text-sm text-foreground mt-0.5">
+                <p className="text-sm text-foreground mt-0.5 leading-relaxed">
                   {c.comment || c.content}
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-1">
@@ -194,7 +318,7 @@ function CommentsSection({ groupId, postId, onClose }) {
             <Button
               variant="ghost"
               size="sm"
-              className="w-full text-xs text-muted-foreground"
+              className="w-full text-xs text-muted-foreground hover:text-stp-blue-light transition-colors"
               onClick={() => fetchNextPage()}
             >
               Load more comments
@@ -372,8 +496,36 @@ function PostCard({ post, groupId }) {
 function CreatePostCard({ groupId, isMember }) {
   const [body, setBody] = useState("");
   const [images, setImages] = useState([]);
+  const [isFocused, setIsFocused] = useState(false);
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
   const { mutate: createPost, isPending } = useCreateGroupPost(groupId);
+
+  // Constants for word limits
+  const MAX_WORDS = 100;
+  const WARNING_THRESHOLD = 0.8;
+
+  // Calculate word count
+  const wordCount = useMemo(() => {
+    if (!body.trim()) return 0;
+    return body.trim().split(/\s+/).length;
+  }, [body]);
+
+  const isOverLimit = wordCount > MAX_WORDS;
+  const showWarning = wordCount > MAX_WORDS * WARNING_THRESHOLD;
+  const wordPercentage = Math.min((wordCount / MAX_WORDS) * 100, 100);
+
+  const getWordCountColor = () => {
+    if (isOverLimit) return "text-red-500";
+    if (showWarning) return "text-amber-500";
+    return "text-emerald-500";
+  };
+
+  const getProgressColor = () => {
+    if (isOverLimit) return "bg-red-500";
+    if (showWarning) return "bg-amber-500";
+    return "bg-emerald-500";
+  };
 
   if (!isMember) return null;
 
@@ -383,62 +535,118 @@ function CreatePostCard({ groupId, isMember }) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleBodyChange = (e) => {
+    const value = e.target.value;
+    const words = value.trim().split(/\s+/);
+    
+    if (words.length > MAX_WORDS && words.length > wordCount) {
+      const trimmedValue = value.split(/\s+/).slice(0, MAX_WORDS).join(" ");
+      setBody(trimmedValue);
+    } else {
+      setBody(value);
+    }
+  };
+
   const handleSubmit = () => {
-    if (!body.trim() || isPending) return;
+    const text = body.trim();
+    if (!text || isPending || isOverLimit) return;
+    
     createPost(
-      { body: body.trim(), images },
+      { body: text, images },
       {
         onSuccess: () => {
           setBody("");
           setImages([]);
+          textareaRef.current?.focus();
         },
       },
     );
   };
 
+  const handleKeyDown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const canSubmit = body.trim() && !isOverLimit && !isPending;
+
   return (
-    <Card>
-      <CardContent className="pt-4">
-        <Textarea
-          placeholder="Share something with the group…"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          className="min-h-[72px] resize-none border-0 p-0 focus-visible:ring-0 text-sm"
-        />
+    <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
+      <CardContent className="pt-4 space-y-3">
+        {/* Textarea with word limit */}
+        <div className="relative">
+          <Textarea
+            ref={textareaRef}
+            placeholder="Share something with the group…"
+            value={body}
+            onChange={handleBodyChange}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              "min-h-[72px] resize-none border-0 p-0 focus-visible:ring-0 text-sm transition-all duration-200",
+              isFocused && "ring-2 ring-stp-blue-light/10 rounded-lg px-3 py-2 bg-muted/30",
+              isOverLimit && "text-red-500 placeholder:text-red-300"
+            )}
+          />
+          
+          {/* Word counter indicator */}
+          {body.trim() && wordCount > 0 && (
+            <div className="absolute -top-6 right-1 flex items-center gap-2">
+              <span className={`text-[10px] font-medium ${getWordCountColor()}`}>
+                {wordCount}/{MAX_WORDS}
+              </span>
+            </div>
+          )}
+          
+          {/* Progress bar */}
+          {body.trim() && wordCount > 0 && (
+            <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-muted rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 rounded-full ${getProgressColor()}`}
+                style={{ width: `${Math.min(wordPercentage, 100)}%` }}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Image previews */}
         {images.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
+          <div className="flex flex-wrap gap-2 mt-1">
             {images.map((file, i) => (
               <div
                 key={i}
-                className="relative h-16 w-16 rounded-lg overflow-hidden"
+                className="relative h-16 w-16 rounded-lg overflow-hidden ring-2 ring-white shadow-sm group"
               >
                 <img
                   src={URL.createObjectURL(file)}
                   alt=""
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105 duration-200"
                 />
                 <button
                   onClick={() =>
                     setImages((prev) => prev.filter((_, idx) => idx !== i))
                   }
-                  className="absolute top-0.5 right-0.5 h-4 w-4 bg-black/60 rounded-full flex items-center justify-center"
+                  className="absolute top-0.5 right-0.5 h-5 w-5 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-colors"
                 >
-                  <X className="h-2.5 w-2.5 text-white" />
+                  <X className="h-3 w-3 text-white" />
                 </button>
               </div>
             ))}
           </div>
         )}
 
-        <div className="flex items-center justify-between mt-4 pt-4 border-t">
+        {/* Footer actions */}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t">
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 hover:bg-stp-blue-light/10 transition-colors"
               onClick={() => fileInputRef.current?.click()}
+              disabled={images.length >= 4}
             >
               <ImageIcon className="h-4 w-4 text-muted-foreground" />
             </Button>
@@ -450,20 +658,64 @@ function CreatePostCard({ groupId, isMember }) {
               className="hidden"
               onChange={handleImageSelect}
             />
-          </div>
-          <Button
-            size="sm"
-            className="bg-stp-blue-light hover:bg-stp-blue-light/90 text-white rounded-full gap-1.5"
-            disabled={!body.trim() || isPending}
-            onClick={handleSubmit}
-          >
-            {isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <SendHorizontal className="h-3.5 w-3.5" />
+            
+            {/* Image counter */}
+            {images.length > 0 && (
+              <span className="text-[10px] text-muted-foreground ml-1">
+                {images.length}/4
+              </span>
             )}
-            Post
-          </Button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Word count status */}
+            {body.trim() && showWarning && (
+              <span className={`text-[10px] font-medium ${getWordCountColor()}`}>
+                {isOverLimit ? "⚠️ Limit" : `${MAX_WORDS - wordCount} left`}
+              </span>
+            )}
+            
+            <Button
+              size="sm"
+              className={cn(
+                "rounded-full gap-1.5 transition-all duration-200",
+                canSubmit
+                  ? "bg-stp-blue-light hover:bg-stp-blue-light/90 text-white shadow-sm shadow-stp-blue-light/20"
+                  : "bg-muted text-muted-foreground cursor-not-allowed"
+              )}
+              disabled={!canSubmit}
+              onClick={handleSubmit}
+            >
+              {isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <SendHorizontal className="h-3.5 w-3.5" />
+              )}
+              Post
+            </Button>
+          </div>
+        </div>
+
+        {/* Bottom info */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-muted-foreground">
+              ⌘ + Enter to post
+            </span>
+            {body.trim() && !isOverLimit && wordCount > 0 && (
+              <>
+                <span className="text-[10px] text-muted-foreground/30">•</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {MAX_WORDS - wordCount} words remaining
+                </span>
+              </>
+            )}
+          </div>
+          {body.trim() && wordCount > 0 && (
+            <span className={`text-[10px] ${getWordCountColor()}`}>
+              {wordCount} {wordCount === 1 ? "word" : "words"}
+            </span>
+          )}
         </div>
       </CardContent>
     </Card>

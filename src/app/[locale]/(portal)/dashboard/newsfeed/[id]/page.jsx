@@ -17,7 +17,6 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import {
   usePost,
   useToggleLike,
@@ -26,6 +25,12 @@ import {
   usePostComments,
 } from "../useNewsfeed";
 import { toast } from "sonner";
+import { useState, useRef, useMemo, useEffect } from "react";
+
+
+// Constants for word limits
+const MAX_WORDS = 50;
+const WARNING_THRESHOLD = 0.8;
 
 export default function PostDetail() {
   const { id } = useParams();
@@ -39,6 +44,70 @@ export default function PostDetail() {
   const saveMutation = useToggleSave(id);
   const commentMutation = useAddComment(id);
   const [commentBody, setCommentBody] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+  const textareaRef = useRef(null);
+
+  // Calculate word count
+  const wordCount = useMemo(() => {
+    if (!commentBody.trim()) return 0;
+    return commentBody.trim().split(/\s+/).length;
+  }, [commentBody]);
+
+  const isOverLimit = wordCount > MAX_WORDS;
+  const showWarning = wordCount > MAX_WORDS * WARNING_THRESHOLD;
+  const wordPercentage = Math.min((wordCount / MAX_WORDS) * 100, 100);
+
+  const getWordCountColor = () => {
+    if (isOverLimit) return "text-red-500";
+    if (showWarning) return "text-amber-500";
+    return "text-emerald-500";
+  };
+
+  const getProgressColor = () => {
+    if (isOverLimit) return "bg-red-500";
+    if (showWarning) return "bg-amber-500";
+    return "bg-emerald-500";
+  };
+
+  // Auto-focus textarea on mount
+  useEffect(() => {
+    if (textareaRef.current) {
+      setTimeout(() => textareaRef.current?.focus(), 100);
+    }
+  }, []);
+
+  const handleCommentChange = (e) => {
+    const value = e.target.value;
+    const words = value.trim().split(/\s+/);
+    
+    if (words.length > MAX_WORDS && words.length > wordCount) {
+      const trimmedValue = value.split(/\s+/).slice(0, MAX_WORDS).join(" ");
+      setCommentBody(trimmedValue);
+      toast.warning(`Maximum ${MAX_WORDS} words allowed`);
+    } else {
+      setCommentBody(value);
+    }
+  };
+
+  const handleCommentSubmit = () => {
+    const text = commentBody.trim();
+    if (!text || commentMutation.isPending || isOverLimit) return;
+    
+    commentMutation.mutate(text, {
+      onSuccess: () => {
+        setCommentBody("");
+        toast.success("Comment posted successfully!");
+        textareaRef.current?.focus();
+      },
+    });
+  };
+
+  const handleKeyDown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleCommentSubmit();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -72,33 +141,10 @@ export default function PostDetail() {
   const post = data.data;
   const comments = commentsData?.data || [];
 
-  console.log(comments,"comments")
-    console.log("PostCard render - post:", post);
-
-  const handleCommentSubmit = () => {
-    if (!commentBody.trim()) return;
-    commentMutation.mutate(commentBody, {
-      onSuccess: () => 
-      {
-
-        setCommentBody("")
-        toast.success("Comment posted successfully!")
-      }
-    });
-  };
-
-  const handleShare = async () => {
-    const url = window.location.href;
-    try {
-      await navigator.clipboard.writeText(url);
-      // Could show a toast here
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
-  };
-
   // Estimate reading time (~200 words/min)
   const readingTime = Math.ceil(post.body.split(/\s+/).length / 200);
+
+  const canSubmit = commentBody.trim() && !isOverLimit && !commentMutation.isPending;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -283,7 +329,7 @@ export default function PostDetail() {
               </Badge>
             </h3>
 
-            {/* Comment Form */}
+            {/* Comment Form with Word Limit */}
             <div className="flex gap-3 mb-8">
               <Avatar className="h-10 w-10 shrink-0">
                 <AvatarFallback className="bg-stp-blue-light text-white text-sm">
@@ -291,38 +337,90 @@ export default function PostDetail() {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <Textarea
-                  placeholder="Share your thoughts..."
-                  value={commentBody}
-                  onChange={(e) => setCommentBody(e.target.value)}
-                  className="min-h-20 resize-none"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && e.metaKey) {
-                      e.preventDefault();
-                      handleCommentSubmit();
-                    }
-                  }}
-                />
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs text-slate-400">
-                    Press <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">⌘</kbd> +{" "}
-                    <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">Enter</kbd> to post
-                  </p>
-                  <Button
-                    size="sm"
-                    onClick={handleCommentSubmit}
-                    disabled={commentMutation.isPending || !commentBody.trim()}
-                    className="gap-2"
-                  >
-                    {commentMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Posting...
-                      </>
-                    ) : (
-                      "Post Comment"
+                <div className="relative">
+                  <Textarea
+                    ref={textareaRef}
+                    placeholder="Share your thoughts..."
+                    value={commentBody}
+                    onChange={handleCommentChange}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    onKeyDown={handleKeyDown}
+                    className={cn(
+                      "min-h-[80px] resize-none transition-all duration-200",
+                      isFocused
+                        ? "border-stp-blue-light ring-2 ring-stp-blue-light/10"
+                        : isOverLimit
+                        ? "border-red-400"
+                        : "border-slate-200",
+                      isOverLimit && "focus-visible:ring-red-400/10"
                     )}
-                  </Button>
+                  />
+                  
+                  {/* Word counter indicator */}
+                  {commentBody.trim() && wordCount > 0 && (
+                    <div className="absolute -top-6 right-1 flex items-center gap-2">
+                      <span className={`text-xs font-medium ${getWordCountColor()}`}>
+                        {wordCount}/{MAX_WORDS}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Progress bar */}
+                  {commentBody.trim() && wordCount > 0 && (
+                    <div className="absolute -bottom-1 left-3 right-3 h-0.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 rounded-full ${getProgressColor()}`}
+                        style={{ width: `${Math.min(wordPercentage, 100)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-3 gap-2">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-xs text-slate-400">
+                      Press <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 text-[10px] font-mono">⌘</kbd> +{" "}
+                      <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 text-[10px] font-mono">Enter</kbd> to post
+                    </p>
+                    {commentBody.trim() && !isOverLimit && wordCount > 0 && (
+                      <>
+                        <span className="text-xs text-slate-300 hidden sm:inline">•</span>
+                        <span className="text-xs text-slate-400">
+                          {MAX_WORDS - wordCount} words remaining
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    {commentBody.trim() && showWarning && (
+                      <span className={`text-xs ${getWordCountColor()} whitespace-nowrap`}>
+                        {isOverLimit ? "⚠️ Limit exceeded" : "⚠️ Approaching limit"}
+                      </span>
+                    )}
+                    
+                    <Button
+                      size="sm"
+                      onClick={handleCommentSubmit}
+                      disabled={!canSubmit}
+                      className={cn(
+                        "gap-2 transition-all w-full sm:w-auto",
+                        canSubmit
+                          ? "bg-stp-blue-light hover:bg-stp-blue-light/90"
+                          : "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {commentMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Posting...
+                        </>
+                      ) : (
+                        "Post Comment"
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -342,15 +440,13 @@ export default function PostDetail() {
                 ))}
               </div>
             ) : comments.length > 0 ? (
-
-              // {"json":{"commentId":"cmt_f50a401336e5b26e","comment":"test","createdAt":"2026-05-05 21:25:12","userId":"61ef00b8-3920-4bd2-93db-bc79b248731a","firstName":"STP","lastName":"Admin","profileImagePath":"https://app.gfa-tech.com/stp/uploads/profile-images/1777023857_e18ea66e74b97f2ec512.png","authorTitle":"CEO"}}
               <div className="space-y-6">
                 {comments.map((c) => (
                   <div key={c.commentId} className="flex gap-3 group">
                     <Avatar className="h-10 w-10 shrink-0">
                       <AvatarImage src={c.profileImagePath} alt={c.firstName} />
                       <AvatarFallback className="bg-slate-200 text-slate-600 text-sm">
-                        {c.firstName?.toUpperCase()}
+                        {c.firstName?.[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 bg-slate-50 rounded-xl p-4">
@@ -385,9 +481,26 @@ export default function PostDetail() {
             )}
           </div>
         </article>
-
-     
       </div>
     </div>
   );
+}
+
+// Share handler function
+function handleShare() {
+  const url = window.location.href;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url)
+      .then(() => toast.success("Link copied to clipboard!"))
+      .catch(() => toast.error("Failed to copy link"));
+  } else {
+    // Fallback for older browsers
+    const textArea = document.createElement("textarea");
+    textArea.value = url;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+    toast.success("Link copied to clipboard!");
+  }
 }

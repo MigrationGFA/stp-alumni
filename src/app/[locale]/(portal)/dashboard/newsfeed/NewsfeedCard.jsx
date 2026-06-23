@@ -23,7 +23,7 @@ export default function PostCard({ post, variant = "grid" }) {
 
   // 👇 Save mutation (wired internally)
 
-  console.log("PostCard render - post:", post);
+  // console.log("PostCard render - post:", post);
   const saveMutation = useToggleSave(post.id);
 
   const handleSave = (e) => {

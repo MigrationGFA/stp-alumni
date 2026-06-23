@@ -77,6 +77,29 @@ export function CreateEventModal({ open, onOpenChange }) {
     },
   });
 
+  // URL validation helper
+  const validateAndFormatUrl = (url) => {
+    if (!url || !url.trim()) return url;
+    
+    const trimmedUrl = url.trim();
+    
+    // Check if it's a valid URL
+    try {
+      // If no protocol, add https://
+      if (!/^https?:\/\//i.test(trimmedUrl)) {
+        return `https://${trimmedUrl}`;
+      }
+      
+      // If it has http://, convert to https:// for security
+      if (/^http:\/\//i.test(trimmedUrl)) {
+        return trimmedUrl.replace(/^http:\/\//i, 'https://');
+      }
+      
+      return trimmedUrl;
+    } catch (error) {
+      return trimmedUrl;
+    }
+  };
 
   const onSubmit = (data) => {
     if (!data.isOnline && !data.isInPerson) {
@@ -93,6 +116,20 @@ export function CreateEventModal({ open, onOpenChange }) {
     ) {
       toast.error("Please fill in all required fields.");
       return;
+    }
+
+    // Validate and format the event link
+    if (data.eventLink && data.eventLink.trim()) {
+      const formattedUrl = validateAndFormatUrl(data.eventLink);
+      
+      // Validate the URL format
+      try {
+        new URL(formattedUrl);
+        data.eventLink = formattedUrl;
+      } catch (error) {
+        toast.error("Please enter a valid URL for the event link");
+        return;
+      }
     }
 
     const finalEventType = data.isOnline && data.isInPerson ? "hybrid" : data.isOnline ? "online" : "in-person";
@@ -154,6 +191,21 @@ export function CreateEventModal({ open, onOpenChange }) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // Handle real-time URL formatting on blur
+  const handleUrlBlur = (e) => {
+    const value = e.target.value;
+    if (value && value.trim()) {
+      const formattedUrl = validateAndFormatUrl(value);
+      try {
+        new URL(formattedUrl);
+        setValue("eventLink", formattedUrl);
+      } catch (error) {
+        // Don't update if invalid, just let user know
+        toast.error("Please enter a valid URL");
+      }
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
@@ -183,7 +235,7 @@ export function CreateEventModal({ open, onOpenChange }) {
                 <button
                   type="button"
                   onClick={removeImage}
-                  className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"
+                  className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -191,7 +243,7 @@ export function CreateEventModal({ open, onOpenChange }) {
             ) : (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary/50"
+                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
               >
                 <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                 <p className="text-sm font-medium">Upload a cover image</p>
@@ -353,12 +405,20 @@ export function CreateEventModal({ open, onOpenChange }) {
             </>
           )}
 
-          {/* External Event Link */}
+          {/* External Event Link with URL validation */}
           <div className="space-y-2">
             <Label className="text-sm text-muted-foreground">
               External Event Link
             </Label>
-            <Input {...register("eventLink")} rows={4} />
+            <Input 
+              {...register("eventLink")} 
+              placeholder="https://example.com/event"
+              onBlur={handleUrlBlur}
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              Will automatically add https:// if missing
+            </p>
           </div>
 
           {/* Description */}

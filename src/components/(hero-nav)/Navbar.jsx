@@ -79,8 +79,8 @@ const Navbar = () => {
             alt="BlazingTorrent"
             width={240}
             height={50}
-            className="object-contain h-[62px]"
-            style={{ width: "auto", height: "auto" }}
+            className="object-contain h-[62px] w-auto"
+            // style={{ width: "auto", height: "auto" }}
             priority
           />
         </Link>
