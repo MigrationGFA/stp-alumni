@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 
 // Constants for word limits
-const MAX_WORDS = 500;
+const MAX_WORDS = 3000;
 const WARNING_THRESHOLD = 0.8;
 
 /**

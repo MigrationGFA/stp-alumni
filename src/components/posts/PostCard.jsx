@@ -30,7 +30,7 @@ import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
 // Constants for word limits
-const MAX_WORDS = 200;
+const MAX_WORDS = 1250;
 const WARNING_THRESHOLD = 0.8;
 
 /**

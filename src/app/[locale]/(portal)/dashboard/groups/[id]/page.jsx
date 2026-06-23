@@ -122,7 +122,7 @@ function CommentsSection({ groupId, postId, onClose }) {
   const comments = data?.pages.flat() || [];
 
   // Constants for word limits
-  const MAX_WORDS = 200;
+  const MAX_WORDS = 1250;
   const WARNING_THRESHOLD = 0.8;
 
   // Calculate word count
@@ -502,7 +502,7 @@ function CreatePostCard({ groupId, isMember }) {
   const { mutate: createPost, isPending } = useCreateGroupPost(groupId);
 
   // Constants for word limits
-  const MAX_WORDS = 500;
+  const MAX_WORDS = 3000;
   const WARNING_THRESHOLD = 0.8;
 
   // Calculate word count
