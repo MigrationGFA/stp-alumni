@@ -500,6 +500,9 @@
     "subjectPlaceholder": "Enter The Subject",
     "messageLabel": "Message",
     "messagePlaceholder": "Enter Your Message...",
-    "submitButton": "Submit Message"
+    "submitButton": "Submit Message",
+    "submitSuccess": "Your request has been submitted successfully!",
+    "submitError": "Failed to submit your request. Please try again.",
+    "fillAllFields": "Please fill in all fields."
   }
 }

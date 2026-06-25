@@ -506,6 +506,9 @@
     "subjectPlaceholder": "Entrez l'objet de votre message",
     "messageLabel": "Message",
     "messagePlaceholder": "Entrez votre message...",
-    "submitButton": "Envoyer le message"
+    "submitButton": "Envoyer le message",
+    "submitSuccess": "Votre demande a été soumise avec succès !",
+    "submitError": "Échec de la soumission de votre demande. Veuillez réessayer.",
+    "fillAllFields": "Veuillez remplir tous les champs."
   }
 }

@@ -499,6 +499,9 @@
     "subjectPlaceholder": "أدخل موضوع الرسالة",
     "messageLabel": "الرسالة",
     "messagePlaceholder": "اكتب رسالتك هنا...",
-    "submitButton": "إرسال الرسالة"
+    "submitButton": "إرسال الرسالة",
+    "submitSuccess": "تم إرسال طلبك بنجاح!",
+    "submitError": "فشل إرسال طلبك. يرجى المحاولة مرة أخرى.",
+    "fillAllFields": "يرجى ملء جميع الحقول."
   }
 }

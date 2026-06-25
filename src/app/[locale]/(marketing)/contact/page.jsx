@@ -13,7 +13,7 @@
 // }
 
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Phone, Mail } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,11 +22,70 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import api from '@/lib/api/axios';
 
 export default function SupportSection() {
   const t = useTranslations("Contact");
   const {size: { height },
   } = useNavbar();
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState({ type: null, message: '' });
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const { name, email, subject, message } = formData;
+
+    if (!name || !email || !subject || !message) {
+      setSubmitStatus({ type: 'error', message: t("fillAllFields") });
+      setTimeout(() => {
+        setSubmitStatus({ type: null, message: '' });
+      }, 5000);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus({ type: null, message: '' });
+    try {
+      await api.post('/public/account-requests', formData);
+      setSubmitStatus({ type: 'success', message: t("submitSuccess") });
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      });
+      setTimeout(() => {
+        setSubmitStatus({ type: null, message: '' });
+      }, 5000);
+    } catch (error) {
+      console.error("Failed to submit account request:", error);
+      setSubmitStatus({ 
+        type: 'error', 
+        message: error.response?.data?.message || t("submitError") 
+      });
+      setTimeout(() => {
+        setSubmitStatus({ type: null, message: '' });
+      }, 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
 
   return (
@@ -63,30 +122,71 @@ export default function SupportSection() {
 
         {/* Right Form Card */}
         <Card className="border-none shadow-2xl shadow-slate-200/50 rounded-[32px] p-4 sm:p-8">
-          <CardContent className="space-y-6 pt-6">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-slate-700 font-bold">{t("nameLabel")}</Label>
-              <Input id="name" placeholder={t("namePlaceholder")} className="h-12 bg-slate-50/50 border-slate-100 rounded-lg" />
-            </div>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-slate-700 font-bold">{t("nameLabel")}</Label>
+                <Input 
+                  id="name" 
+                  value={formData.name} 
+                  onChange={handleInputChange} 
+                  placeholder={t("namePlaceholder")} 
+                  className="h-12 bg-slate-50/50 border-slate-100 rounded-lg" 
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-700 font-bold">{t("emailLabel")}</Label>
-              <Input id="email" type="email" placeholder={t("emailPlaceholder")} className="h-12 bg-slate-50/50 border-slate-100 rounded-lg" />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-700 font-bold">{t("emailLabel")}</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={formData.email} 
+                  onChange={handleInputChange} 
+                  placeholder={t("emailPlaceholder")} 
+                  className="h-12 bg-slate-50/50 border-slate-100 rounded-lg" 
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="subject" className="text-slate-700 font-bold">{t("subjectLabel")}</Label>
-              <Input id="subject" placeholder={t("subjectPlaceholder")} className="h-12 bg-slate-50/50 border-slate-100 rounded-lg" />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="subject" className="text-slate-700 font-bold">{t("subjectLabel")}</Label>
+                <Input 
+                  id="subject" 
+                  value={formData.subject} 
+                  onChange={handleInputChange} 
+                  placeholder={t("subjectPlaceholder")} 
+                  className="h-12 bg-slate-50/50 border-slate-100 rounded-lg" 
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="message" className="text-slate-700 font-bold">{t("messageLabel")}</Label>
-              <Textarea id="message" placeholder={t("messagePlaceholder")} className="min-h-[150px] bg-slate-50/50 border-slate-100 rounded-lg resize-none" />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="message" className="text-slate-700 font-bold">{t("messageLabel")}</Label>
+                <Textarea 
+                  id="message" 
+                  value={formData.message} 
+                  onChange={handleInputChange} 
+                  placeholder={t("messagePlaceholder")} 
+                  className="min-h-[150px] bg-slate-50/50 border-slate-100 rounded-lg resize-none" 
+                />
+              </div>
 
-            <Button className="w-full h-14 bg-[#1e2d7d] hover:bg-[#16225f] text-white rounded-lg text-lg font-medium transition-colors">
-              {t("submitButton")}
-            </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="w-full h-14 bg-[#1e2d7d] hover:bg-[#16225f] text-white rounded-lg text-lg font-medium transition-colors"
+              >
+                {isSubmitting ? "..." : t("submitButton")}
+              </Button>
+
+              {submitStatus.message && (
+                <div className={`mt-4 p-4 rounded-xl text-center text-sm font-semibold border transition-all duration-300 ${
+                  submitStatus.type === 'success' 
+                    ? 'bg-[#155DFC]/8 text-[#0f46c2] border-[#155DFC]/20 dark:bg-[#155DFC]/15 dark:text-[#7faaff] dark:border-[#155DFC]/30' 
+                    : 'bg-[#ED202D]/8 text-[#c9121e] border-[#ED202D]/20 dark:bg-[#ED202D]/15 dark:text-[#ff858d] dark:border-[#ED202D]/30'
+                }`}>
+                  {submitStatus.message}
+                </div>
+              )}
+            </form>
           </CardContent>
         </Card>
       </div>
