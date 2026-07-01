@@ -14,6 +14,7 @@ import { sidePanelContent } from "@/lib/data";
 import BusinessForm, { businessInfoSchema } from "./BusinessForm";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import z from "zod";
 
 function StepIndicator({ currentStep }) {
   const steps = [
@@ -121,6 +122,16 @@ export function TagSelector({
   );
 }
 
+const personalSchema = z.object({
+  jobTitle: z.string().optional(),
+  cohort: z.string().optional(),
+  location: z.string().min(1, "Location is required"), // Now expects a string
+  sectors: z.array(z.string()).min(1, "Select at least one sector"),
+  skills: z.array(z.string()).min(1, "Select at least one skill"),
+  linkedInProfile: z.string().url("Enter a valid URL").optional().or(z.string().length(0)),
+  goals: z.string().min(10, "Goals must be at least 10 characters"),
+});
+
 export default function ProfileSetupPage() {
   const t = useTranslations("ProfileSetup");
   const router = useRouter();
@@ -128,7 +139,7 @@ export default function ProfileSetupPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const updateUser = useAuthStore((state) => state.updateUser);
 
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
@@ -144,6 +155,7 @@ export default function ProfileSetupPage() {
     //     "https://downloadwella.com/bjbhoukaz72a/The.Originals.S01E19.(NKIRI.COM).mkv.html",
     //   goals: "hala madrid",
     // },
+    resolver: zodResolver(personalSchema),
     defaultValues: {
       jobTitle: '',
       cohort: '',

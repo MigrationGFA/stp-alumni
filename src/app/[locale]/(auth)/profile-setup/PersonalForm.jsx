@@ -27,6 +27,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCountries } from "@/hooks/useCountry";
 
 function PersonalForm({
   t,
@@ -37,7 +38,6 @@ function PersonalForm({
   personalForm,
 }) {
   const [countries, setCountries] = useState([]);
-  const [countriesLoading, setCountriesLoading] = useState(true);
 
   const [sectorOpen, setSectorOpen] = useState(false);
   const [sectorInput, setSectorInput] = useState("");
@@ -45,45 +45,14 @@ function PersonalForm({
   const [skillOpen, setSkillOpen] = useState(false);
   const [skillInput, setSkillInput] = useState("");
 
+  const { data, isLoading: countriesLoading } = useCountries();
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
-  const filteredCountries = locationSearch
-    ? countries.filter((c) =>
-        c.toLowerCase().includes(locationSearch.toLowerCase()),
-      )
-    : countries;
+  const filteredCountries = data.filter((c) =>
+    c.name.toLowerCase().includes(locationSearch.toLowerCase()),
+  );
 
-  useEffect(() => {
-    fetch("https://restcountries.com/v3.1/all?fields=name")
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = data
-          .map((c) => c.name.common)
-          .sort((a, b) => a.localeCompare(b));
-        setCountries(sorted);
-      })
-      .catch(() => {
-        setCountries([
-          "Benin",
-          "Cameroon",
-          "Canada",
-          "Côte d'Ivoire",
-          "France",
-          "Gabon",
-          "Germany",
-          "Ghana",
-          "Kenya",
-          "Nigeria",
-          "Rwanda",
-          "Senegal",
-          "South Africa",
-          "Togo",
-          "United Kingdom",
-          "United States",
-        ]);
-      })
-      .finally(() => setCountriesLoading(false));
-  }, []);
+  // console.log(filteredCountries, "outside");
 
   const filteredSkills = SKILL_SUGGESTIONS.filter(
     (s) =>
@@ -175,38 +144,108 @@ function PersonalForm({
       <Controller
         name="title"
         control={personalForm.control}
-        render={({ field }) => (
-          <div>
-            <Label htmlFor="title" className="text-gray-700 mb-2 block">
-              Job Title
-            </Label>
-            <Input
-              id="title"
-              type="text"
-              placeholder="e.g. Co-founder & CEO"
-              {...field}
-            />
-          </div>
-        )}
+        render={({ field }) => {
+          const MAX_CHARS = 20;
+
+          const handleChange = (e) => {
+            const value = e.target.value;
+            if (value.length > MAX_CHARS) {
+              field.onChange(value.slice(0, MAX_CHARS));
+            } else {
+              field.onChange(value);
+            }
+          };
+
+          return (
+            <div>
+              <Label htmlFor="title" className="text-gray-700 mb-2 block">
+                Job Title{" "}
+                <span className="text-gray-400 font-normal text-xs">
+                  ({MAX_CHARS} chars max)
+                </span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="title"
+                  type="text"
+                  placeholder="e.g. Co-founder & CEO"
+                  className="pr-16"
+                  value={field.value || ""}
+                  onChange={handleChange}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  maxLength={MAX_CHARS}
+                />
+                {field.value && field.value.length > 0 && (
+                  <span
+                    className={cn(
+                      "absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium",
+                      field.value.length === MAX_CHARS
+                        ? "text-red-500"
+                        : "text-gray-400",
+                    )}
+                  >
+                    {field.value.length}/{MAX_CHARS}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        }}
       />
 
       {/* Cohort */}
       <Controller
         name="cohort"
         control={personalForm.control}
-        render={({ field }) => (
-          <div>
-            <Label htmlFor="cohort" className="text-gray-700 mb-2 block">
-              {t("cohort")}
-            </Label>
-            <Input
-              id="cohort"
-              type="text"
-              placeholder={t("cohortPlaceholder")}
-              {...field}
-            />
-          </div>
-        )}
+        render={({ field }) => {
+          const MAX_CHARS = 20;
+
+          const handleChange = (e) => {
+            const value = e.target.value;
+            if (value.length > MAX_CHARS) {
+              field.onChange(value.slice(0, MAX_CHARS));
+            } else {
+              field.onChange(value);
+            }
+          };
+
+          return (
+            <div>
+              <Label htmlFor="cohort" className="text-gray-700 mb-2 block">
+                {t("cohort")}{" "}
+                <span className="text-gray-400 font-normal text-xs">
+                  ({MAX_CHARS} chars max)
+                </span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="cohort"
+                  type="text"
+                  placeholder={t("cohortPlaceholder")}
+                  className="pr-16"
+                  value={field.value || ""}
+                  onChange={handleChange}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  maxLength={MAX_CHARS}
+                />
+                {field.value && field.value.length > 0 && (
+                  <span
+                    className={cn(
+                      "absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium",
+                      field.value.length === MAX_CHARS
+                        ? "text-red-500"
+                        : "text-gray-400",
+                    )}
+                  >
+                    {field.value.length}/{MAX_CHARS}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        }}
       />
 
       {/* Location */}
@@ -250,10 +289,10 @@ function PersonalForm({
                     <CommandGroup>
                       {filteredCountries.map((country) => (
                         <CommandItem
-                          key={country}
-                          value={country}
+                          key={country.name}
+                          value={country.name}
                           onSelect={() => {
-                            field.onChange(country);
+                            field.onChange(country.name);
                             setLocationOpen(false);
                             setLocationSearch("");
                           }}
@@ -261,12 +300,15 @@ function PersonalForm({
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              field.value === country
+                              field.value === country.name
                                 ? "opacity-100"
                                 : "opacity-0",
                             )}
                           />
-                          {country}
+                          <span className="mr-2 text-lg">
+                            {country.emoji || country.flag || "🏳️"}
+                          </span>
+                          {country.name}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -499,103 +541,104 @@ function PersonalForm({
       />
 
       {/* Goals */}
-    <Controller
-  name="goals"
-  control={personalForm.control}
-  render={({ field }) => {
-    const [charCount, setCharCount] = useState(0);
-    const MAX_CHARS = 100;
+      <Controller
+        name="goals"
+        control={personalForm.control}
+        render={({ field }) => {
+          const [charCount, setCharCount] = useState(0);
+          const MAX_CHARS = 100;
 
-    const handleChange = (e) => {
-      const value = e.target.value;
-      if (value.length > MAX_CHARS) {
-        const truncated = value.slice(0, MAX_CHARS);
-        field.onChange(truncated);
-        setCharCount(MAX_CHARS);
-      } else {
-        field.onChange(value);
-        setCharCount(value.length);
-      }
-    };
+          const handleChange = (e) => {
+            const value = e.target.value;
+            if (value.length > MAX_CHARS) {
+              const truncated = value.slice(0, MAX_CHARS);
+              field.onChange(truncated);
+              setCharCount(MAX_CHARS);
+            } else {
+              field.onChange(value);
+              setCharCount(value.length);
+            }
+          };
 
-    return (
-      <div className="space-y-2">
-        <Label htmlFor="goals" className="text-gray-700 mb-2 block">
-          {t("goals")} <span className="text-red-500">*</span>
-        </Label>
-        
-        <div>
-          <textarea
-            id="goals"
-            placeholder={t("goalsPlaceholder")}
-            className={cn(
-              "flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none",
-              charCount > MAX_CHARS * 0.8 && "border-amber-500",
-              charCount === MAX_CHARS && "border-red-500",
-            )}
-            rows={3}
-            value={field.value || ""}
-            onChange={handleChange}
-            onBlur={field.onBlur}
-            ref={field.ref}
-            maxLength={MAX_CHARS}
-          />
+          return (
+            <div className="space-y-2">
+              <Label htmlFor="goals" className="text-gray-700 mb-2 block">
+                {t("goals")} <span className="text-red-500">*</span>
+              </Label>
 
-          {/* Progress bar - now using margin instead of absolute */}
-          {field.value && field.value.length > 0 && (
-            <div className="mt-1.5 h-0.5 bg-muted rounded-full overflow-hidden">
-              <div
-                className={cn(
-                  "h-full transition-all duration-300 rounded-full",
-                  charCount > MAX_CHARS * 0.8 &&
-                    charCount < MAX_CHARS &&
-                    "bg-amber-500",
-                  charCount === MAX_CHARS && "bg-red-500",
-                  charCount < MAX_CHARS * 0.8 && "bg-emerald-500",
+              <div>
+                <textarea
+                  id="goals"
+                  placeholder={t("goalsPlaceholder")}
+                  className={cn(
+                    "flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none",
+                    charCount > MAX_CHARS * 0.8 && "border-amber-500",
+                    charCount === MAX_CHARS && "border-red-500",
+                  )}
+                  rows={3}
+                  value={field.value || ""}
+                  onChange={handleChange}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  maxLength={MAX_CHARS}
+                />
+
+                {/* Progress bar - now using margin instead of absolute */}
+                {field.value && field.value.length > 0 && (
+                  <div className="mt-1.5 h-0.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full transition-all duration-300 rounded-full",
+                        charCount > MAX_CHARS * 0.8 &&
+                          charCount < MAX_CHARS &&
+                          "bg-amber-500",
+                        charCount === MAX_CHARS && "bg-red-500",
+                        charCount < MAX_CHARS * 0.8 && "bg-emerald-500",
+                      )}
+                      style={{ width: `${(charCount / MAX_CHARS) * 100}%` }}
+                    />
+                  </div>
                 )}
-                style={{ width: `${(charCount / MAX_CHARS) * 100}%` }}
-              />
+              </div>
+
+              {/* Character counter - using flex layout */}
+              <div className="flex items-center justify-between">
+                {field.value &&
+                  field.value.length > 0 &&
+                  charCount > MAX_CHARS * 0.8 && (
+                    <span
+                      className={cn(
+                        "text-xs",
+                        charCount === MAX_CHARS
+                          ? "text-red-500 font-medium"
+                          : "text-amber-500",
+                      )}
+                    >
+                      {charCount === MAX_CHARS
+                        ? "⚠️ Character limit reached"
+                        : `${MAX_CHARS - charCount} characters remaining`}
+                    </span>
+                  )}
+
+                {field.value && field.value.length > 0 && (
+                  <span
+                    className={cn(
+                      "text-xs font-medium ml-auto",
+                      charCount > MAX_CHARS * 0.8 &&
+                        charCount < MAX_CHARS &&
+                        "text-amber-500",
+                      charCount === MAX_CHARS && "text-red-500",
+                      charCount < MAX_CHARS * 0.8 && "text-emerald-500",
+                    )}
+                  >
+                    {charCount}/{MAX_CHARS}
+                  </span>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Character counter - using flex layout */}
-        <div className="flex items-center justify-between">
-          {field.value && field.value.length > 0 && charCount > MAX_CHARS * 0.8 && (
-            <span
-              className={cn(
-                "text-xs",
-                charCount === MAX_CHARS
-                  ? "text-red-500 font-medium"
-                  : "text-amber-500",
-              )}
-            >
-              {charCount === MAX_CHARS
-                ? "⚠️ Character limit reached"
-                : `${MAX_CHARS - charCount} characters remaining`}
-            </span>
-          )}
-          
-          {field.value && field.value.length > 0 && (
-            <span
-              className={cn(
-                "text-xs font-medium ml-auto",
-                charCount > MAX_CHARS * 0.8 &&
-                  charCount < MAX_CHARS &&
-                  "text-amber-500",
-                charCount === MAX_CHARS && "text-red-500",
-                charCount < MAX_CHARS * 0.8 && "text-emerald-500",
-              )}
-            >
-              {charCount}/{MAX_CHARS}
-            </span>
-          )}
-        </div>
-      </div>
-    );
-  }}
-/>
-
+          );
+        }}
+      />
 
       <p className="text-xs text-gray-400 text-center pt-1">
         Profile details can be modified later in Settings.

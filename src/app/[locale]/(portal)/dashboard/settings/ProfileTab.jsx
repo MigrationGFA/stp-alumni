@@ -51,6 +51,7 @@ import userService from "@/lib/services/userService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "react-haiku";
 import { debounce } from "lodash";
+import { useCountries } from "@/hooks/useCountry";
 
 function ProfileTab({
   t,
@@ -335,65 +336,39 @@ function PersonalEditForm({ profile, onDone }) {
   const goals = watch("goals");
   const title = watch("title");
 
-
-
-   const formatLinkedInUrl = useCallback(
+  const formatLinkedInUrl = useCallback(
     debounce((value) => {
       if (!value) return;
-      
+
       let formatted = value.trim();
-      const linkedInPattern = /linkedin\.com\/in\/|linkedin\.com\/company\/|lnkd\.in/;
-      
+      const linkedInPattern =
+        /linkedin\.com\/in\/|linkedin\.com\/company\/|lnkd\.in/;
+
       if (linkedInPattern.test(formatted)) {
-        if (!formatted.startsWith('http://') && !formatted.startsWith('https://')) {
-          formatted = `https://${formatted.replace(/^www\./, '')}`;
-          setValue('linkedInProfile', formatted);
+        if (
+          !formatted.startsWith("http://") &&
+          !formatted.startsWith("https://")
+        ) {
+          formatted = `https://${formatted.replace(/^www\./, "")}`;
+          setValue("linkedInProfile", formatted);
         }
-      } else if (!formatted.startsWith('http://') && !formatted.startsWith('https://')) {
+      } else if (
+        !formatted.startsWith("http://") &&
+        !formatted.startsWith("https://")
+      ) {
         // For general URLs like torn.com
         formatted = `https://${formatted}`;
-        setValue('linkedInProfile', formatted);
+        setValue("linkedInProfile", formatted);
       }
     }, 500),
-    [setValue]
+    [setValue],
   );
 
-  const [countries, setCountries] = useState([]);
-  useEffect(() => {
-    fetch("https://restcountries.com/v3.1/all?fields=name")
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = data
-          .map((c) => c.name.common)
-          .sort((a, b) => a.localeCompare(b));
-        setCountries(sorted);
-      })
-      .catch(() => {
-        setCountries([
-          "Benin",
-          "Cameroon",
-          "Canada",
-          "Côte d'Ivoire",
-          "France",
-          "Gabon",
-          "Germany",
-          "Ghana",
-          "Kenya",
-          "Nigeria",
-          "Rwanda",
-          "Senegal",
-          "South Africa",
-          "Togo",
-          "United Kingdom",
-          "United States",
-        ]);
-      })
-    
-  }, []);
+  const { data: countries, isLoading: countriesLoading } = useCountries();
 
   const filteredCountries = locationSearch
     ? countries.filter((c) =>
-        c.toLowerCase().includes(locationSearch.toLowerCase()),
+        c.name.toLowerCase().includes(locationSearch.toLowerCase()),
       )
     : countries;
 
@@ -424,8 +399,7 @@ function PersonalEditForm({ profile, onDone }) {
   };
 
   function handleProfileImageChange(e) {
-
-    e.preventDefault()
+    e.preventDefault();
     const file = e.target.files?.[0];
     if (file) {
       setProfileImage(file);
@@ -433,56 +407,55 @@ function PersonalEditForm({ profile, onDone }) {
     }
   }
 
- async function handleProfileImgSubmit(file) {
-  if (!file) return null;
-  
-  try {
-    const res = await userService.uploadProfileImage(file);
-    
-    if (res.status) {
-      toast.success("Profile image updated!");
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      return res.data?.avatarUrl || res.avatarUrl; // Return the URL from response
-    } else {
-      toast.error(res.message || "Failed to upload profile image.");
-      throw new Error("Upload failed");
-    }
-  } catch (error) {
-    console.error("Upload error:", error);
-    toast.error("Failed to upload profile image.");
-    throw error;
-  }
-}
+  async function handleProfileImgSubmit(file) {
+    if (!file) return null;
 
-const onSubmit = async (data) => {
-  try {
-    let uploadedImageUrl = profile.profileImagePath;
-    
-    if (profileImage) {
-        console.log(profileImage, "selected file submit");
-      uploadedImageUrl = await handleProfileImgSubmit(profileImage);
+    try {
+      const res = await userService.uploadProfileImage(file);
+
+      if (res.status) {
+        toast.success("Profile image updated!");
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+        return res.data?.avatarUrl || res.avatarUrl; // Return the URL from response
+      } else {
+        toast.error(res.message || "Failed to upload profile image.");
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload profile image.");
+      throw error;
     }
-    
-    const personal = {
-      sectors: data.sectors,
-      location: data.location,
-      skills: data.skills,
-      linkedInProfile: data.linkedInProfile,
-      goal: data.goals,
-      title: data.title,
-      profileImagePath: uploadedImageUrl,
-    };
-    
-    console.log(personal, "profile data");
-    
-    // Call your update service
-    mutate(personal);
-    
-  } catch (error) {
-    console.error("Submission error:", error);
-    // Don't show another error if the image upload already showed one
   }
-};
+
+  const onSubmit = async (data) => {
+    try {
+      let uploadedImageUrl = profile.profileImagePath;
+
+      if (profileImage) {
+        console.log(profileImage, "selected file submit");
+        uploadedImageUrl = await handleProfileImgSubmit(profileImage);
+      }
+
+      const personal = {
+        sectors: data.sectors,
+        location: data.location,
+        skills: data.skills,
+        linkedInProfile: data.linkedInProfile,
+        goal: data.goals,
+        title: data.title,
+        profileImagePath: uploadedImageUrl,
+      };
+
+      console.log(personal, "profile data");
+
+      // Call your update service
+      mutate(personal);
+    } catch (error) {
+      console.error("Submission error:", error);
+      // Don't show another error if the image upload already showed one
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -541,12 +514,52 @@ const onSubmit = async (data) => {
 
       {/* Job Title */}
       <div>
-        <Label className="text-gray-700 mb-1.5 block text-sm">Job Title</Label>
-        <Input
-          {...register("title")}
-          placeholder="e.g. Co-founder & CEO"
-          disabled={isPending}
-        />
+        <Label className="text-gray-700 mb-1.5 block text-sm">
+          Job Title{" "}
+          <span className="text-gray-400 font-normal text-xs">
+            (20 chars max)
+          </span>
+        </Label>
+        <div className="relative">
+          <Input
+            className={cn(
+              "pr-16",
+              watch("title")?.length > 16 && "border-amber-500",
+              watch("title")?.length === 20 && "border-red-500",
+            )}
+            {...register("title", {
+              maxLength: {
+                value: 20,
+                message: "Job title cannot exceed 20 characters",
+              },
+              onChange: (e) => {
+                if (e.target.value.length > 20) {
+                  e.target.value = e.target.value.slice(0, 20);
+                }
+              },
+            })}
+            placeholder="e.g. Co-founder & CEO"
+            disabled={isPending}
+            maxLength={20}
+          />
+          {watch("title")?.length > 0 && (
+            <span
+              className={cn(
+                "absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium",
+                watch("title")?.length === 20
+                  ? "text-red-500"
+                  : watch("title")?.length > 16
+                    ? "text-amber-500"
+                    : "text-gray-400",
+              )}
+            >
+              {watch("title")?.length || 0}/20
+            </span>
+          )}
+        </div>
+        {errors.title && (
+          <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>
+        )}
       </div>
 
       {/* Location */}
@@ -581,10 +594,10 @@ const onSubmit = async (data) => {
                 <CommandGroup>
                   {filteredCountries.map((country) => (
                     <CommandItem
-                      key={country}
-                      value={country}
+                      key={country.name}
+                      value={country.name}
                       onSelect={() => {
-                        setValue("location", country);
+                        setValue("location", country.name);
                         setLocationOpen(false);
                         setLocationSearch("");
                       }}
@@ -592,10 +605,15 @@ const onSubmit = async (data) => {
                       <Check
                         className={cn(
                           "mr-2 h-4 w-4",
-                          location === country ? "opacity-100" : "opacity-0",
+                          location === country.name
+                            ? "opacity-100"
+                            : "opacity-0",
                         )}
                       />
-                      {country}
+                      <span className="mr-2 text-lg">
+                        {country.emoji || country.flag || "🏳️"}
+                      </span>
+                      {country.name}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -736,9 +754,11 @@ const onSubmit = async (data) => {
         </Label>
         <Input
           type="url"
-          {...register("linkedInProfile" ,{onChange: (e) => {
-            formatLinkedInUrl(e.target.value);
-          }})}
+          {...register("linkedInProfile", {
+            onChange: (e) => {
+              formatLinkedInUrl(e.target.value);
+            },
+          })}
           placeholder="https://linkedin.com/in/yourname"
           disabled={isPending}
         />
@@ -746,14 +766,53 @@ const onSubmit = async (data) => {
 
       {/* Goals */}
       <div>
-        <Label className="text-gray-700 mb-1.5 block text-sm">Goals</Label>
-        <textarea
-          className="flex min-h-[72px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-          rows={3}
-          {...register("goals")}
-          placeholder="What are you hoping to achieve through the STP network?"
-          disabled={isPending}
-        />
+        <Label className="text-gray-700 mb-1.5 block text-sm">
+          Goals{" "}
+          <span className="text-gray-400 font-normal text-xs">
+            (100 chars max)
+          </span>
+        </Label>
+        <div className="relative">
+          <textarea
+            className={cn(
+              "flex min-h-[72px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none pr-16",
+              watch("goals")?.length > 80 && "border-amber-500",
+              watch("goals")?.length === 100 && "border-red-500",
+            )}
+            rows={3}
+            {...register("goals", {
+              maxLength: {
+                value: 100,
+                message: "Goals cannot exceed 100 characters",
+              },
+              onChange: (e) => {
+                if (e.target.value.length > 100) {
+                  e.target.value = e.target.value.slice(0, 100);
+                }
+              },
+            })}
+            placeholder="What are you hoping to achieve through the STP network?"
+            disabled={isPending}
+            maxLength={100}
+          />
+          {watch("goals")?.length > 0 && (
+            <span
+              className={cn(
+                "absolute right-3 bottom-3 text-xs font-medium",
+                watch("goals")?.length === 100
+                  ? "text-red-500"
+                  : watch("goals")?.length > 80
+                    ? "text-amber-500"
+                    : "text-gray-400",
+              )}
+            >
+              {watch("goals")?.length || 0}/100
+            </span>
+          )}
+        </div>
+        {errors.goals && (
+          <p className="text-xs text-red-500 mt-1">{errors.goals.message}</p>
+        )}
       </div>
 
       {/* Actions */}
@@ -882,7 +941,7 @@ function BusinessReadView({ profile }) {
 // ─── Business Edit Form ───────────────────────────────────────────────────────
 
 function BusinessEditForm({ profile, onDone }) {
-  const { register, handleSubmit, setValue, watch } = useForm({
+  const { register, handleSubmit, setValue, watch ,formState:{errors}} = useForm({
     defaultValues: {
       companyName: profile.companyName || "",
       businessModel: profile.businessModel || "",
@@ -959,16 +1018,56 @@ function BusinessEditForm({ profile, onDone }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {/* Company name */}
+      {/* Company Name - 20 character limit */}
       <div>
         <Label className="text-gray-700 mb-1.5 block text-sm">
-          Company Name
+          Company Name{" "}
+          <span className="text-gray-400 font-normal text-xs">
+            (20 chars max)
+          </span>
         </Label>
-        <Input
-          {...register("companyName")}
-          placeholder="e.g. Acme Inc."
-          disabled={isPending}
-        />
+        <div className="relative">
+          <Input
+            className={cn(
+              "pr-16",
+              watch("companyName")?.length > 16 && "border-amber-500",
+              watch("companyName")?.length === 20 && "border-red-500",
+            )}
+            {...register("companyName", {
+              maxLength: {
+                value: 20,
+                message: "Company name cannot exceed 20 characters",
+              },
+              onChange: (e) => {
+                if (e.target.value.length > 20) {
+                  e.target.value = e.target.value.slice(0, 20);
+                }
+              },
+            })}
+            placeholder="e.g. Acme Inc."
+            disabled={isPending}
+            maxLength={20}
+          />
+          {watch("companyName")?.length > 0 && (
+            <span
+              className={cn(
+                "absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium",
+                watch("companyName")?.length === 20
+                  ? "text-red-500"
+                  : watch("companyName")?.length > 16
+                    ? "text-amber-500"
+                    : "text-gray-400",
+              )}
+            >
+              {watch("companyName")?.length || 0}/20
+            </span>
+          )}
+        </div>
+        {errors.companyName && (
+          <p className="text-xs text-red-500 mt-1">
+            {errors.companyName.message}
+          </p>
+        )}
       </div>
 
       {/* Business Model */}
@@ -1073,21 +1172,57 @@ function BusinessEditForm({ profile, onDone }) {
         </Popover>
       </div>
 
-      {/* Elevator Pitch */}
+      {/* Elevator Pitch - 100 character limit */}
       <div>
         <Label className="text-gray-700 mb-1.5 block text-sm">
           Elevator Pitch{" "}
           <span className="text-gray-400 font-normal text-xs">
-            (one sentence)
+            (100 chars max • one sentence)
           </span>
         </Label>
-        <textarea
-          className="flex min-h-[64px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-          rows={2}
-          {...register("elevatorPitch")}
-          disabled={isPending}
-          placeholder="We help African SMEs access affordable trade finance through a mobile-first platform."
-        />
+        <div className="relative">
+          <textarea
+            className={cn(
+              "flex min-h-[64px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none pr-16",
+              watch("elevatorPitch")?.length > 80 && "border-amber-500",
+              watch("elevatorPitch")?.length === 100 && "border-red-500",
+            )}
+            rows={2}
+            {...register("elevatorPitch", {
+              maxLength: {
+                value: 100,
+                message: "Elevator pitch cannot exceed 100 characters",
+              },
+              onChange: (e) => {
+                if (e.target.value.length > 100) {
+                  e.target.value = e.target.value.slice(0, 100);
+                }
+              },
+            })}
+            disabled={isPending}
+            placeholder="We help African SMEs access affordable trade finance through a mobile-first platform."
+            maxLength={100}
+          />
+          {watch("elevatorPitch")?.length > 0 && (
+            <span
+              className={cn(
+                "absolute right-3 bottom-3 text-xs font-medium",
+                watch("elevatorPitch")?.length === 100
+                  ? "text-red-500"
+                  : watch("elevatorPitch")?.length > 80
+                    ? "text-amber-500"
+                    : "text-gray-400",
+              )}
+            >
+              {watch("elevatorPitch")?.length || 0}/100
+            </span>
+          )}
+        </div>
+        {errors.elevatorPitch && (
+          <p className="text-xs text-red-500 mt-1">
+            {errors.elevatorPitch.message}
+          </p>
+        )}
       </div>
 
       {/* Offers */}
