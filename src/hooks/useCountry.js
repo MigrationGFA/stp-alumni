@@ -24,7 +24,10 @@ const FALLBACK_COUNTRIES = [
 // Fetch function with your API key
 const fetchCountries = async () => {
 
-  console.log(process.env.NEXT_PUBLIC_COUNTRY_API,"process.env.COUNTRY_API")
+  if (!process.env.NEXT_PUBLIC_COUNTRY_API) {
+    console.log("API key not available");
+    throw new Error("Missing API key");
+  }
   try {
     const response = await fetch(
       'https://api.restcountries.com/countries/v5?region=Africa&limit=100',
