@@ -9,6 +9,8 @@ import {
   FileText,
   Download,
   ZoomIn,
+  Play,
+  Maximize2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -52,12 +54,19 @@ function MessageStatus({ status }) {
 function MediaContent({ message }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   if (!message.mediaUrl) return null;
 
   const isImage =
     message.mediaType === "image" ||
+    message.type === "image" ||
     /\.(jpg|jpeg|png|gif|webp)$/i.test(message.mediaUrl);
+
+  const isVideo =
+    message.mediaType === "video" ||
+    message.type === "video" ||
+    /\.(mp4|webm|ogg|mov)$/i.test(message.mediaUrl);
 
   if (isImage) {
     return (
@@ -96,29 +105,114 @@ function MediaContent({ message }) {
           onClose={() => setLightboxOpen(false)}
           src={message.mediaUrl}
           alt={message.content || "Image"}
+          type={message.mediaType || message.type}
         />
       </>
     );
   }
 
-  // Document section remains the same...
+  if (isVideo) {
+    return (
+      <>
+        <div className="relative w-[320px] max-w-full h-[180px] rounded-lg overflow-hidden bg-black flex items-center justify-center group">
+          {isPlaying ? (
+            <video
+              src={message.mediaUrl}
+              controls
+              autoPlay
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <>
+              <video
+                src={message.mediaUrl}
+                preload="metadata"
+                className="w-full h-full object-cover opacity-80"
+              />
+              {/* Play icon overlay */}
+              <div 
+                className="absolute inset-0 bg-black/25 flex items-center justify-center cursor-pointer transition-colors group-hover:bg-black/35"
+                onClick={() => setIsPlaying(true)}
+              >
+                <div className="w-12 h-12 rounded-full bg-white/90 text-stp-blue-light hover:scale-105 hover:bg-white transition-all flex items-center justify-center shadow-lg">
+                  <Play className="w-6 h-6 fill-current translate-x-0.5" />
+                </div>
+              </div>
+              {/* Zoom icon overlay */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxOpen(true);
+                }}
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Lightbox */}
+        <ImageLightbox
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          src={message.mediaUrl}
+          alt={message.content || "Video"}
+          type={message.mediaType || message.type || "video"}
+        />
+      </>
+    );
+  }
+
+  // Document section
   const fileName = message.mediaUrl.split("/").pop() || "Document";
   return (
-    <a
-      href={message.mediaUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        "flex items-center gap-2 p-2 rounded-lg transition-colors",
-        message.isOwn
-          ? "bg-white/10 hover:bg-white/20"
-          : "bg-muted hover:bg-muted/80",
-      )}
-    >
-      <FileText className="h-5 w-5 shrink-0" />
-      <span className="text-xs truncate flex-1">{fileName}</span>
-      <Download className="h-4 w-4 shrink-0 opacity-60" />
-    </a>
+    <>
+      <div
+        className={cn(
+          "flex items-center justify-between gap-3 p-3 rounded-xl border transition-all cursor-pointer w-[280px] max-w-full",
+          message.isOwn
+            ? "bg-white/10 hover:bg-white/15 border-white/20 text-white"
+            : "bg-muted hover:bg-muted/80 border-border text-foreground"
+        )}
+        onClick={() => setLightboxOpen(true)}
+      >
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className={cn(
+            "p-2 rounded-lg shrink-0",
+            message.isOwn ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
+          )}>
+            <FileText className="h-5 w-5 shrink-0" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-xs font-medium truncate">{fileName}</span>
+            <span className="text-[10px] opacity-70">Click to preview</span>
+          </div>
+        </div>
+        <a
+          href={message.mediaUrl}
+          download
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "p-1.5 rounded-full hover:bg-black/10 transition-colors shrink-0",
+            message.isOwn ? "hover:bg-white/10" : "hover:bg-black/5"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Download className="h-4 w-4 opacity-60" />
+        </a>
+      </div>
+
+      {/* Lightbox for document preview */}
+      <ImageLightbox
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        src={message.mediaUrl}
+        alt={message.content || fileName}
+        type={message.mediaType || message.type || "document"}
+      />
+    </>
   );
 }
 

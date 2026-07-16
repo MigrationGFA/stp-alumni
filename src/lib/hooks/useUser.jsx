@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import userService from "../services/userService";
 import useAuthStore from "../store/useAuthStore";
+import { useRouter } from "@/i18n/routing";
 
 // Create the context
 const AuthContext = createContext(null);
@@ -19,6 +20,8 @@ export const useAuth = () => {
 // Auth Provider component
 export const AuthProvider = ({ children }) => {
   const updateUser = useAuthStore((state) => state.updateUser);
+  const logout = useAuthStore((state) => state.logout);
+  const router = useRouter();
   // Fetch full profile from API
   const { data: profileData, isLoading: isProfileLoading } = useQuery({
     queryKey: ["userProfile"],
