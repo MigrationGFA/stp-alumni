@@ -14,7 +14,9 @@ export default function proxy(req) {
 
   // Protect dashboard and profile-setup — both require a token
   if (isProtectedRoute && !token) {
-    const loginUrl = new URL('/login', req.url);
+    const segments = pathname.split('/');
+    const locale = routing.locales.includes(segments[1]) ? segments[1] : routing.defaultLocale;
+    const loginUrl = new URL(`/${locale}/login`, req.url);
     return NextResponse.redirect(loginUrl);
   }
 

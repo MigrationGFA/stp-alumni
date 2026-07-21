@@ -192,7 +192,7 @@ export function useMessaging() {
       senderAvatar: user?.profileImagePath,
       content: caption,
       mediaUrl: URL.createObjectURL(file),
-      mediaType: file.type.startsWith("image/") ? "image" : "document",
+      mediaType: file.type.startsWith("image/") ? "image" : file.type.startsWith("video/") ? "video" : file.type === "application/pdf" ? "pdf" : "document",
       createdAt: now,
       isOwn: true,
       status: "sending",
@@ -206,7 +206,7 @@ export function useMessaging() {
       content: caption,
       conversationId: selectedConversationId,
       createdAt: now,
-      mediaType: file.type.startsWith("image/") ? "image" : "document",
+      mediaType: file.type.startsWith("image/") ? "image" : file.type.startsWith("video/") ? "video" : file.type === "application/pdf" ? "pdf" : "document",
       tempMediaUrl: optimisticMessage.mediaUrl
     };
     // console.log("calling sendMediaMutation with", { conversationId: selectedConversationId, optimisticMessage });
@@ -305,7 +305,7 @@ export function useMessaging() {
           conv.conversationId === conversationId
             ? {
               ...conv,
-              lastMessage: wsMessage.content || (wsMessage.mediaType === 'image' || wsMessage.mediaType === 'file' ? "Sent an attachment" : ""),
+              lastMessage: wsMessage.content || (wsMessage.mediaType === 'image' || wsMessage.mediaType === 'video' || wsMessage.mediaType === 'file' || wsMessage.mediaType === 'document' ? "Sent an attachment" : ""),
               lastMessageAt: wsMessage.createdAt
             }
             : conv
