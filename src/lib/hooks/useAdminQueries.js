@@ -80,6 +80,7 @@ export function useAdminUnreadSupportCount() {
     queryFn: () => adminService.getUnreadSupportCount(),
     select: (data) => data?.data?.unreadCount ?? data?.data?.count ?? 0,
     refetchInterval: 60000,
+    retry: false,
   });
 }
 

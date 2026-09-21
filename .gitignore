@@ -47,3 +47,4 @@ blue-print/*
 .specstory/
 frontend_api_coverage_categorized.pdf
 BACKEND_INTEGRATION_NOTES.md
+/brain

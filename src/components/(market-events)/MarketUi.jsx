@@ -139,7 +139,7 @@ export default function MarketplaceUi() {
 
   const roles = useMemo(() => {
     if (!allData?.data) return [];
-    const allRoles = allData.data.map(ele => ele.title).filter(Boolean);
+    const allRoles = allData.data.flatMap(ele => [ele.role, ele.title]).filter(Boolean);
     return [...new Set(allRoles)].sort();
   }, [allData]);
 

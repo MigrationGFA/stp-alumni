@@ -26,6 +26,9 @@ const getNotificationIcon = (type) => {
     case 'EVENT_REGISTRATION':
     case 'EVENT_UPDATE':
       return <Calendar className="h-4 w-4 text-purple-500" />;
+    case 'EVENT_DELETE':
+    case 'EVENT_DELETION':
+      return <Calendar className="h-4 w-4 text-red-500" />;
     default:
       return <Bell className="h-4 w-4 text-gray-500" />;
   }
@@ -45,6 +48,9 @@ const getNotificationActionUrl = (notification) => {
     case 'EVENT_UPDATE':
     case 'EVENT_REGISTRATION':
       return data.eventId ? `/dashboard/events/${data.eventId}` : '/dashboard/events';
+    case 'EVENT_DELETE':
+    case 'EVENT_DELETION':
+      return '/dashboard/events';
     default:
       return null;
   }
