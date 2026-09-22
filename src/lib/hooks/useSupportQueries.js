@@ -10,7 +10,9 @@ export function useSubmitSupportTicket() {
       toast.success(data?.message || 'Support request submitted successfully');
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to submit support request');
+      const status = error?.response?.status ? `[HTTP ${error.response.status}] ` : '';
+      const message = error?.response?.data?.message || error?.message || 'Failed to submit support request';
+      toast.error(`${status}${message}`);
     },
   });
 }

@@ -25,7 +25,7 @@ import useAuthStore from "@/lib/store/useAuthStore";
 const menuItems = [
   { icon: User, label: "View Profile", href: "/dashboard/settings" },
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
-  { icon: HelpCircle, label: "Help & Support", href: "/dashboard/settings" },
+  { icon: HelpCircle, label: "Help & Support", href: "/dashboard/support" },
 ];
 
 export function ProfileDrawer({ children, data }) {

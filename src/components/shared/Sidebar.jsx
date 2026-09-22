@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import useAuthStore from "@/lib/store/useAuthStore";
+import { useAdminUnreadSupportCount } from "@/lib/hooks/useAdminQueries";
 import {
   Home,
   Users,
@@ -27,6 +28,7 @@ const Sidebar = ({ isCollapsed }) => {
   const pathname = usePathname();
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
+  const { data: unreadSupportCount = 0 } = useAdminUnreadSupportCount();
 
   const [isHovered, setIsHovered] = useState(false);
 
@@ -93,6 +95,8 @@ const Sidebar = ({ isCollapsed }) => {
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
+          const isSupport = item.href === "/dashboard/support";
+          const hasSupportBadge = isSupport && unreadSupportCount > 0;
 
           return (
             <Link
@@ -103,7 +107,12 @@ const Sidebar = ({ isCollapsed }) => {
                   : "text-white/70 hover:bg-white/5"
                 }`}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <div className="relative shrink-0 flex items-center justify-center">
+                <Icon className="h-5 w-5" />
+                {hasSupportBadge && !isExpanded && (
+                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#1B2F5B]" />
+                )}
+              </div>
               <span
                 className={`ml-4 text-sm font-medium whitespace-nowrap transition-all duration-300 ${isExpanded
                     ? "opacity-100 translate-x-0"
@@ -112,6 +121,11 @@ const Sidebar = ({ isCollapsed }) => {
               >
                 {item.label}
               </span>
+              {hasSupportBadge && isExpanded && (
+                <span className="ml-auto px-2 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white shrink-0">
+                  {unreadSupportCount > 99 ? "99+" : unreadSupportCount}
+                </span>
+              )}
             </Link>
           );
         })}

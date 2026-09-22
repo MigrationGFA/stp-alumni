@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '@/lib/hooks/useUser';
+import useAuthStore from '@/lib/store/useAuthStore';
 import { useSubmitSupportTicket } from '@/lib/hooks/useSupportQueries';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +10,29 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 
 export default function SupportPage() {
-  const { user } = useAuth();
+  const authUser = useAuthStore((state) => state.user);
+  const { data: profileData } = useAuth();
+  const profile = profileData?.data || profileData || {};
+
+  const firstName =
+    authUser?.firstName ||
+    authUser?.first_name ||
+    profile?.firstName ||
+    profile?.first_name ||
+    '';
+  const lastName =
+    authUser?.lastName ||
+    authUser?.last_name ||
+    profile?.lastName ||
+    profile?.last_name ||
+    '';
+  const displayName =
+    authUser?.name ||
+    profile?.name ||
+    `${firstName} ${lastName}`.trim() ||
+    'User';
+  const displayEmail = authUser?.email || profile?.email || '';
+
   const { mutate: submitTicket, isPending } = useSubmitSupportTicket();
   
   const [subject, setSubject] = useState('');
@@ -21,7 +44,7 @@ export default function SupportPage() {
     if (message.length < 10) return;
 
     submitTicket(
-      { name: user?.first_name + ' ' + user?.last_name, email: user?.email, subject, message },
+      { subject, message },
       {
         onSuccess: () => {
           setSubmitted(true);
@@ -67,9 +90,9 @@ export default function SupportPage() {
                     <Label htmlFor="name">Name</Label>
                     <Input 
                       id="name" 
-                      value={`${user?.first_name || ''} ${user?.last_name || ''}`} 
+                      value={displayName} 
                       disabled 
-                      className="bg-gray-50"
+                      className="bg-gray-50 font-medium text-gray-700"
                     />
                   </div>
                   <div className="space-y-2">
@@ -77,9 +100,9 @@ export default function SupportPage() {
                     <Input 
                       id="email" 
                       type="email" 
-                      value={user?.email || ''} 
+                      value={displayEmail} 
                       disabled 
-                      className="bg-gray-50"
+                      className="bg-gray-50 font-medium text-gray-700"
                     />
                   </div>
                 </div>

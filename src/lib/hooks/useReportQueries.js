@@ -10,7 +10,9 @@ export function useReportPost() {
       toast.success(data?.message || 'Post reported successfully');
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to report post');
+      const status = error?.response?.status ? `[HTTP ${error.response.status}] ` : '';
+      const message = error?.response?.data?.message || error?.message || 'Failed to report post';
+      toast.error(`${status}${message}`);
     },
   });
 }

@@ -10,6 +10,12 @@ export const dealroomKeys = {
   auditLog: (id) => ['dealrooms', id, 'audit-log'],
 };
 
+function formatErrorMessage(error, defaultMsg) {
+  const status = error?.response?.status ? `[HTTP ${error.response.status}] ` : '';
+  const message = error?.response?.data?.message || error?.message || defaultMsg;
+  return `${status}${message}`;
+}
+
 // ─── Rooms ─────────────────────────────────────────────────────────────────
 
 export function useMyDealroom() {
@@ -45,7 +51,7 @@ export function useCreateDealroom() {
       toast.success('Deal room created');
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to create deal room');
+      toast.error(formatErrorMessage(error, 'Failed to create deal room'));
     },
   });
 }
@@ -62,7 +68,7 @@ export function useAddMembers() {
       toast.success('Member added');
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to add member');
+      toast.error(formatErrorMessage(error, 'Failed to add member'));
       console.error('Add member error:', error);
     },
   });
@@ -78,7 +84,7 @@ export function useRemoveDealroomMember() {
       toast.success('Member removed');
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to remove member');
+      toast.error(formatErrorMessage(error, 'Failed to remove member'));
     },
   });
 }
@@ -119,7 +125,7 @@ export function useSendDealroomMessage() {
       queryClient.invalidateQueries({ queryKey: dealroomKeys.messages(roomId) });
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to send message');
+      toast.error(formatErrorMessage(error, 'Failed to send message'));
     },
   });
 }
@@ -132,7 +138,7 @@ export function useDeleteDealroomMessage() {
       queryClient.invalidateQueries({ queryKey: dealroomKeys.messages(roomId) });
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to delete message');
+      toast.error(formatErrorMessage(error, 'Failed to delete message'));
     },
   });
 }
@@ -149,7 +155,7 @@ export function useUploadDealroomFile() {
       toast.success('File uploaded');
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to upload file');
+      toast.error(formatErrorMessage(error, 'Failed to upload file'));
     },
   });
 }
@@ -165,7 +171,7 @@ export function useSignNda() {
       toast.success('NDA signed — welcome to the deal room.');
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to sign NDA');
+      toast.error(formatErrorMessage(error, 'Failed to sign NDA'));
     },
   });
 }
