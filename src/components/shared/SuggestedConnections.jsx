@@ -10,51 +10,19 @@ import { useAuth } from "@/lib/hooks/useUser";
 import { toast } from "sonner";
 import { Link } from "@/i18n/routing";
 
-const normalizeToString = (val) => {
-  if (!val) return "";
-  if (Array.isArray(val)) {
-    return val
-      .map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v)))
-      .join(" ")
-      .toLowerCase();
-  }
-  if (typeof val === "object") {
-    return Object.values(val).join(" ").toLowerCase();
-  }
-  const str = String(val).trim();
-  if (str.startsWith("[") || str.startsWith("{")) {
-    try {
-      const parsed = JSON.parse(str);
-      if (Array.isArray(parsed)) return parsed.join(" ").toLowerCase();
-      if (typeof parsed === "object") return Object.values(parsed).join(" ").toLowerCase();
-    } catch {
-      // ignore
-    }
-  }
-  return str.toLowerCase();
-};
-
 export default function SuggestedConnections() {
   const queryClient = useQueryClient();
-  const { data: profileData, isProfileLoading } = useAuth();
+  const { isProfileLoading } = useAuth();
 
-  // Extract user profile gracefully
-  const currentUser = profileData?.data || profileData || {};
-  const currentUserId = currentUser.userId || currentUser.id;
-  const userLocation = currentUser.location;
-  const userRole = currentUser.title || currentUser.role || currentUser.sector;
-
-  // 1. Fetch backend suggested connections (August 2026 endpoint)
-  const { data: suggestedPayload, isLoading: isLoadingSuggested } = useQuery({
+  // Fetch backend suggested connections (August 2026 endpoint)
+  const {
+    data: suggestedPayload,
+    isLoading: isLoadingSuggested,
+    error: suggestedError,
+    refetch: refetchSuggested,
+  } = useQuery({
     queryKey: ["network", "suggested", 10],
     queryFn: () => networkService.getSuggestedConnections(10),
-  });
-
-  // 2. Fallback query if needed
-  const { data: networkData, isLoading: isLoadingNetwork } = useQuery({
-    queryKey: ["network", "suggestions"],
-    queryFn: () => networkService.getNetwork(),
-    enabled: !suggestedPayload?.data?.byLocation && !suggestedPayload?.data?.byRole,
   });
 
   const { mutate: connectUser, isPending } = useMutation({
@@ -63,79 +31,33 @@ export default function SuggestedConnections() {
       queryClient.invalidateQueries({ queryKey: ["network"] });
       toast.success("Connection request sent!");
     },
-    onError: () => {
-      toast.error("Failed to send connection request");
+    onError: (error) => {
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to send connection request";
+      const statusCode = error?.response?.status
+        ? ` [HTTP ${error.response.status}]`
+        : "";
+      toast.error(`Connection Error${statusCode}: ${errorMsg}`);
     },
   });
 
-  const { locationSuggestions, roleSuggestions } = useMemo(() => {
-    // If backend returns categorized suggestions directly, use them
+  const locationSuggestions = useMemo(() => {
     const backendData = suggestedPayload?.data;
-    if (backendData && (Array.isArray(backendData.byLocation) || Array.isArray(backendData.byRole))) {
-      return {
-        locationSuggestions: Array.isArray(backendData.byLocation) ? backendData.byLocation : [],
-        roleSuggestions: Array.isArray(backendData.byRole) ? backendData.byRole : [],
-      };
-    }
+    if (Array.isArray(backendData?.byLocation)) return backendData.byLocation;
+    if (Array.isArray(backendData)) return backendData.slice(0, 5);
+    return [];
+  }, [suggestedPayload]);
 
-    if (!networkData) return { locationSuggestions: [], roleSuggestions: [] };
+  const roleSuggestions = useMemo(() => {
+    const backendData = suggestedPayload?.data;
+    if (Array.isArray(backendData?.byRole)) return backendData.byRole;
+    if (Array.isArray(backendData) && backendData.length > 5) return backendData.slice(5, 10);
+    return [];
+  }, [suggestedPayload]);
 
-    const users = Array.isArray(networkData?.data)
-      ? networkData.data
-      : Array.isArray(networkData)
-        ? networkData
-        : [];
-
-    const isConnectedOrSelf = (u) => {
-      const uid = u.userId || u.id;
-      return (
-        uid === currentUserId ||
-        u.connectionStatus === "ACCEPTED" ||
-        u.connectionStatus === "PENDING"
-      );
-    };
-
-    // Filter out already connected, self, and pending
-    const availableUsers = users.filter((u) => !isConnectedOrSelf(u));
-
-    const normalizedUserLoc = normalizeToString(userLocation);
-    const byLocation = availableUsers
-      .filter((u) => {
-        if (!normalizedUserLoc) return false;
-        const uLoc = normalizeToString(u.location || u.country || u.city);
-        return (
-          uLoc &&
-          (uLoc.includes(normalizedUserLoc) || normalizedUserLoc.includes(uLoc))
-        );
-      })
-      .slice(0, 3);
-
-    // Filter by role/title/sector
-    const normalizedUserRole = normalizeToString(userRole);
-    const byRole = availableUsers
-      .filter((u) => {
-        if (!normalizedUserRole) return false;
-        const uRole = normalizeToString(
-          u.title || u.role || u.sector || u.industry || u.jobTitle
-        );
-        if (!uRole) return false;
-
-        if (uRole === normalizedUserRole) return true;
-        const userTokens = normalizedUserRole
-          .split(/[\s,+/]+/)
-          .filter((t) => t.length > 2);
-        const uTokens = uRole.split(/[\s,+/]+/).filter((t) => t.length > 2);
-        return userTokens.some((t) => uTokens.includes(t));
-      })
-      .slice(0, 3);
-
-    return {
-      locationSuggestions: byLocation,
-      roleSuggestions: byRole,
-    };
-  }, [suggestedPayload, networkData, currentUserId, userLocation, userRole]);
-
-  if (isProfileLoading || isLoadingNetwork) {
+  if (isProfileLoading || isLoadingSuggested) {
     return (
       <div className="bg-white rounded-lg p-4 lg:p-6 mb-6">
         <h3 className="font-semibold text-[#233389] mb-4">
@@ -144,6 +66,35 @@ export default function SuggestedConnections() {
         <div className="flex justify-center p-4">
           <Loader2 className="animate-spin h-6 w-6 text-[#233389]" />
         </div>
+      </div>
+    );
+  }
+
+  if (suggestedError) {
+    const errorMsg =
+      suggestedError?.response?.data?.message ||
+      suggestedError?.message ||
+      "Failed to load suggestions";
+    const statusCode = suggestedError?.response?.status
+      ? ` [HTTP ${suggestedError.response.status}]`
+      : "";
+
+    return (
+      <div className="bg-white rounded-lg p-4 lg:p-6 mb-6 border border-red-100">
+        <h3 className="font-semibold text-[#233389] mb-2">
+          Suggested Connections
+        </h3>
+        <p className="text-xs text-red-600 font-mono mb-3 break-words">
+          Error{statusCode}: {errorMsg}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetchSuggested()}
+          className="text-xs border-[#233389] text-[#233389]"
+        >
+          Retry
+        </Button>
       </div>
     );
   }

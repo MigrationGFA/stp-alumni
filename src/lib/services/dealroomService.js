@@ -15,8 +15,8 @@ const dealroomService = {
 
   createRoom: async (data) => {
     const response = await api.post('/dealrooms', {
-      roomName: data.name,
-      roomDescription: data.description || '',
+      roomName: data.roomName || data.name,
+      roomDescription: data.roomDescription || data.description || '',
     });
     return response.data;
   },

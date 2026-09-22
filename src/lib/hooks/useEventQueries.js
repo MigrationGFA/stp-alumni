@@ -13,7 +13,9 @@ export function useUpdateEvent() {
       toast.success('Event updated successfully');
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to update event');
+      const status = error?.response?.status ? `[HTTP ${error.response.status}] ` : '';
+      const message = error?.response?.data?.message || error?.message || 'Failed to update event';
+      toast.error(`${status}${message}`);
     },
   });
 }
@@ -28,7 +30,9 @@ export function useDeleteEvent() {
       toast.success('Event deleted successfully');
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to delete event');
+      const status = error?.response?.status ? `[HTTP ${error.response.status}] ` : '';
+      const message = error?.response?.data?.message || error?.message || 'Failed to delete event';
+      toast.error(`${status}${message}`);
     },
   });
 }

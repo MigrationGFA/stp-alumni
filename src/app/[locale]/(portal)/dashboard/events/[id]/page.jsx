@@ -15,6 +15,7 @@ import {
   MapPinHouse,
   Loader2,
   UserCheck,
+  AlertCircle,
 } from "lucide-react";
 import {
   Dialog,
@@ -65,7 +66,7 @@ export default function EventDetail({ params }) {
     });
   };
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error: eventError, refetch: refetchEvent } = useQuery({
     queryKey: ["events", id],
     queryFn: () => eventService.getEventById(id),
   });
@@ -78,7 +79,9 @@ export default function EventDetail({ params }) {
       toast.success("Successfully registered for event!");
     },
     onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to register for event");
+      const status = err?.response?.status ? `[HTTP ${err.response.status}] ` : "";
+      const msg = err?.response?.data?.message || err?.message || "Failed to register for event";
+      toast.error(`${status}${msg}`);
     },
   });
 
@@ -90,11 +93,13 @@ export default function EventDetail({ params }) {
       toast.success("Registration cancelled successfully");
     },
     onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to cancel registration");
+      const status = err?.response?.status ? `[HTTP ${err.response.status}] ` : "";
+      const msg = err?.response?.data?.message || err?.message || "Failed to cancel registration";
+      toast.error(`${status}${msg}`);
     },
   });
 
-  const { data: registrantsData, isLoading: isLoadingRegistrants } = useQuery({
+  const { data: registrantsData, isLoading: isLoadingRegistrants, error: registrantsError, refetch: refetchRegistrants } = useQuery({
     queryKey: ["event-registrants", id],
     queryFn: () => eventService.getEventRegistrants(id),
     enabled: isRegistrantsModalOpen,
@@ -149,6 +154,27 @@ export default function EventDetail({ params }) {
         <div className="flex-1 space-y-6">
           {isLoading ? (
             <EventDetailSkeleton />
+          ) : eventError ? (
+            <div className="bg-card rounded-xl border border-red-200 p-8 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 mx-auto flex items-center justify-center">
+                <AlertCircle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Failed to load event</h3>
+                <p className="text-sm text-red-600 font-mono mt-2 bg-red-50 p-2.5 rounded border border-red-200 inline-block max-w-lg">
+                  {eventError?.response?.status ? `[HTTP ${eventError.response.status}] ` : ""}
+                  {eventError?.response?.data?.message || eventError?.message || "Unable to retrieve event details from server."}
+                </p>
+              </div>
+              <div className="flex justify-center gap-3 pt-2">
+                <Button variant="outline" onClick={() => refetchEvent()}>
+                  Retry
+                </Button>
+                <Button variant="ghost" onClick={() => router.push('/dashboard/events')}>
+                  Back to Events
+                </Button>
+              </div>
+            </div>
           ) : (
             <div className="bg-card rounded-xl border border-border overflow-hidden">
               <div className="aspect-video overflow-hidden">
@@ -393,6 +419,18 @@ export default function EventDetail({ params }) {
             {isLoadingRegistrants ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-[#233389]" />
+              </div>
+            ) : registrantsError ? (
+              <div className="text-center py-8 px-4 bg-red-50 rounded-xl border border-red-200 space-y-2">
+                <AlertCircle className="h-6 w-6 mx-auto text-red-600" />
+                <p className="text-sm font-semibold text-gray-900">Failed to load attendees</p>
+                <p className="text-xs text-red-600 font-mono">
+                  {registrantsError?.response?.status ? `[HTTP ${registrantsError.response.status}] ` : ""}
+                  {registrantsError?.response?.data?.message || registrantsError?.message || "Server error"}
+                </p>
+                <Button size="sm" variant="outline" onClick={() => refetchRegistrants()} className="mt-2">
+                  Retry
+                </Button>
               </div>
             ) : registrants.length === 0 ? (
               <div className="text-center py-8 text-gray-500 text-sm">

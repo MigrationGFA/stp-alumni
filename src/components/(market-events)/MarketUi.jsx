@@ -87,7 +87,12 @@ export default function MarketplaceUi() {
   });
 
   // Query for filtered data (used for display)
-  const { data: marketplaceData, isLoading } = useQuery({
+  const {
+    data: marketplaceData,
+    isLoading,
+    error: marketplaceError,
+    refetch,
+  } = useQuery({
     queryKey: ["marketplace", { ...filters, search: debouncedSearch, page, limit }],
     queryFn: () => {
       const params = { page, limit };
@@ -139,7 +144,7 @@ export default function MarketplaceUi() {
 
   const roles = useMemo(() => {
     if (!allData?.data) return [];
-    const allRoles = allData.data.flatMap(ele => [ele.role, ele.title]).filter(Boolean);
+    const allRoles = allData.data.map(ele => ele.role).filter(Boolean);
     return [...new Set(allRoles)].sort();
   }, [allData]);
 
@@ -166,6 +171,8 @@ export default function MarketplaceUi() {
             page={page}
             setPage={setPage}
             isLoading={isLoading}
+            error={marketplaceError}
+            onRetry={() => refetchMarketplace()}
             getSectorDisplay={getSectorDisplay}
             sectors={sectors}
             locations={locations}
@@ -196,6 +203,8 @@ export default function MarketplaceUi() {
               page={page}
               setPage={setPage}
               isLoading={isLoading}
+              error={marketplaceError}
+              onRetry={() => refetchMarketplace()}
               getSectorDisplay={getSectorDisplay}
             />
           </Container>
@@ -214,6 +223,8 @@ function MarketplaceContent({
   page,
   setPage,
   isLoading,
+  error,
+  onRetry,
   getSectorDisplay,
   sectors,
   locations,
@@ -343,6 +354,29 @@ function MarketplaceContent({
         {isLoading ? (
           <div className="flex justify-center items-center h-full py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#233389]"></div>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-3">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Failed to load marketplace alumni</h3>
+            <p className="text-sm text-red-600 max-w-md mb-3 font-mono bg-red-50 p-2 rounded border border-red-200">
+              {error?.response?.status ? `[HTTP ${error.response.status}] ` : ""}
+              {error?.response?.data?.message || error?.message || "An unexpected server error occurred."}
+            </p>
+            <div className="flex items-center gap-3">
+              {onRetry && (
+                <Button onClick={onRetry} variant="outline" className="border-[#233389] text-[#233389]">
+                  Retry
+                </Button>
+              )}
+              <Button onClick={clearAllFilters} variant="ghost" className="text-gray-600">
+                Reset filters
+              </Button>
+            </div>
           </div>
         ) : listData && listData.length > 0 ? (
           <>

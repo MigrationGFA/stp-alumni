@@ -151,7 +151,9 @@ export function useSendMessage() {
         const updateMessage = useMessagingStore.getState().updateMessage;
         updateMessage(conversationId, optimisticMessage.id, { status: 'failed' });
       }
-      toast.error('Failed to send message');
+      const status = error?.response?.status ? `[HTTP ${error.response.status}] ` : '';
+      const msg = error?.response?.data?.message || error?.message || 'Failed to send message';
+      toast.error(`${status}${msg}`);
     },
   });
 }
@@ -286,7 +288,9 @@ export function useSendMedia() {
           return Array.isArray(old) ? updated : { ...old, data: updated };
         });
       }
-      toast.error(error?.response?.data?.message || "Failed to send attachment");
+      const status = error?.response?.status ? `[HTTP ${error.response.status}] ` : '';
+      const msg = error?.response?.data?.message || error?.message || 'Failed to send attachment';
+      toast.error(`${status}${msg}`);
       console.error("Send media error:", error);
     },
   });
@@ -310,8 +314,10 @@ export function useDeleteConversation() {
       queryClient.invalidateQueries({ queryKey: messagingKeys.conversations });
       toast.success('Conversation removed');
     },
-    onError: () => {
-      toast.error('Failed to remove conversation');
+    onError: (error) => {
+      const status = error?.response?.status ? `[HTTP ${error.response.status}] ` : '';
+      const msg = error?.response?.data?.message || error?.message || 'Failed to remove conversation';
+      toast.error(`${status}${msg}`);
     },
   });
 }
@@ -339,7 +345,9 @@ export function useDeleteMessage() {
       if (context?.conversationId) {
         queryClient.invalidateQueries({ queryKey: messagingKeys.messages(context.conversationId) });
       }
-      toast.error('Failed to delete message');
+      const status = error?.response?.status ? `[HTTP ${error.response.status}] ` : '';
+      const msg = error?.response?.data?.message || error?.message || 'Failed to delete message';
+      toast.error(`${status}${msg}`);
     },
   });
 }
@@ -426,8 +434,10 @@ export function useRespondToInvitation() {
       toast.success(action === 'accept' ? 'Invitation accepted' : 'Invitation ignored');
     },
 
-    onError: () => {
-      toast.error('Failed to respond to invitation');
+    onError: (error) => {
+      const status = error?.response?.status ? `[HTTP ${error.response.status}] ` : '';
+      const msg = error?.response?.data?.message || error?.message || 'Failed to respond to invitation';
+      toast.error(`${status}${msg}`);
     },
   });
 }
